@@ -19,3 +19,10 @@ Prepara el plugin una vez:
 - [ ] Con una nota índice abierta, **Nuevo proyecto Atlas** crea `Manuscrito/`, `Personajes/`, `Lugares/`, `Objetos/`, `Trama/`, `Estilo/` y `_Memoria/` junto a esa nota.
 - [ ] La nota índice queda con `longform.format: scenes`, `sceneFolder: Manuscrito` y `atlas.version: 1`. El texto que ya tenía sigue debajo.
 - [ ] Ejecutar el comando otra vez no duplica el frontmatter ni borra un capítulo que ya esté en `Manuscrito/`.
+
+## #15 proveedores
+
+- [ ] **Settings → Atlas**: con el endpoint vacío, el comando **Nuevo proyecto Atlas** sigue disponible.
+- [ ] Un endpoint `http://127.0.0.1:11434` no muestra aviso.
+- [ ] Un endpoint `https://api.openai.com/v1` muestra el aviso de host no permitido.
+- [ ] Tras activar **Permitir nube** y escribir `api.openai.com` en la lista blanca, ese endpoint ya no avisa.

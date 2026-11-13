@@ -25,15 +25,33 @@ test("npm run build produce main.js y onload no escribe en consola", async () =>
   const originalRequire = nodeModule.prototype.require;
   nodeModule.prototype.require = function (id) {
     if (id === "obsidian") {
-      return {
-        Plugin: class Plugin {
-          constructor(app, manifest) {
-            this.app = app;
-            this.manifest = manifest;
-          }
-          addCommand() {}
+      class Plugin {
+        constructor(app, manifest) {
+          this.app = app;
+          this.manifest = manifest;
+        }
+        addCommand() {}
+        addSettingTab() {}
+        async loadData() {
+          return null;
+        }
+        async saveData() {}
+      }
+      class PluginSettingTab {
+        constructor(app, plugin) {
+          this.app = app;
+          this.plugin = plugin;
+        }
+      }
+      return new Proxy(
+        { Plugin, PluginSettingTab },
+        {
+          get(target, prop) {
+            if (prop in target) return target[prop];
+            return class {};
+          },
         },
-      };
+      );
     }
     return originalRequire.apply(this, arguments);
   };
