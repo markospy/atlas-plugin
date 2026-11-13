@@ -1,6 +1,7 @@
 import { Notice, Plugin, TFile, type Vault } from "obsidian";
 
 import { characterFolder, characterNote, parseCharacter, relationErrors } from "./characters";
+import { placeFolder, placeNote } from "./places";
 import { MARKER_VIEW, MarkerView } from "./marker-view";
 import { DEFAULT_PROVIDER_SETTINGS, type ProviderSettings } from "./providers";
 import { AtlasSettingTab } from "./settings";
@@ -73,6 +74,13 @@ export default class AtlasPlugin extends Plugin {
 			},
 		});
 		this.addCommand({
+			id: "new-place",
+			name: "Nuevo lugar",
+			editorCallback: (editor) => {
+				void this.newPlace(editor.getSelection().trim());
+			},
+		});
+		this.addCommand({
 			id: "new-project",
 			name: "Nuevo proyecto Atlas",
 			callback: () => {
@@ -112,6 +120,29 @@ export default class AtlasPlugin extends Plugin {
 		}
 		await this.app.vault.create(path, characterNote(name));
 		new Notice("Ficha creada.");
+	}
+
+	private async newPlace(name: string): Promise<void> {
+		if (name.length === 0) {
+			new Notice("Selecciona el nombre del lugar.");
+			return;
+		}
+		if (name.includes("/") || name.includes("\\")) {
+			new Notice("El nombre no puede incluir carpetas.");
+			return;
+		}
+		const active = this.app.workspace.getActiveFile();
+		const folder = placeFolder(active?.path ?? "");
+		const path = `${folder}/${name}.md`;
+		if (await this.app.vault.adapter.exists(path)) {
+			new Notice("Ese lugar ya existe.");
+			return;
+		}
+		if (!(await this.app.vault.adapter.exists(folder))) {
+			await this.app.vault.createFolder(folder);
+		}
+		await this.app.vault.create(path, placeNote(name));
+		new Notice("Lugar creado.");
 	}
 
 	async saveSettings(): Promise<void> {

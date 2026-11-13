@@ -32,6 +32,11 @@ Prepara el plugin una vez:
 - [ ] Con el nombre seleccionado, **Nueva ficha de personaje** crea la nota en `Personajes/` y no sustituye una ficha ya existente.
 - [ ] **Comprobar relaciones del personaje** acepta `con: "[[Alguien]]"` y avisa si `con` no es un wikilink.
 
+## #4 lugares
+
+- [ ] Con el nombre seleccionado, **Nuevo lugar** crea la nota en `Lugares/` con las secciones sensoriales y no sustituye una ficha ya existente.
+- [ ] Un lugar con `padre: "[[Casa]]"` y un estado en el capítulo 12 se lee al reabrir la nota.
+
 ## #26 marcadores
 
 - [ ] En una nota del manuscrito, **Insertar [TK]** y **Insertar [INVESTIGAR]** dejan el texto en el cursor. El atajo se asigna en **Settings → Hotkeys**.
