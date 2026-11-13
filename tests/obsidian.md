@@ -26,3 +26,9 @@ Prepara el plugin una vez:
 - [ ] Un endpoint `http://127.0.0.1:11434` no muestra aviso.
 - [ ] Un endpoint `https://api.openai.com/v1` muestra el aviso de host no permitido.
 - [ ] Tras activar **Permitir nube** y escribir `api.openai.com` en la lista blanca, ese endpoint ya no avisa.
+
+## #26 marcadores
+
+- [ ] En una nota del manuscrito, **Insertar [TK]** y **Insertar [INVESTIGAR]** dejan el texto en el cursor. El atajo se asigna en **Settings → Hotkeys**.
+- [ ] **Marcadores del manuscrito** lista esos marcadores y el enlace abre la nota en esa línea.
+- [ ] Borrar `[TK]` del texto y volver a abrir el panel lo quita de la lista.

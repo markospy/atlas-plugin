@@ -32,6 +32,7 @@ test("npm run build produce main.js y onload no escribe en consola", async () =>
         }
         addCommand() {}
         addSettingTab() {}
+        registerView() {}
         async loadData() {
           return null;
         }
