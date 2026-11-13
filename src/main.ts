@@ -1,5 +1,7 @@
 import { Notice, Plugin, TFile, type Vault } from "obsidian";
 
+import { DEFAULT_PROVIDER_SETTINGS, type ProviderSettings } from "./providers";
+import { AtlasSettingTab } from "./settings";
 import { createAtlasProject, type AtlasFiles } from "./vault";
 
 function filesFromVault(vault: Vault): AtlasFiles {
@@ -21,7 +23,16 @@ function filesFromVault(vault: Vault): AtlasFiles {
 }
 
 export default class AtlasPlugin extends Plugin {
+	settings: ProviderSettings = { ...DEFAULT_PROVIDER_SETTINGS };
+
 	async onload(): Promise<void> {
+		const stored = (await this.loadData()) as Partial<ProviderSettings> | null;
+		this.settings = {
+			...DEFAULT_PROVIDER_SETTINGS,
+			...stored,
+			allowedHosts: stored?.allowedHosts ?? [],
+		};
+		this.addSettingTab(new AtlasSettingTab(this.app, this));
 		this.addCommand({
 			id: "new-project",
 			name: "Nuevo proyecto Atlas",
@@ -39,5 +50,9 @@ export default class AtlasPlugin extends Plugin {
 		}
 		await createAtlasProject(filesFromVault(this.app.vault), file.path);
 		new Notice("Proyecto Atlas listo.");
+	}
+
+	async saveSettings(): Promise<void> {
+		await this.saveData(this.settings);
 	}
 }
