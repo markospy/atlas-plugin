@@ -13,3 +13,9 @@ Prepara el plugin una vez:
 - [ ] Activar **Atlas** no escribe ningún error en la consola (Ctrl+Shift+I, o Cmd-Option-I en macOS).
 - [ ] Desactivar **Atlas** tampoco escribe ningún error en la consola.
 - [ ] Cambiar `name` en `manifest.json`, reiniciar Obsidian y comprobar que el nombre mostrado cambia. Volver a dejar `Atlas`.
+
+## #2 vault
+
+- [ ] Con una nota índice abierta, **Nuevo proyecto Atlas** crea `Manuscrito/`, `Personajes/`, `Lugares/`, `Objetos/`, `Trama/`, `Estilo/` y `_Memoria/` junto a esa nota.
+- [ ] La nota índice queda con `longform.format: scenes`, `sceneFolder: Manuscrito` y `atlas.version: 1`. El texto que ya tenía sigue debajo.
+- [ ] Ejecutar el comando otra vez no duplica el frontmatter ni borra un capítulo que ya esté en `Manuscrito/`.

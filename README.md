@@ -1,6 +1,6 @@
 # Atlas
 
-Plugin de Obsidian para fichas, continuidad y escritura. Esta versión solo carga: no registra comandos ni vistas.
+Plugin de Obsidian para fichas, continuidad y escritura.
 
 ## Desarrollar
 
@@ -21,3 +21,7 @@ npm run dev
 4. En **Installed plugins**, activa **Atlas**.
 
 Reinicia Obsidian después de cambiar `manifest.json`. Tras cambiar el TypeScript, ejecuta **Reload app without saving** en la paleta de comandos.
+
+## Nuevo proyecto
+
+Abre la nota que será el índice y ejecuta **Nuevo proyecto Atlas** en la paleta de comandos. El comando crea, junto a esa nota, las carpetas `Manuscrito/`, `Personajes/`, `Lugares/`, `Objetos/`, `Trama/`, `Estilo/` y `_Memoria/`. En la nota escribe frontmatter `longform` (formato `scenes`, `sceneFolder: Manuscrito`, `scenes` vacío) y la clave `atlas`. No reescribe notas que ya existan; si el índice ya tiene texto, lo conserva. `_Memoria/` es material generado, aparte del manuscrito.
