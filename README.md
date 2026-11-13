@@ -30,6 +30,10 @@ Abre la nota que será el índice y ejecuta **Nuevo proyecto Atlas** en la palet
 
 En **Settings → Atlas** puedes dejar el endpoint vacío: el plugin sigue usable. `localhost`, `127.0.0.1` y `::1` se aceptan siempre. Cualquier otro host se rechaza hasta que actives **Permitir nube** y lo escribas en la lista blanca.
 
+## Personajes
+
+Selecciona el nombre en una nota del proyecto y ejecuta **Nueva ficha de personaje**. Crea `Personajes/<nombre>.md` con `tipo: personaje`, `alias`, `relaciones` y las secciones Físico, Psicología, Voz y Arco. No pisa una ficha que ya exista. Cada relación lleva `con` como `[[nota]]`, `tipo` y, si hace falta, `desde`, `hasta` y `nota`. **Comprobar relaciones del personaje** avisa si `con` no es un wikilink.
+
 ## Marcadores
 
 En el editor, **Insertar [TK]** e **Insertar [INVESTIGAR]** dejan el marcador en el cursor. Asigna el atajo en **Settings → Hotkeys**. **Marcadores del manuscrito** abre el panel: lista los `[TK]` y `[INVESTIGAR: …]` de las notas bajo `Manuscrito/` y salta a la línea. Si borras el marcador del texto, desaparece del panel al volver a ejecutar el comando.

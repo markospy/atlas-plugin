@@ -27,6 +27,11 @@ Prepara el plugin una vez:
 - [ ] Un endpoint `https://api.openai.com/v1` muestra el aviso de host no permitido.
 - [ ] Tras activar **Permitir nube** y escribir `api.openai.com` en la lista blanca, ese endpoint ya no avisa.
 
+## #3 personajes
+
+- [ ] Con el nombre seleccionado, **Nueva ficha de personaje** crea la nota en `Personajes/` y no sustituye una ficha ya existente.
+- [ ] **Comprobar relaciones del personaje** acepta `con: "[[Alguien]]"` y avisa si `con` no es un wikilink.
+
 ## #26 marcadores
 
 - [ ] En una nota del manuscrito, **Insertar [TK]** y **Insertar [INVESTIGAR]** dejan el texto en el cursor. El atajo se asigna en **Settings → Hotkeys**.
