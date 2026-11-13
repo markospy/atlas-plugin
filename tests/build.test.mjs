@@ -31,6 +31,7 @@ test("npm run build produce main.js y onload no escribe en consola", async () =>
             this.app = app;
             this.manifest = manifest;
           }
+          addCommand() {}
         },
       };
     }
