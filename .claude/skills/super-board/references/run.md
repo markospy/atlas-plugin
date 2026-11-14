@@ -515,6 +515,8 @@ Next: <builder | qa | reviewer | Eric | none>
   the Reviewer reruns), `gh-quota-on-exit:`, `blocked-by:`.
 - Run the prose through `humanizer` when installed (else the plain-words rules in
   writing-standard.md).
+- Config `language` set → write the prose and labels in it, machine tokens verbatim
+  (writing-standard.md → "6 · Language"). Absent → English, as below.
 - The **issue comment** is the same header plus the PR link; the PR comment carries the detail.
 
 Builder exit (PR):

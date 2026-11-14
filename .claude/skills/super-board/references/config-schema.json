@@ -69,6 +69,12 @@
   // Onboard sets it to the machine's zone. Absent → the machine's local zone.
   "timezone": "America/Toronto",
 
+  // Language of the prose humans read: comments, Block template fields, PR
+  // bodies, tickets (writing-standard.md → "6 · Language"). A language code,
+  // e.g. "es". Machine tokens (`[role] [label]`, `Reason tag:`, `blocked-by:`,
+  // `approval-request:`, `done`) stay verbatim. Absent or null → English.
+  "language": null,
+
   // Names of the Status options on the project, always all seven (v3.0.0).
   // Aliases tolerated; canonicalized at read time. There is no Skipped column:
   // a card dropped on purpose is closed as not planned and moved to Done with a

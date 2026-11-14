@@ -18,6 +18,7 @@
   },
   "base_branch": "staging",
   "timezone": "Europe/Berlin",
+  "language": "es",
   "columns": [
     "Backlog",
     "Ready",
