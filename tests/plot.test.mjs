@@ -74,3 +74,13 @@ subtrama: "fuera del frontmatter"
 	});
 	assert.equal(parseScene(plotNote("Novela", "tres-actos")).pov, "");
 });
+
+test("un valor entre comillas respeta los escapes y una comilla suelta queda tal cual", () => {
+	const scene = `---
+objetivo: "Dijo \\"no\\""
+conflicto: "
+---
+`;
+	assert.equal(parseScene(scene).objetivo, 'Dijo "no"');
+	assert.equal(parseScene(scene).conflicto, '"');
+});
