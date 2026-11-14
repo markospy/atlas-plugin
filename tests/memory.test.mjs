@@ -85,3 +85,12 @@ test("acepta los cuatro estados y avisa de los demás", () => {
 	assert.deepEqual(knowledgeErrors(bad), ["Estado «intuye» no válido para padre: usa ignora, sospecha, cree-falso o sabe."]);
 	assert.deepEqual(whatKnows([bad], "Elena", 3), []);
 });
+
+test("la consulta normaliza a quién y no cuenta capítulos anteriores a la memoria", () => {
+	const memories = [parseMemory(CAP_03)];
+	const elena = [{ hecho: "padre", texto: "El juez es el padre de Elena", verdad: true, estado: "sabe" }];
+	assert.deepEqual(whatKnows(memories, "elena", 3), elena);
+	assert.deepEqual(whatKnows(memories, " [[Elena|la Doctora]] ", 3), elena);
+	assert.equal(whatKnows(memories, "[[lector]]", 3)[0]?.estado, "sospecha");
+	assert.deepEqual(whatKnows(memories, "Elena", 2), []);
+});
