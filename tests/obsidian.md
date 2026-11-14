@@ -53,6 +53,12 @@ Prepara el plugin una vez:
 - [ ] Con el nombre seleccionado en un capítulo, **Nuevo objeto** crea `Objetos/<nombre>.md` del proyecto con descripción, origen, valor material, valor sentimental y función en la trama.
 - [ ] Ejecutarlo otra vez con el mismo nombre avisa "Ese objeto ya existe." y no pisa la nota.
 
+## #7 entidades
+
+- [ ] Con un capítulo abierto, **Índice de entidades (escanear manuscrito)** abre el panel a la derecha con Personajes, Lugares y Objetos del proyecto.
+- [ ] Bajo cada ficha salen las escenas que la nombran por `nombre` o por un `alias`; clic en una escena la abre.
+- [ ] Borrar la mención de un capítulo y ejecutar el comando otra vez la quita del panel, sin repetir fichas ni escenas.
+
 ## #14 linter
 
 - [ ] En un capítulo con `- Hola.` y `Pienso de que sí.`, **Revisar estilo de la nota** lista `raya-dialogo` y `dequeismo` con su línea. Al pulsar uno, el cursor va a esa línea.

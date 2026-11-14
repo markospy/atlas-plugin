@@ -9,3 +9,9 @@ main.js
 .claude/super-board/inflight/
 .claude/super-board/migrations/
 .claude/super-board/upgrade.json
+.claude/worktrees/
+.claude/super-board/cache/
+.claude/super-board/github-halt*.json
+.claude/settings.json.bak-*
+.claude/settings.local.json
+__pycache__/
