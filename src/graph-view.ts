@@ -1,7 +1,7 @@
 import { ItemView, type WorkspaceLeaf } from "obsidian";
 
-import { parseCharacter } from "./characters";
-import { buildGraph, circleLayout, filterGraph, relationTypes, type GraphFilter, type RelationGraph } from "./graph";
+import { characterFolder, parseCharacter } from "./characters";
+import { buildGraph, circleLayout, filterGraph, projectCharacterPaths, relationTypes, type GraphFilter, type RelationGraph } from "./graph";
 
 export const GRAPH_VIEW = "atlas-graph";
 
@@ -28,7 +28,10 @@ export class GraphView extends ItemView {
 	}
 
 	async refresh(): Promise<void> {
-		const files = this.app.vault.getMarkdownFiles().filter((file) => isCharacter(file.path));
+		const all = this.app.vault.getMarkdownFiles();
+		const folder = characterFolder(this.app.workspace.getActiveFile()?.path ?? "");
+		const inProject = new Set(projectCharacterPaths(all.map((file) => file.path), folder));
+		const files = all.filter((file) => inProject.has(file.path));
 		const characters = await Promise.all(
 			files.map(async (file) => ({
 				name: file.basename,
@@ -101,8 +104,4 @@ export class GraphView extends ItemView {
 			name.textContent = node.name;
 		}
 	}
-}
-
-function isCharacter(path: string): boolean {
-	return path.startsWith("Personajes/") || path.includes("/Personajes/");
 }

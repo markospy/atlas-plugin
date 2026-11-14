@@ -26,7 +26,15 @@ export interface PlacedNode {
 
 export function linkTarget(link: string): string {
 	const inner = link.trim().replace(/^\[\[/, "").replace(/\]\]$/, "");
-	return (inner.split("|")[0] ?? "").split("#")[0]?.trim() ?? "";
+	const target = (inner.split("|")[0] ?? "").split("#")[0] ?? "";
+	// Obsidian writes `[[Folder/Name]]` when two notes share a name; the node is the note name.
+	return target.split("/").pop()?.trim() ?? "";
+}
+
+// Character notes directly inside one project's `Personajes` folder (see `characterFolder`).
+export function projectCharacterPaths(paths: string[], folder: string): string[] {
+	const prefix = `${folder}/`;
+	return paths.filter((path) => path.startsWith(prefix) && !path.slice(prefix.length).includes("/"));
 }
 
 export function chapterNumber(link: string | undefined): number | null {

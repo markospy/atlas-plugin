@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { buildGraph, chapterNumber, circleLayout, filterGraph, linkTarget, relationTypes } from "../src/graph.ts";
+import { characterFolder } from "../src/characters.ts";
+import { buildGraph, chapterNumber, circleLayout, filterGraph, linkTarget, projectCharacterPaths, relationTypes } from "../src/graph.ts";
 
 const GRAPH = buildGraph([
 	{
@@ -73,4 +74,29 @@ test("sin filtro, o con tipo vacío, se ven todas las aristas", () => {
 test("el círculo centra un nodo solo y no falla sin nodos", () => {
 	assert.deepEqual(circleLayout(["Elena"], 400), [{ name: "Elena", x: 200, y: 200 }]);
 	assert.deepEqual(circleLayout([], 400), []);
+});
+
+test("un enlace con carpeta apunta a la ficha, no a un nodo fantasma", () => {
+	assert.equal(linkTarget("[[Novela/Personajes/Marcos|el hermano]]"), "Marcos");
+	assert.equal(chapterNumber("[[Novela/Manuscrito/Cap 07]]"), 7);
+	const graph = buildGraph([
+		{ name: "Elena", relaciones: [{ con: "[[Personajes/Marcos]]", tipo: "hermano" }] },
+		{ name: "Marcos", relaciones: [] },
+	]);
+	assert.deepEqual(graph.nodes, ["Elena", "Marcos"]);
+	assert.deepEqual(pairs(graph), ["Elena-hermano-Marcos"]);
+});
+
+test("el grafo solo lee las fichas del proyecto activo", () => {
+	const paths = [
+		"Novela/Personajes/Elena.md",
+		"Novela/Personajes/Marcos.md",
+		"Otra/Personajes/Elena.md",
+		"Personajes/Suelta.md",
+		"Novela/Manuscrito/Cap 01.md",
+	];
+	const forActive = (active) => projectCharacterPaths(paths, characterFolder(active));
+	assert.deepEqual(forActive("Novela/Manuscrito/Cap 01.md"), ["Novela/Personajes/Elena.md", "Novela/Personajes/Marcos.md"]);
+	assert.deepEqual(forActive("Otra/Personajes/Elena.md"), ["Otra/Personajes/Elena.md"]);
+	assert.deepEqual(forActive(""), ["Personajes/Suelta.md"]);
 });

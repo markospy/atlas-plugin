@@ -48,3 +48,4 @@ Prepara el plugin una vez:
 - [ ] Con dos fichas en `Personajes/` que se relacionan, **Grafo de relaciones** abre un SVG con un nodo por personaje y una arista con el tipo.
 - [ ] Elegir un tipo en el selector oculta las aristas de otros tipos.
 - [ ] Una relación con `desde: "[[Cap 07]]"` no aparece con capítulo 3 y sí con capítulo 7.
+- [ ] Con dos proyectos en la bóveda, el grafo abierto desde una nota de uno solo muestra sus personajes; `con: "[[Personajes/Marcos]]"` une la arista al nodo `Marcos`.
