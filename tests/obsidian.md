@@ -42,3 +42,19 @@ Prepara el plugin una vez:
 - [ ] En una nota del manuscrito, **Insertar [TK]** y **Insertar [INVESTIGAR]** dejan el texto en el cursor. El atajo se asigna en **Settings → Hotkeys**.
 - [ ] **Marcadores del manuscrito** lista esos marcadores y el enlace abre la nota en esa línea.
 - [ ] Borrar `[TK]` del texto y volver a abrir el panel lo quita de la lista.
+
+## #13 estilo
+
+- [ ] Con el nombre seleccionado en un capítulo, **Nueva skill de estilo** crea `Estilo/<nombre>.md` del proyecto con `alcance`, `aplica_a`, `severidad`, `verificacion`, `patron` y las secciones Regla / Ejemplo mal / Ejemplo bien.
+- [ ] Ejecutarlo otra vez con el mismo nombre avisa "Esa skill ya existe." y no pisa la nota.
+
+## #5 objetos
+
+- [ ] Con el nombre seleccionado en un capítulo, **Nuevo objeto** crea `Objetos/<nombre>.md` del proyecto con descripción, origen, valor material, valor sentimental y función en la trama.
+- [ ] Ejecutarlo otra vez con el mismo nombre avisa "Ese objeto ya existe." y no pisa la nota.
+
+## #7 entidades
+
+- [ ] Con un capítulo abierto, **Índice de entidades (escanear manuscrito)** abre el panel a la derecha con Personajes, Lugares y Objetos del proyecto.
+- [ ] Bajo cada ficha salen las escenas que la nombran por `nombre` o por un `alias`; clic en una escena la abre.
+- [ ] Borrar la mención de un capítulo y ejecutar el comando otra vez la quita del panel, sin repetir fichas ni escenas.

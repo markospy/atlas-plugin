@@ -1,6 +1,8 @@
 import { Notice, Plugin, TFile, type Vault } from "obsidian";
 
 import { characterFolder, characterNote, parseCharacter, relationErrors } from "./characters";
+import { ENTITY_VIEW, EntityView } from "./entity-view";
+import { objectFolder, objectNote } from "./objects";
 import { placeFolder, placeNote } from "./places";
 import {
 	chapterNumber,
@@ -15,6 +17,7 @@ import {
 import { MARKER_VIEW, MarkerView } from "./marker-view";
 import { DEFAULT_PROVIDER_SETTINGS, type ProviderSettings } from "./providers";
 import { AtlasSettingTab } from "./settings";
+import { skillFolder, skillNote } from "./style";
 import { createAtlasProject, type AtlasFiles } from "./vault";
 
 function filesFromVault(vault: Vault): AtlasFiles {
@@ -47,6 +50,7 @@ export default class AtlasPlugin extends Plugin {
 		};
 		this.addSettingTab(new AtlasSettingTab(this.app, this));
 		this.registerView(MARKER_VIEW, (leaf) => new MarkerView(leaf));
+		this.registerView(ENTITY_VIEW, (leaf) => new EntityView(leaf));
 		this.addCommand({
 			id: "insert-tk",
 			name: "Insertar [TK]",
@@ -69,6 +73,13 @@ export default class AtlasPlugin extends Plugin {
 			},
 		});
 		this.addCommand({
+			id: "scan-entities",
+			name: "Índice de entidades (escanear manuscrito)",
+			callback: () => {
+				void this.openEntities();
+			},
+		});
+		this.addCommand({
 			id: "new-character",
 			name: "Nueva ficha de personaje",
 			editorCallback: (editor) => {
@@ -88,6 +99,20 @@ export default class AtlasPlugin extends Plugin {
 			name: "Nuevo lugar",
 			editorCallback: (editor) => {
 				void this.newPlace(editor.getSelection().trim());
+			},
+		});
+		this.addCommand({
+			id: "new-object",
+			name: "Nuevo objeto",
+			editorCallback: (editor) => {
+				void this.newObject(editor.getSelection().trim());
+			},
+		});
+		this.addCommand({
+			id: "new-skill",
+			name: "Nueva skill de estilo",
+			editorCallback: (editor) => {
+				void this.newSkill(editor.getSelection().trim());
 			},
 		});
 		this.addCommand({
@@ -169,6 +194,52 @@ export default class AtlasPlugin extends Plugin {
 		new Notice("Lugar creado.");
 	}
 
+	private async newObject(name: string): Promise<void> {
+		if (name.length === 0) {
+			new Notice("Selecciona el nombre del objeto.");
+			return;
+		}
+		if (name.includes("/") || name.includes("\\")) {
+			new Notice("El nombre no puede incluir carpetas.");
+			return;
+		}
+		const active = this.app.workspace.getActiveFile();
+		const folder = objectFolder(active?.path ?? "");
+		const path = `${folder}/${name}.md`;
+		if (await this.app.vault.adapter.exists(path)) {
+			new Notice("Ese objeto ya existe.");
+			return;
+		}
+		if (!(await this.app.vault.adapter.exists(folder))) {
+			await this.app.vault.createFolder(folder);
+		}
+		await this.app.vault.create(path, objectNote(name));
+		new Notice("Objeto creado.");
+	}
+
+	private async newSkill(name: string): Promise<void> {
+		if (name.length === 0) {
+			new Notice("Selecciona el nombre de la skill.");
+			return;
+		}
+		if (name.includes("/") || name.includes("\\")) {
+			new Notice("El nombre no puede incluir carpetas.");
+			return;
+		}
+		const active = this.app.workspace.getActiveFile();
+		const folder = skillFolder(active?.path ?? "");
+		const path = `${folder}/${name}.md`;
+		if (await this.app.vault.adapter.exists(path)) {
+			new Notice("Esa skill ya existe.");
+			return;
+		}
+		if (!(await this.app.vault.adapter.exists(folder))) {
+			await this.app.vault.createFolder(folder);
+		}
+		await this.app.vault.create(path, skillNote(name));
+		new Notice("Skill creada.");
+	}
+
 	private async newMemory(): Promise<void> {
 		const active = this.app.workspace.getActiveFile();
 		const chapter = chapterNumber(active?.path ?? "");
@@ -221,6 +292,21 @@ export default class AtlasPlugin extends Plugin {
 		}
 		await this.app.workspace.revealLeaf(leaf);
 		if (leaf.view instanceof MarkerView) {
+			await leaf.view.refresh();
+		}
+	}
+
+	private async openEntities(): Promise<void> {
+		const existing = this.app.workspace.getLeavesOfType(ENTITY_VIEW);
+		const leaf = existing[0] ?? this.app.workspace.getRightLeaf(false);
+		if (!leaf) {
+			return;
+		}
+		if (existing.length === 0) {
+			await leaf.setViewState({ type: ENTITY_VIEW, active: false });
+		}
+		await this.app.workspace.revealLeaf(leaf);
+		if (leaf.view instanceof EntityView) {
 			await leaf.view.refresh();
 		}
 	}

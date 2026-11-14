@@ -38,6 +38,14 @@ Selecciona el nombre en una nota del proyecto y ejecuta **Nueva ficha de persona
 
 Selecciona el nombre y ejecuta **Nuevo lugar**. Crea `Lugares/<nombre>.md` con vista, sonido, olor, tacto, disposición y atmósfera. En el frontmatter, `padre` es el lugar que lo contiene (`[[Casa]]`) y `estados` anota cambios por capítulo (`capitulo` + `descripcion`). No pisa una ficha que ya exista.
 
+## Objetos
+
+Selecciona el nombre y ejecuta **Nuevo objeto**. Crea `Objetos/<nombre>.md` con descripción, origen, valor material, valor sentimental (para quién y por qué) y función en la trama. En el frontmatter, `funcion` marca su peso narrativo (p. ej. "pistola de Chéjov"), `foreshadowing` enlaza dónde se anuncia y `posesiones` anota cada cambio de poseedor (`poseedor` + `capitulo`, p. ej. `[[Cap 04]]`). `holderAt(ficha, N)` en `src/objects.ts` responde quién tiene el objeto en el capítulo N. No pisa una ficha que ya exista.
+
+## Estilo
+
+Selecciona el nombre y ejecuta **Nueva skill de estilo**. Crea `Estilo/<nombre>.md` con las secciones Regla, Ejemplo mal y Ejemplo bien. En el frontmatter: `alcance` (`global`, `personaje`, `POV`, `capítulo` o `escena`), `aplica_a` (p. ej. `["[[Marcos]]"]` para la voz de un personaje), `severidad` (`sugerencia`, `aviso` u `obligatoria`), `verificacion` (`patron` sin IA, o `ia`) y `patron`, la expresión regular que se usa solo con `verificacion: patron`. No pisa una skill que ya exista.
+
 ## Marcadores
 
 En el editor, **Insertar [TK]** e **Insertar [INVESTIGAR]** dejan el marcador en el cursor. Asigna el atajo en **Settings → Hotkeys**. **Marcadores del manuscrito** abre el panel: lista los `[TK]` y `[INVESTIGAR: …]` de las notas bajo `Manuscrito/` y salta a la línea. Si borras el marcador del texto, desaparece del panel al volver a ejecutar el comando.
@@ -50,3 +58,7 @@ Con un capítulo abierto (`Cap NN`), **Nueva memoria del capítulo** crea `_Memo
 - `conocimiento`: cada entrada con `hecho` (el `id`), `quien` (`lector` o `[[Personaje]]`) y `estado`: `ignora`, `sospecha`, `cree-falso` o `sabe`.
 
 **Qué sabe en este capítulo** responde por el texto seleccionado (`[[Elena]]`) o, sin selección, por el lector. Suma las memorias hasta ese capítulo y, si un hecho cambia de estado, gana el más reciente. Avisa de estados no válidos.
+
+## Índice de entidades
+
+Con una nota del proyecto abierta, ejecuta **Índice de entidades (escanear manuscrito)**. El panel lista los personajes, lugares y objetos del proyecto y, bajo cada ficha, las escenas de `Manuscrito/` que la nombran por `nombre` o por cualquiera de sus `alias` (palabra completa, sin distinguir mayúsculas). El escaneo es local, sin IA, y solo corre cuando ejecutas el comando: vuelve a ejecutarlo tras editar y el índice se rehace sin duplicar escenas.
