@@ -1,0 +1,202 @@
+{
+  "tickets": [
+    {
+      "key": "scaffold",
+      "number": 1,
+      "url": "https://github.com/markospy/atlas-plugin/issues/1",
+      "title": "\u2728 [feature] scaffold: Obsidian plugin build skeleton"
+    },
+    {
+      "key": "vault",
+      "number": 2,
+      "url": "https://github.com/markospy/atlas-plugin/issues/2",
+      "title": "\u2728 [feature] vault: project layout + Longform index"
+    },
+    {
+      "key": "characters",
+      "number": 3,
+      "url": "https://github.com/markospy/atlas-plugin/issues/3",
+      "title": "\u2728 [feature] characters: sheets + timed typed relations"
+    },
+    {
+      "key": "places",
+      "number": 4,
+      "url": "https://github.com/markospy/atlas-plugin/issues/4",
+      "title": "\u2728 [feature] places: sensory sheets + nesting + state"
+    },
+    {
+      "key": "objects",
+      "number": 5,
+      "url": "https://github.com/markospy/atlas-plugin/issues/5",
+      "title": "\u2728 [feature] objects: sheets + possession timeline"
+    },
+    {
+      "key": "plot",
+      "number": 6,
+      "url": "https://github.com/markospy/atlas-plugin/issues/6",
+      "title": "\u2728 [feature] plot: arcs, scenes, beats templates"
+    },
+    {
+      "key": "mentions",
+      "number": 7,
+      "url": "https://github.com/markospy/atlas-plugin/issues/7",
+      "title": "\u2728 [feature] entities: index + mention detection"
+    },
+    {
+      "key": "rel-graph",
+      "number": 8,
+      "url": "https://github.com/markospy/atlas-plugin/issues/8",
+      "title": "\u2728 [feature] graph: relationship view by type/chapter"
+    },
+    {
+      "key": "world-state",
+      "number": 9,
+      "url": "https://github.com/markospy/atlas-plugin/issues/9",
+      "title": "\u2728 [feature] world: state-at-chapter-N query"
+    },
+    {
+      "key": "memory",
+      "number": 10,
+      "url": "https://github.com/markospy/atlas-plugin/issues/10",
+      "title": "\u2728 [feature] memory: reader vs character knowledge"
+    },
+    {
+      "key": "foreshadow",
+      "number": 11,
+      "url": "https://github.com/markospy/atlas-plugin/issues/11",
+      "title": "\u2728 [feature] foreshadow: planted\u2192resolved board"
+    },
+    {
+      "key": "continuity",
+      "number": 12,
+      "url": "https://github.com/markospy/atlas-plugin/issues/12",
+      "title": "\u2728 [feature] continuity: spoilers + omniscient alerts"
+    },
+    {
+      "key": "skills",
+      "number": 13,
+      "url": "https://github.com/markospy/atlas-plugin/issues/13",
+      "title": "\u2728 [feature] style: literary skills notes"
+    },
+    {
+      "key": "linter",
+      "number": 14,
+      "url": "https://github.com/markospy/atlas-plugin/issues/14",
+      "title": "\u2728 [feature] linter: deterministic Spanish prose rules"
+    },
+    {
+      "key": "ai-providers",
+      "number": 15,
+      "url": "https://github.com/markospy/atlas-plugin/issues/15",
+      "title": "\u2728 [feature] ai: providers + local-first whitelist"
+    },
+    {
+      "key": "context-builder",
+      "number": 16,
+      "url": "https://github.com/markospy/atlas-plugin/issues/16",
+      "title": "\u2728 [feature] ai: scene context builder"
+    },
+    {
+      "key": "ai-review",
+      "number": 17,
+      "url": "https://github.com/markospy/atlas-plugin/issues/17",
+      "title": "\u2728 [feature] ai: review against skills and continuity"
+    },
+    {
+      "key": "co-write",
+      "number": 18,
+      "url": "https://github.com/markospy/atlas-plugin/issues/18",
+      "title": "\u2728 [feature] ai: co-write with approve/reject diff"
+    },
+    {
+      "key": "extract",
+      "number": 19,
+      "url": "https://github.com/markospy/atlas-plugin/issues/19",
+      "title": "\u2728 [feature] ai: extract memory updates for approval"
+    },
+    {
+      "key": "dep-graph",
+      "number": 20,
+      "url": "https://github.com/markospy/atlas-plugin/issues/20",
+      "title": "\u2728 [feature] chapters: fact dependency graph"
+    },
+    {
+      "key": "stale",
+      "number": 21,
+      "url": "https://github.com/markospy/atlas-plugin/issues/21",
+      "title": "\u2728 [feature] chapters: stale mark + ordered reanalysis"
+    },
+    {
+      "key": "decisions",
+      "number": 22,
+      "url": "https://github.com/markospy/atlas-plugin/issues/22",
+      "title": "\u2728 [feature] decisions: forward-looking change log"
+    },
+    {
+      "key": "chronology",
+      "number": 23,
+      "url": "https://github.com/markospy/atlas-plugin/issues/23",
+      "title": "\u2728 [feature] chronology: travel/age/date checks"
+    },
+    {
+      "key": "sidebar",
+      "number": 24,
+      "url": "https://github.com/markospy/atlas-plugin/issues/24",
+      "title": "\u2728 [feature] sidebar: entity peek at chapter state"
+    },
+    {
+      "key": "stats",
+      "number": 25,
+      "url": "https://github.com/markospy/atlas-plugin/issues/25",
+      "title": "\u2728 [feature] writing: goals and word stats"
+    },
+    {
+      "key": "markers",
+      "number": 26,
+      "url": "https://github.com/markospy/atlas-plugin/issues/26",
+      "title": "\u2728 [feature] writing: inline TK/INVESTIGAR markers"
+    },
+    {
+      "key": "export",
+      "number": 27,
+      "url": "https://github.com/markospy/atlas-plugin/issues/27",
+      "title": "\u2728 [feature] export: DOCX EPUB PDF"
+    },
+    {
+      "key": "backups",
+      "number": 28,
+      "url": "https://github.com/markospy/atlas-plugin/issues/28",
+      "title": "\u2728 [feature] safety: backups before AI edits"
+    }
+  ],
+  "key_to_number": {
+    "scaffold": 1,
+    "vault": 2,
+    "characters": 3,
+    "places": 4,
+    "objects": 5,
+    "plot": 6,
+    "mentions": 7,
+    "rel-graph": 8,
+    "world-state": 9,
+    "memory": 10,
+    "foreshadow": 11,
+    "continuity": 12,
+    "skills": 13,
+    "linter": 14,
+    "ai-providers": 15,
+    "context-builder": 16,
+    "ai-review": 17,
+    "co-write": 18,
+    "extract": 19,
+    "dep-graph": 20,
+    "stale": 21,
+    "decisions": 22,
+    "chronology": 23,
+    "sidebar": 24,
+    "stats": 25,
+    "markers": 26,
+    "export": 27,
+    "backups": 28
+  }
+}
