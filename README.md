@@ -50,6 +50,10 @@ No pisa una trama que ya exista.
 
 En una escena de `Manuscrito/`, **Añadir campos de escena** agrega al frontmatter `objetivo`, `conflicto`, `resultado`, `pov` y `subtrama` vacíos, sin tocar los que ya tengan valor ni el texto. `pov` y `subtrama` admiten un `[[wikilink]]`.
 
+## Estilo
+
+Selecciona el nombre y ejecuta **Nueva skill de estilo**. Crea `Estilo/<nombre>.md` con las secciones Regla, Ejemplo mal y Ejemplo bien. En el frontmatter: `alcance` (`global`, `personaje`, `POV`, `capítulo` o `escena`), `aplica_a` (p. ej. `["[[Marcos]]"]` para la voz de un personaje), `severidad` (`sugerencia`, `aviso` u `obligatoria`), `verificacion` (`patron` sin IA, o `ia`) y `patron`, la expresión regular que se usa solo con `verificacion: patron`. No pisa una skill que ya exista.
+
 ## Marcadores
 
 En el editor, **Insertar [TK]** e **Insertar [INVESTIGAR]** dejan el marcador en el cursor. Asigna el atajo en **Settings → Hotkeys**. **Marcadores del manuscrito** abre el panel: lista los `[TK]` y `[INVESTIGAR: …]` de las notas bajo `Manuscrito/` y salta a la línea. Si borras el marcador del texto, desaparece del panel al volver a ejecutar el comando.

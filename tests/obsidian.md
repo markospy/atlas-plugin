@@ -47,3 +47,8 @@ Prepara el plugin una vez:
 - [ ] En una nota del manuscrito, **Insertar [TK]** y **Insertar [INVESTIGAR]** dejan el texto en el cursor. El atajo se asigna en **Settings → Hotkeys**.
 - [ ] **Marcadores del manuscrito** lista esos marcadores y el enlace abre la nota en esa línea.
 - [ ] Borrar `[TK]` del texto y volver a abrir el panel lo quita de la lista.
+
+## #13 estilo
+
+- [ ] Con el nombre seleccionado en un capítulo, **Nueva skill de estilo** crea `Estilo/<nombre>.md` del proyecto con `alcance`, `aplica_a`, `severidad`, `verificacion`, `patron` y las secciones Regla / Ejemplo mal / Ejemplo bien.
+- [ ] Ejecutarlo otra vez con el mismo nombre avisa "Esa skill ya existe." y no pisa la nota.
