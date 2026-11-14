@@ -38,6 +38,18 @@ Selecciona el nombre en una nota del proyecto y ejecuta **Nueva ficha de persona
 
 Selecciona el nombre y ejecuta **Nuevo lugar**. Crea `Lugares/<nombre>.md` con vista, sonido, olor, tacto, disposición y atmósfera. En el frontmatter, `padre` es el lugar que lo contiene (`[[Casa]]`) y `estados` anota cambios por capítulo (`capitulo` + `descripcion`). No pisa una ficha que ya exista.
 
+## Trama
+
+Selecciona el nombre y ejecuta una de **Nueva trama (Tres actos)**, **Nueva trama (Save the Cat)** o **Nueva trama (Viaje del héroe)**. Crea `Trama/<nombre>.md` con premisa, tema, conflicto central, arcos y subtramas, más los beats del esqueleto elegido como subsecciones. `estructura` en el frontmatter guarda cuál elegiste:
+
+- `tres-actos`: Acto I, Acto II y Acto III.
+- `save-the-cat`: los 15 beats de Blake Snyder, de la imagen de apertura a la imagen final.
+- `viaje-del-heroe`: las 12 etapas de Vogler, del mundo ordinario al regreso con el elixir.
+
+No pisa una trama que ya exista.
+
+En una escena de `Manuscrito/`, **Añadir campos de escena** agrega al frontmatter `objetivo`, `conflicto`, `resultado`, `pov` y `subtrama` vacíos, sin tocar los que ya tengan valor ni el texto. `pov` y `subtrama` admiten un `[[wikilink]]`.
+
 ## Marcadores
 
 En el editor, **Insertar [TK]** e **Insertar [INVESTIGAR]** dejan el marcador en el cursor. Asigna el atajo en **Settings → Hotkeys**. **Marcadores del manuscrito** abre el panel: lista los `[TK]` y `[INVESTIGAR: …]` de las notas bajo `Manuscrito/` y salta a la línea. Si borras el marcador del texto, desaparece del panel al volver a ejecutar el comando.

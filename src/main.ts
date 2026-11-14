@@ -2,6 +2,7 @@ import { Notice, Plugin, TFile, type Vault } from "obsidian";
 
 import { characterFolder, characterNote, parseCharacter, relationErrors } from "./characters";
 import { placeFolder, placeNote } from "./places";
+import { PLOT_STRUCTURES, plotFolder, plotNote, SCENE_FIELDS, type PlotStructure } from "./plot";
 import { MARKER_VIEW, MarkerView } from "./marker-view";
 import { DEFAULT_PROVIDER_SETTINGS, type ProviderSettings } from "./providers";
 import { AtlasSettingTab } from "./settings";
@@ -80,6 +81,22 @@ export default class AtlasPlugin extends Plugin {
 				void this.newPlace(editor.getSelection().trim());
 			},
 		});
+		for (const [structure, { nombre }] of Object.entries(PLOT_STRUCTURES)) {
+			this.addCommand({
+				id: `new-plot-${structure}`,
+				name: `Nueva trama (${nombre})`,
+				editorCallback: (editor) => {
+					void this.newPlot(editor.getSelection().trim(), structure as PlotStructure);
+				},
+			});
+		}
+		this.addCommand({
+			id: "add-scene-fields",
+			name: "Añadir campos de escena",
+			callback: () => {
+				void this.addSceneFields();
+			},
+		});
 		this.addCommand({
 			id: "new-project",
 			name: "Nuevo proyecto Atlas",
@@ -143,6 +160,50 @@ export default class AtlasPlugin extends Plugin {
 		}
 		await this.app.vault.create(path, placeNote(name));
 		new Notice("Lugar creado.");
+	}
+
+	private async newPlot(name: string, structure: PlotStructure): Promise<void> {
+		if (name.length === 0) {
+			new Notice("Selecciona el nombre de la trama.");
+			return;
+		}
+		if (name.includes("/") || name.includes("\\")) {
+			new Notice("El nombre no puede incluir carpetas.");
+			return;
+		}
+		const active = this.app.workspace.getActiveFile();
+		const folder = plotFolder(active?.path ?? "");
+		const path = `${folder}/${name}.md`;
+		if (await this.app.vault.adapter.exists(path)) {
+			new Notice("Esa trama ya existe.");
+			return;
+		}
+		if (!(await this.app.vault.adapter.exists(folder))) {
+			await this.app.vault.createFolder(folder);
+		}
+		await this.app.vault.create(path, plotNote(name, structure));
+		new Notice("Trama creada.");
+	}
+
+	private async addSceneFields(): Promise<void> {
+		const file = this.app.workspace.getActiveFile();
+		if (!file || file.extension !== "md") {
+			new Notice("Abre una escena del manuscrito.");
+			return;
+		}
+		try {
+			await this.app.fileManager.processFrontMatter(file, (frontmatter: Record<string, unknown>) => {
+				for (const field of SCENE_FIELDS) {
+					if (!(field in frontmatter)) {
+						frontmatter[field] = "";
+					}
+				}
+			});
+		} catch {
+			new Notice("El frontmatter de la escena no es YAML válido.");
+			return;
+		}
+		new Notice("Campos de escena listos.");
 	}
 
 	async saveSettings(): Promise<void> {
