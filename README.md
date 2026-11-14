@@ -53,3 +53,17 @@ En el editor, **Insertar [TK]** e **Insertar [INVESTIGAR]** dejan el marcador en
 ## Índice de entidades
 
 Con una nota del proyecto abierta, ejecuta **Índice de entidades (escanear manuscrito)**. El panel lista los personajes, lugares y objetos del proyecto y, bajo cada ficha, las escenas de `Manuscrito/` que la nombran por `nombre` o por cualquiera de sus `alias` (palabra completa, sin distinguir mayúsculas). El escaneo es local, sin IA, y solo corre cuando ejecutas el comando: vuelve a ejecutarlo tras editar y el índice se rehace sin duplicar escenas.
+
+## Linter de estilo
+
+**Revisar estilo de la nota** revisa la nota abierta sin IA y lista cada hallazgo con su línea. Pulsa el hallazgo para ir a esa línea. Las reglas base, todas con severidad `aviso`:
+
+| Regla | Avisa cuando |
+|---|---|
+| `raya-dialogo` | el diálogo abre con guion (`-`, `–`) o con raya seguida de espacio (`— Hola`) |
+| `gerundios-encadenados` | hay tres o más gerundios en la misma frase |
+| `dijo-repetido` | `dijo` aparece dos veces en una línea, o en dos líneas seguidas con texto |
+| `mente-acotacion` | hay un adverbio en `-mente` en la acotación (`—No —dijo tristemente.`) |
+| `dequeismo` | aparece `de que` tras un verbo de pensar o decir (`pienso de que`) |
+
+También ejecuta las skills de `Estilo/` con `alcance: global` y `verificacion: patron`. El mensaje es el `nombre` de la skill, con su `severidad`. El patrón no distingue mayúsculas, y una expresión regular inválida se ignora. **Ignorar aquí** añade `%% atlas-ignorar: <regla> %%` al final de la línea. Así se calla esa regla en esa línea y en esa nota. Para recuperar el aviso, borra el comentario. El frontmatter no se revisa.
