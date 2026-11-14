@@ -1,0 +1,13 @@
+✔ el estándar define la clave language y los tokens que nunca se traducen (2.292129ms)
+✔ el informe de lane en español conserva la cabecera que leen las lanes (1.426064ms)
+✔ super-board-deps.sh lee blocked-by: de un bloqueo escrito en español (170.775367ms)
+✔ el 🙋 en español sigue marcando needsYou para deps.sh y approval.py (218.826014ms)
+✔ sin la clave language las plantillas siguen en inglés (1.371492ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 551.21139

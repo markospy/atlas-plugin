@@ -1,6 +1,8 @@
 import { Notice, Plugin, TFile, type Vault } from "obsidian";
 
 import { characterFolder, characterNote, parseCharacter, relationErrors } from "./characters";
+import { ENTITY_VIEW, EntityView } from "./entity-view";
+import { objectFolder, objectNote } from "./objects";
 import { placeFolder, placeNote } from "./places";
 import { PLOT_STRUCTURES, plotFolder, plotNote, SCENE_FIELDS, type PlotStructure } from "./plot";
 import { MARKER_VIEW, MarkerView } from "./marker-view";
@@ -39,6 +41,7 @@ export default class AtlasPlugin extends Plugin {
 		};
 		this.addSettingTab(new AtlasSettingTab(this.app, this));
 		this.registerView(MARKER_VIEW, (leaf) => new MarkerView(leaf));
+		this.registerView(ENTITY_VIEW, (leaf) => new EntityView(leaf));
 		this.addCommand({
 			id: "insert-tk",
 			name: "Insertar [TK]",
@@ -58,6 +61,13 @@ export default class AtlasPlugin extends Plugin {
 			name: "Marcadores del manuscrito",
 			callback: () => {
 				void this.openMarkers();
+			},
+		});
+		this.addCommand({
+			id: "scan-entities",
+			name: "Índice de entidades (escanear manuscrito)",
+			callback: () => {
+				void this.openEntities();
 			},
 		});
 		this.addCommand({
@@ -96,6 +106,13 @@ export default class AtlasPlugin extends Plugin {
 			name: "Añadir campos de escena",
 			callback: () => {
 				void this.addSceneFields();
+			},
+		});
+		this.addCommand({
+			id: "new-object",
+			name: "Nuevo objeto",
+			editorCallback: (editor) => {
+				void this.newObject(editor.getSelection().trim());
 			},
 		});
 		this.addCommand({
@@ -214,6 +231,29 @@ export default class AtlasPlugin extends Plugin {
 		new Notice("Campos de escena listos.");
 	}
 
+	private async newObject(name: string): Promise<void> {
+		if (name.length === 0) {
+			new Notice("Selecciona el nombre del objeto.");
+			return;
+		}
+		if (name.includes("/") || name.includes("\\")) {
+			new Notice("El nombre no puede incluir carpetas.");
+			return;
+		}
+		const active = this.app.workspace.getActiveFile();
+		const folder = objectFolder(active?.path ?? "");
+		const path = `${folder}/${name}.md`;
+		if (await this.app.vault.adapter.exists(path)) {
+			new Notice("Ese objeto ya existe.");
+			return;
+		}
+		if (!(await this.app.vault.adapter.exists(folder))) {
+			await this.app.vault.createFolder(folder);
+		}
+		await this.app.vault.create(path, objectNote(name));
+		new Notice("Objeto creado.");
+	}
+
 	private async newSkill(name: string): Promise<void> {
 		if (name.length === 0) {
 			new Notice("Selecciona el nombre de la skill.");
@@ -252,6 +292,21 @@ export default class AtlasPlugin extends Plugin {
 		}
 		await this.app.workspace.revealLeaf(leaf);
 		if (leaf.view instanceof MarkerView) {
+			await leaf.view.refresh();
+		}
+	}
+
+	private async openEntities(): Promise<void> {
+		const existing = this.app.workspace.getLeavesOfType(ENTITY_VIEW);
+		const leaf = existing[0] ?? this.app.workspace.getRightLeaf(false);
+		if (!leaf) {
+			return;
+		}
+		if (existing.length === 0) {
+			await leaf.setViewState({ type: ENTITY_VIEW, active: false });
+		}
+		await this.app.workspace.revealLeaf(leaf);
+		if (leaf.view instanceof EntityView) {
 			await leaf.view.refresh();
 		}
 	}
