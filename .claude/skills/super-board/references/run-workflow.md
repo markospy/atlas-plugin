@@ -201,6 +201,10 @@ Repeat until a done condition or halt gate fires:
    reports those as `preflight:blocked`; `preflight:failed` means pre-flight was blind and the card
    stays in Ready for the next wave. Sequenced cards carry a `blocked-by:` line, so this same sweep
    frees them when the overlapping PR's issue closes.
+   **Truth-check.** Before each Review lane the wave runs its `Truth-check` phase: a
+   Code-grounder and a Historian agent, independent of the Reviewer (lane agents cannot spawn
+   sub-agents). The summary shows `truth:scored|skipped|inconclusive`; the Reviewer gets the
+   result and Blocks 🛡 on `inconclusive`. A Reviewer that advances anyway is reported `failed`.
    Wave width is every card the dependency graph says is free, in flight
    first (Review → QA → Ready), cut to `max_workers` when it is set (0 or
    absent = no cap). `max_workers` is the GitHub-limit valve: step 5 lowers it
