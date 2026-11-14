@@ -101,3 +101,42 @@ test("incluye el estado de cada lugar con un cambio en o antes de N", () => {
 		{ lugar: "Faro", estado: "Abandonado", desde: "[[Cap 09]]" },
 	]);
 });
+
+test("bordes: empate en el mismo capítulo, orden libre, capítulo ilegible y poseedor vacío", () => {
+	const sheets = {
+		personajes: [
+			{ nombre: "Marcos", relaciones: [{ con: "[[Elena]]", tipo: "rival", hasta: "[[Cap 04]]" }] },
+		],
+		objetos: [
+			{
+				nombre: "Llave",
+				posesiones: [
+					{ poseedor: "[[Elena]]", capitulo: "[[Cap 06]]" },
+					{ poseedor: "[[Abuelo]]", capitulo: "[[Cap 02]]" },
+					{ poseedor: "[[Marcos]]", capitulo: "[[Cap 06]]" },
+					{ poseedor: "[[Nadie]]", capitulo: "[[Epílogo]]" },
+				],
+			},
+			{ nombre: "Anillo", posesiones: [{ poseedor: "", capitulo: "[[Cap 01]]" }] },
+		],
+		lugares: [
+			{
+				nombre: "Puerto",
+				estados: [
+					{ capitulo: "[[Cap 05]]", descripcion: "Cerrado" },
+					{ capitulo: "[[Cap 05]]", descripcion: "Reabierto" },
+				],
+			},
+		],
+	};
+	assert.deepEqual(worldAt(sheets, 3).relaciones, [{ personaje: "Marcos", con: "[[Elena]]", tipo: "rival" }]);
+	assert.deepEqual(worldAt(sheets, 4).relaciones, []);
+	assert.deepEqual(worldAt(sheets, 5).posesiones, [{ objeto: "Llave", poseedor: "[[Abuelo]]" }]);
+	assert.deepEqual(worldAt(sheets, 6).posesiones, [{ objeto: "Llave", poseedor: "[[Marcos]]" }]);
+	assert.deepEqual(worldAt(sheets, 5).lugares, [{ lugar: "Puerto", estado: "Reabierto", desde: "[[Cap 05]]" }]);
+	assert.deepEqual(worldAt(sheets, 0), {
+		relaciones: [{ personaje: "Marcos", con: "[[Elena]]", tipo: "rival" }],
+		posesiones: [],
+		lugares: [],
+	});
+});
