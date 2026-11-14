@@ -1,6 +1,7 @@
 import { type Editor, Notice, Plugin, TFile, type Vault } from "obsidian";
 
 import { characterFolder, characterNote, parseCharacter, relationErrors } from "./characters";
+import { objectFolder, objectNote } from "./objects";
 import { placeFolder, placeNote } from "./places";
 import { BASE_RULES, patternRules } from "./linter";
 import { LintModal } from "./lint-modal";
@@ -84,6 +85,13 @@ export default class AtlasPlugin extends Plugin {
 			},
 		});
 		this.addCommand({
+			id: "new-object",
+			name: "Nuevo objeto",
+			editorCallback: (editor) => {
+				void this.newObject(editor.getSelection().trim());
+			},
+		});
+		this.addCommand({
 			id: "new-skill",
 			name: "Nueva skill de estilo",
 			editorCallback: (editor) => {
@@ -160,6 +168,29 @@ export default class AtlasPlugin extends Plugin {
 		}
 		await this.app.vault.create(path, placeNote(name));
 		new Notice("Lugar creado.");
+	}
+
+	private async newObject(name: string): Promise<void> {
+		if (name.length === 0) {
+			new Notice("Selecciona el nombre del objeto.");
+			return;
+		}
+		if (name.includes("/") || name.includes("\\")) {
+			new Notice("El nombre no puede incluir carpetas.");
+			return;
+		}
+		const active = this.app.workspace.getActiveFile();
+		const folder = objectFolder(active?.path ?? "");
+		const path = `${folder}/${name}.md`;
+		if (await this.app.vault.adapter.exists(path)) {
+			new Notice("Ese objeto ya existe.");
+			return;
+		}
+		if (!(await this.app.vault.adapter.exists(folder))) {
+			await this.app.vault.createFolder(folder);
+		}
+		await this.app.vault.create(path, objectNote(name));
+		new Notice("Objeto creado.");
 	}
 
 	private async newSkill(name: string): Promise<void> {
