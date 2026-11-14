@@ -41,9 +41,9 @@ export function chapterNumber(link: string | undefined): number | null {
 	if (!link) {
 		return null;
 	}
-	const digits = linkTarget(link).match(/\d+/g);
-	const last = digits?.[digits.length - 1];
-	return last === undefined ? null : Number(last);
+	// The chapter is the first number: `[[Cap 07 - parte 2]]` is chapter 7.
+	const first = linkTarget(link).match(/\d+/)?.[0];
+	return first === undefined ? null : Number(first);
 }
 
 export function buildGraph(characters: { name: string; relaciones: CharacterRelation[] }[]): RelationGraph {

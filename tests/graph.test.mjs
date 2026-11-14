@@ -32,6 +32,7 @@ test("el filtro por tipo oculta el resto", () => {
 test("el filtro por capítulo solo deja relaciones vigentes en N", () => {
 	assert.equal(chapterNumber("[[Cap 07]]"), 7);
 	assert.equal(chapterNumber("[[Prólogo]]"), null);
+	assert.equal(chapterNumber("[[Cap 07 - parte 2]]"), 7);
 	assert.deepEqual(pairs(filterGraph(GRAPH, { capitulo: 1 })), ["Elena-hermano-Marcos", "Marcos-rival-Iván"]);
 	assert.deepEqual(pairs(filterGraph(GRAPH, { capitulo: 5 })), ["Elena-hermano-Marcos", "Elena-amiga-Lucía"]);
 	assert.deepEqual(pairs(filterGraph(GRAPH, { capitulo: 7 })), ["Elena-hermano-Marcos", "Elena-rival-Iván"]);
