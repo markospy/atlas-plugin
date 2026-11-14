@@ -1,0 +1,7 @@
+desktop {"edges":4,"nodes":["Elena","Iván","Lucía","Marcos"],"labels":["hermano","rival","amiga","rival"]} no-errors
+tablet {"edges":4,"nodes":["Elena","Iván","Lucía","Marcos"],"labels":["hermano","rival","amiga","rival"]} no-errors
+mobile {"edges":4,"nodes":["Elena","Iván","Lucía","Marcos"],"labels":["hermano","rival","amiga","rival"]} no-errors
+ac2-tipo-rival-desktop {"edges":2,"nodes":["Elena","Iván","Lucía","Marcos"],"labels":["rival","rival"]} no-errors
+ac3-capitulo-3-desktop {"edges":3,"nodes":["Elena","Iván","Lucía","Marcos"],"labels":["hermano","amiga","rival"]} no-errors
+ac3-capitulo-7-desktop {"edges":2,"nodes":["Elena","Iván","Lucía","Marcos"],"labels":["hermano","rival"]} no-errors
+r2-otro-proyecto-desktop {"edges":1,"nodes":["Elena","Zoe"],"labels":["mentora"]} no-errors

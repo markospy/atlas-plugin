@@ -100,3 +100,8 @@ test("el grafo solo lee las fichas del proyecto activo", () => {
 	assert.deepEqual(forActive("Otra/Personajes/Elena.md"), ["Otra/Personajes/Elena.md"]);
 	assert.deepEqual(forActive(""), ["Personajes/Suelta.md"]);
 });
+
+test("un proyecto con nombre parecido no se cuela en el grafo", () => {
+	const paths = ["Novela/Personajes/Elena.md", "Novela/Personajes2/Iván.md", "Novela/Personajes/Secundarios/Lucía.md", "OtraNovela/Personajes/Marcos.md"];
+	assert.deepEqual(projectCharacterPaths(paths, "Novela/Personajes"), ["Novela/Personajes/Elena.md"]);
+});
