@@ -73,3 +73,35 @@ test("filtra skills por alcance personaje", () => {
 		["Sin adverbios en -mente en diálogos"],
 	);
 });
+
+test("qa: la skill se crea en Estilo/ del proyecto desde cualquier nota", () => {
+	assert.equal(skillFolder("Novela/Novela.md"), "Novela/Estilo");
+	assert.equal(skillFolder("Novela.md"), "Estilo");
+	assert.equal(skillFolder("Estilo/Otra.md"), "Estilo");
+	assert.equal(skillFolder("Manuscrito/Cap 01.md"), "Estilo");
+	const note = skillNote('Voz de "Marcos"');
+	assert.equal(parseSkill(note).nombre, 'Voz de "Marcos"');
+	assert.equal(note.split("\n")[0], "---");
+});
+
+test("qa: las tres severidades se leen y el patrón se oculta con verificación ia", () => {
+	for (const severidad of ["sugerencia", "aviso", "obligatoria"]) {
+		assert.equal(parseSkill(VOICE.replace("obligatoria", severidad)).severidad, severidad);
+	}
+	const ia = parseSkill(ADVERBS.replace("verificacion: patron", "verificacion: ia"));
+	assert.equal(ia.verificacion, "ia");
+	assert.equal("patron" in ia, false);
+	const quoted = parseSkill(ADVERBS.replace(/^patron: .*$/m, 'patron: "\\\\bya\\\\b"'));
+	assert.equal(quoted.patron, "\\bya\\b");
+	assert.equal(new RegExp(quoted.patron).test("ya no"), true);
+});
+
+test("qa: filtro por personaje con varios destinos y alcances con tilde", () => {
+	const both = parseSkill(VOICE.replace('aplica_a: ["[[Marcos]]"]', 'aplica_a: ["[[Marcos]]", "[[Elena]]"]'));
+	assert.deepEqual(both.aplica_a, ["[[Marcos]]", "[[Elena]]"]);
+	assert.equal(skillsFor([both], "personaje", "[[Elena]]").length, 1);
+	const chapter = parseSkill(VOICE.replace("alcance: personaje", "alcance: capítulo"));
+	assert.equal(chapter.alcance, "capítulo");
+	assert.deepEqual(skillsFor([chapter, both], "personaje").map((s) => s.alcance), ["personaje"]);
+	assert.equal(parseSkill(VOICE.replace("alcance: personaje", "alcance: libro")).alcance, "global");
+});
