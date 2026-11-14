@@ -192,3 +192,37 @@ test("frontmatter con saltos CRLF", () => {
 	assert.equal(index[0].nombre, "Elena");
 	assert.deepEqual(index[0].alias, ["Ele"]);
 });
+
+test("qa v2: lista de bloque seguida de otra lista no mezcla sus ítems en los alias", () => {
+	const sheet = `---
+nombre: "Elena Ruiz"
+alias:
+  - Ele
+relaciones:
+  - con: "[[Marcos]]"
+    tipo: hermano
+---
+`;
+	const index = buildEntityIndex("Novela", [
+		{ path: "Novela/Personajes/Elena.md", text: sheet },
+		{ path: "Novela/Manuscrito/Cap 01.md", text: "con: hermano, sin nadie más." },
+		{ path: "Novela/Manuscrito/Cap 02.md", text: "Ele sale." },
+	]);
+	assert.deepEqual(index[0].alias, ["Ele"]);
+	assert.deepEqual(index[0].escenas, ["Novela/Manuscrito/Cap 02.md"]);
+});
+
+test("qa v2: re-escanear tras quitar un alias de la ficha quita sus escenas", () => {
+	const scenes = [
+		{ path: "Novela/Manuscrito/Cap 01.md", text: "Ele sale." },
+		{ path: "Novela/Manuscrito/Cap 02.md", text: "Llega la Doctora." },
+	];
+	const withBoth = "---\nnombre: Elena\nalias:\n  - Ele\n  - la Doctora\n---\n";
+	const withOne = "---\nnombre: Elena\nalias:\n  - la Doctora\n---\n";
+	const first = buildEntityIndex("Novela", [{ path: "Novela/Personajes/Elena.md", text: withBoth }, ...scenes]);
+	assert.deepEqual(first[0].escenas, ["Novela/Manuscrito/Cap 01.md", "Novela/Manuscrito/Cap 02.md"]);
+	const again = buildEntityIndex("Novela", [{ path: "Novela/Personajes/Elena.md", text: withOne }, ...scenes]);
+	assert.equal(again.length, 1);
+	assert.deepEqual(again[0].alias, ["la Doctora"]);
+	assert.deepEqual(again[0].escenas, ["Novela/Manuscrito/Cap 02.md"]);
+});
