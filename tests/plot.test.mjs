@@ -46,3 +46,31 @@ test("la plantilla de trama trae las secciones y el esqueleto elegido", () => {
 	assert.match(plotNote("Novela", "viaje-del-heroe"), /^### La llamada a la aventura$/m);
 	assert.equal(plotFolder("Novela/Manuscrito/Cap 01.md"), "Novela/Trama");
 });
+
+test("la trama cae en la carpeta Trama del proyecto desde cualquier nota", () => {
+	assert.equal(plotFolder("Novela/Trama/Principal.md"), "Novela/Trama");
+	assert.equal(plotFolder("Trama/Principal.md"), "Trama");
+	assert.equal(plotFolder("Manuscrito/Cap 01.md"), "Trama");
+	assert.equal(plotFolder("Novela/Notas.md"), "Novela/Trama");
+	assert.equal(plotFolder(""), "Trama");
+});
+
+test("una escena recién preparada se lee vacía y no confunde claves parecidas", () => {
+	const scene = `---
+objetivos: "no es objetivo"
+objetivo: ""
+conflicto: Marcos la esconde
+resultado:
+pov: "[[Elena]]"
+---
+subtrama: "fuera del frontmatter"
+`;
+	assert.deepEqual(parseScene(scene), {
+		objetivo: "",
+		conflicto: "Marcos la esconde",
+		resultado: "",
+		pov: "[[Elena]]",
+		subtrama: "",
+	});
+	assert.equal(parseScene(plotNote("Novela", "tres-actos")).pov, "");
+});
