@@ -1,0 +1,60 @@
+
+> atlas@0.1.0 test
+> node --experimental-strip-types --test tests/*.test.mjs
+
+✔ npm run build produce main.js y onload no escribe en consola (3679.272809ms)
+(node:3101155) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///home/marcos/OtherProjects/atlas-plugin/.claude/worktrees/issue-8-qa/src/characters.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /home/marcos/OtherProjects/atlas-plugin/.claude/worktrees/issue-8-qa/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ parsea alias y relaciones temporales (4.643609ms)
+✔ una relación sin wikilink se rechaza y la plantilla nace vacía (1.053749ms)
+(node:3101161) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///home/marcos/OtherProjects/atlas-plugin/.claude/worktrees/issue-8-qa/src/characters.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /home/marcos/OtherProjects/atlas-plugin/.claude/worktrees/issue-8-qa/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ nodos personaje y aristas tipadas desde las fichas (4.372648ms)
+✔ el filtro por tipo oculta el resto (0.436368ms)
+✔ el filtro por capítulo solo deja relaciones vigentes en N (0.430085ms)
+✔ el círculo coloca cada nodo dentro del lienzo (0.660512ms)
+✔ los enlaces con alias, encabezado o sin corchetes apuntan a la ficha (0.377498ms)
+✔ una relación de un solo capítulo solo vale en ese capítulo (0.469919ms)
+✔ un límite sin número de capítulo queda abierto (0.563593ms)
+✔ sin filtro, o con tipo vacío, se ven todas las aristas (0.786556ms)
+✔ el círculo centra un nodo solo y no falla sin nodos (0.465962ms)
+✔ un enlace con carpeta apunta a la ficha, no a un nodo fantasma (0.539299ms)
+✔ el grafo solo lee las fichas del proyecto activo (0.464269ms)
+✔ un proyecto con nombre parecido no se cuela en el grafo (0.18945ms)
+✔ el capítulo sale de la nota del enlace, no de la carpeta ni de la escena (1.447417ms)
+✔ manifest declara id, versión y minAppVersion para plugins de la comunidad (12.194616ms)
+(node:3101168) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///home/marcos/OtherProjects/atlas-plugin/.claude/worktrees/issue-8-qa/src/markers.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /home/marcos/OtherProjects/atlas-plugin/.claude/worktrees/issue-8-qa/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ el parser encuentra TK e INVESTIGAR y los pierde al borrarlos (5.012151ms)
+✔ inserta el marcador en el cursor (0.554334ms)
+(node:3101200) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///home/marcos/OtherProjects/atlas-plugin/.claude/worktrees/issue-8-qa/src/places.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /home/marcos/OtherProjects/atlas-plugin/.claude/worktrees/issue-8-qa/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ lee el lugar padre y un cambio de estado (7.744575ms)
+(node:3101209) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///home/marcos/OtherProjects/atlas-plugin/.claude/worktrees/issue-8-qa/src/providers.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /home/marcos/OtherProjects/atlas-plugin/.claude/worktrees/issue-8-qa/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ localhost pasa y un host no listado falla (2.087982ms)
+✔ la nube solo entra con opt-in y el host en la lista blanca (0.811932ms)
+✔ el README explica cómo compilar y cargar el plugin en local (16.904637ms)
+(node:3101230) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///home/marcos/OtherProjects/atlas-plugin/.claude/worktrees/issue-8-qa/src/vault.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /home/marcos/OtherProjects/atlas-plugin/.claude/worktrees/issue-8-qa/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ crea el árbol y el índice Longform sin pisar lo que ya existe (2.902018ms)
+ℹ tests 24
+ℹ suites 0
+ℹ pass 24
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 3871.00346

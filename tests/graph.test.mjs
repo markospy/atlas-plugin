@@ -106,3 +106,13 @@ test("un proyecto con nombre parecido no se cuela en el grafo", () => {
 	const paths = ["Novela/Personajes/Elena.md", "Novela/Personajes2/Iván.md", "Novela/Personajes/Secundarios/Lucía.md", "OtraNovela/Personajes/Marcos.md"];
 	assert.deepEqual(projectCharacterPaths(paths, "Novela/Personajes"), ["Novela/Personajes/Elena.md"]);
 });
+
+test("el capítulo sale de la nota del enlace, no de la carpeta ni de la escena", () => {
+	assert.equal(chapterNumber("[[Libro 2/Cap 07]]"), 7);
+	assert.equal(chapterNumber("[[Cap 07 - escena 3|parte 2]]"), 7);
+	const graph = buildGraph([{ name: "Elena", relaciones: [{ con: "[[Iván]]", tipo: "rival", desde: "[[Libro 2/Cap 07 - parte 3]]" }] }]);
+	assert.deepEqual(pairs(filterGraph(graph, { capitulo: 2 })), []);
+	assert.deepEqual(pairs(filterGraph(graph, { capitulo: 3 })), []);
+	assert.deepEqual(pairs(filterGraph(graph, { capitulo: 6 })), []);
+	assert.deepEqual(pairs(filterGraph(graph, { capitulo: 7 })), ["Elena-rival-Iván"]);
+});
