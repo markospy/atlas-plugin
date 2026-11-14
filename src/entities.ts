@@ -1,3 +1,5 @@
+import { frontmatterBody, list, scalar } from "./frontmatter.ts";
+
 export type EntityKind = "personaje" | "lugar" | "objeto";
 
 export interface EntityEntry {
@@ -32,7 +34,7 @@ export function buildEntityIndex(project: string, notes: VaultNote[]): EntityEnt
 			.sort((a, b) => byPath(a.path, b.path));
 		for (const sheet of sheets) {
 			const frontmatter = frontmatterBody(sheet.text);
-			const alias = inlineList(frontmatter, "alias");
+			const alias = list(frontmatter, "alias");
 			const nombre = scalar(frontmatter, "nombre") || noteTitle(sheet.path);
 			const terms = [nombre, ...alias];
 			index.push({
@@ -78,35 +80,4 @@ function byPath(a: string, b: string): number {
 
 function noteTitle(path: string): string {
 	return path.slice(path.lastIndexOf("/") + 1).replace(/\.md$/i, "");
-}
-
-function frontmatterBody(note: string): string {
-	if (!note.startsWith("---\n")) {
-		return "";
-	}
-	const end = note.indexOf("\n---", 3);
-	return end === -1 ? "" : note.slice(4, end);
-}
-
-function scalar(frontmatter: string, key: string): string {
-	const match = new RegExp(`^${key}:\\s*(.*)$`, "m").exec(frontmatter);
-	return match ? unquote(match[1] ?? "") : "";
-}
-
-function inlineList(frontmatter: string, key: string): string[] {
-	const match = new RegExp(`^${key}:\\s*\\[(.*)\\]\\s*$`, "m").exec(frontmatter);
-	const inner = match?.[1] ?? "";
-	return inner.trim().length === 0 ? [] : inner.split(",").map((item) => unquote(item));
-}
-
-function unquote(value: string): string {
-	const trimmed = value.trim();
-	if (trimmed.startsWith('"') && trimmed.endsWith('"')) {
-		try {
-			return JSON.parse(trimmed) as string;
-		} catch {
-			return trimmed.slice(1, -1);
-		}
-	}
-	return trimmed;
 }

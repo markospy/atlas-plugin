@@ -148,3 +148,47 @@ alias: ["Señora Ruiz", "Ele"]
 	assert.deepEqual(index[0].escenas, ["Novela/Manuscrito/Cap 01.md"]);
 	assert.deepEqual(index[1].escenas, ["Novela/Manuscrito/Cap 02.md"]);
 });
+
+test("R1: alias en lista YAML de bloque (panel Propiedades de Obsidian)", () => {
+	const sheet = `---
+tipo: personaje
+nombre: "Elena Ruiz"
+alias:
+  - la Doctora
+  - "Ele"
+relaciones: []
+---
+`;
+	const index = buildEntityIndex("Novela", [
+		{ path: "Novela/Personajes/Elena.md", text: sheet },
+		{ path: "Novela/Manuscrito/Cap 01.md", text: "Ele sale." },
+		{ path: "Novela/Manuscrito/Cap 02.md", text: "Llega la Doctora." },
+		{ path: "Novela/Manuscrito/Cap 03.md", text: "Nadie." },
+	]);
+	assert.deepEqual(index[0].alias, ["la Doctora", "Ele"]);
+	assert.deepEqual(index[0].escenas, ["Novela/Manuscrito/Cap 01.md", "Novela/Manuscrito/Cap 02.md"]);
+});
+
+test("R2: alias entre comillas con coma no se parte", () => {
+	const sheet = `---
+nombre: Elena
+alias: ["Ruiz, Elena", 'la Doctora', Ele]
+---
+`;
+	const index = buildEntityIndex("Novela", [
+		{ path: "Novela/Personajes/Elena.md", text: sheet },
+		{ path: "Novela/Manuscrito/Cap 01.md", text: "Firmado: Ruiz, Elena." },
+	]);
+	assert.deepEqual(index[0].alias, ["Ruiz, Elena", "la Doctora", "Ele"]);
+	assert.deepEqual(index[0].escenas, ["Novela/Manuscrito/Cap 01.md"]);
+});
+
+test("frontmatter con saltos CRLF", () => {
+	const sheet = "---\r\nnombre: Elena\r\nalias:\r\n  - Ele\r\n---\r\n";
+	const index = buildEntityIndex("Novela", [
+		{ path: "Novela/Personajes/X.md", text: sheet },
+		{ path: "Novela/Manuscrito/Cap 01.md", text: "Ele sale." },
+	]);
+	assert.equal(index[0].nombre, "Elena");
+	assert.deepEqual(index[0].alias, ["Ele"]);
+});
