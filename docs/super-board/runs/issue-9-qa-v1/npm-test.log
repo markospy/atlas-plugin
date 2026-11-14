@@ -1,0 +1,71 @@
+
+> atlas@0.1.0 test
+> node --experimental-strip-types --test tests/*.test.mjs
+
+✔ npm run build produce main.js y onload no escribe en consola (5965.926894ms)
+(node:3101311) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///home/marcos/OtherProjects/atlas-plugin/.claude/worktrees/issue-9-qa/src/characters.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /home/marcos/OtherProjects/atlas-plugin/.claude/worktrees/issue-9-qa/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ parsea alias y relaciones temporales (4.969262ms)
+✔ una relación sin wikilink se rechaza y la plantilla nace vacía (3.792955ms)
+✔ manifest declara id, versión y minAppVersion para plugins de la comunidad (20.13885ms)
+(node:3101323) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///home/marcos/OtherProjects/atlas-plugin/.claude/worktrees/issue-9-qa/src/markers.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /home/marcos/OtherProjects/atlas-plugin/.claude/worktrees/issue-9-qa/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ el parser encuentra TK e INVESTIGAR y los pierde al borrarlos (3.815768ms)
+✔ inserta el marcador en el cursor (0.577859ms)
+(node:3101331) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///home/marcos/OtherProjects/atlas-plugin/.claude/worktrees/issue-9-qa/src/objects.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /home/marcos/OtherProjects/atlas-plugin/.claude/worktrees/issue-9-qa/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ lee la ficha y responde quién tiene el objeto en cada capítulo (4.020748ms)
+✔ nadie tiene el objeto antes de su primera posesión (0.803866ms)
+✔ la plantilla trae descripción, origen, valores y función (1.124239ms)
+✔ qa: posesiones desordenadas y capítulo numérico siguen la línea de tiempo (0.406071ms)
+✔ qa: dos cambios en el mismo capítulo se quedan con el último anotado (0.300335ms)
+✔ qa: Objetos/ en la raíz y desde una nota suelta del proyecto (0.234424ms)
+(node:3101360) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///home/marcos/OtherProjects/atlas-plugin/.claude/worktrees/issue-9-qa/src/places.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /home/marcos/OtherProjects/atlas-plugin/.claude/worktrees/issue-9-qa/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ lee el lugar padre y un cambio de estado (3.676831ms)
+(node:3101370) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///home/marcos/OtherProjects/atlas-plugin/.claude/worktrees/issue-9-qa/src/providers.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /home/marcos/OtherProjects/atlas-plugin/.claude/worktrees/issue-9-qa/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ localhost pasa y un host no listado falla (2.82756ms)
+✔ la nube solo entra con opt-in y el host en la lista blanca (0.788588ms)
+✔ el README explica cómo compilar y cargar el plugin en local (21.83691ms)
+(node:3101378) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///home/marcos/OtherProjects/atlas-plugin/.claude/worktrees/issue-9-qa/src/style.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /home/marcos/OtherProjects/atlas-plugin/.claude/worktrees/issue-9-qa/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ la plantilla trae frontmatter completo y secciones (6.739376ms)
+✔ severidades válidas y patrón expuesto solo en verificación por patrón (1.964975ms)
+✔ filtra skills por alcance personaje (0.695486ms)
+✔ qa: la skill se crea en Estilo/ del proyecto desde cualquier nota (0.397876ms)
+✔ qa: las tres severidades se leen y el patrón se oculta con verificación ia (1.081219ms)
+✔ qa: filtro por personaje con varios destinos y alcances con tilde (0.684517ms)
+(node:3101395) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///home/marcos/OtherProjects/atlas-plugin/.claude/worktrees/issue-9-qa/src/vault.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /home/marcos/OtherProjects/atlas-plugin/.claude/worktrees/issue-9-qa/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ crea el árbol y el índice Longform sin pisar lo que ya existe (3.648448ms)
+(node:3101405) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///home/marcos/OtherProjects/atlas-plugin/.claude/worktrees/issue-9-qa/src/characters.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /home/marcos/OtherProjects/atlas-plugin/.claude/worktrees/issue-9-qa/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ devuelve las relaciones vigentes en el capítulo N (3.806821ms)
+✔ incluye el poseedor de cada objeto rastreado en N (0.660762ms)
+✔ incluye el estado de cada lugar con un cambio en o antes de N (0.456715ms)
+✔ bordes: empate en el mismo capítulo, orden libre, capítulo ilegible y poseedor vacío (3.648638ms)
+ℹ tests 27
+ℹ suites 0
+ℹ pass 27
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 6121.100119
