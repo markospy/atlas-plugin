@@ -17,11 +17,13 @@ test("hay al menos cinco reglas base, todas con mensaje y severidad aviso", () =
 test("raya: el guion o la raya con espacio no abren diálogo", () => {
 	assert.deepEqual(ids("- Hola.\n– Adiós.\n— Bien.\n—Así sí."), ["1:raya-dialogo", "2:raya-dialogo", "3:raya-dialogo"]);
 	assert.deepEqual(ids("Una lista - con guion en medio."), []);
+	assert.deepEqual(ids("Fin de escena.\n\n---\n\nOtra escena.\n* * *\n___"), []);
 });
 
 test("gerundios: tres o más en la misma frase", () => {
 	assert.deepEqual(ids("Salió corriendo, mirando atrás y temiendo lo peor."), ["1:gerundios-encadenados"]);
 	assert.deepEqual(ids("Salió corriendo. Miró atrás cuando pudo, temiendo lo peor."), []);
+	assert.deepEqual(ids("Iba dando, yendo y corriendo."), ["1:gerundios-encadenados"]);
 });
 
 test("dijo: dos veces en la misma línea o en líneas seguidas", () => {

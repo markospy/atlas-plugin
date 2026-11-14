@@ -22,6 +22,7 @@ export interface LintFinding {
 }
 
 const IGNORE = /%%\s*atlas-ignorar:\s*([^%]*)%%/g;
+const SCENE_BREAK = /^\s*([-*_])(\s*\1){2,}\s*$/;
 const NOT_GERUNDS = new Set(["cuando", "mando", "bando", "blando", "comando", "nefando", "fernando", "orlando", "rolando"]);
 const NOT_ADVERBS = new Set(["mente", "demente", "clemente", "inclemente", "vehemente"]);
 const DEQUEISMO =
@@ -50,7 +51,7 @@ export const BASE_RULES: LintRule[] = [
 		id: "raya-dialogo",
 		message: "Diálogo: abre con raya (—) pegada al texto, sin guion ni espacio.",
 		severidad: "aviso",
-		find: (line) => all(/^\s*(?:[-–]\s*|—\s+)(?=\S)/gu, line),
+		find: (line) => (SCENE_BREAK.test(line) ? [] : all(/^\s*(?:[-–]\s*|—\s+)(?=\S)/gu, line)),
 	},
 	{
 		id: "gerundios-encadenados",
@@ -61,7 +62,7 @@ export const BASE_RULES: LintRule[] = [
 			for (const sentence of all(/[^.!?…]+/gu, line)) {
 				const gerunds = words(sentence.text, sentence.index).filter((word) => {
 					const lower = word.text.toLowerCase();
-					return /(?:ando|iendo|yendo)$/.test(lower) && lower.length > 5 && !NOT_GERUNDS.has(lower);
+					return /(?:ando|iendo|yendo)$/.test(lower) && lower.length > 4 && !NOT_GERUNDS.has(lower);
 				});
 				if (gerunds.length >= 3 && gerunds[0]) {
 					found.push(gerunds[0]);
