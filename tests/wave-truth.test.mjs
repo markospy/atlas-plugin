@@ -134,3 +134,47 @@ test("resultado done con headSha vacío → INCONCLUSIVE", async () => {
 	assert.doesNotMatch(review.prompt, /SCORED/);
 	assert.match(review.prompt, /MUST NOT merge/);
 });
+
+// QA #47 · v2 — edge cases.
+test("qa v2: una tarjeta que falla QA no lanza truth-check ni Reviewer", async () => {
+	const calls = [];
+	const agent = async (prompt, opts) => {
+		calls.push({ prompt, ...opts });
+		if (opts.label.startsWith("qa:")) return { status: "bounced", column: "Ready", detail: "fail" };
+		throw new Error(`unexpected agent ${opts.label}`);
+	};
+	const args = {
+		configPath: ".claude/super-board/configs/atlas-plugin.json",
+		cards: [{ number: 9, status: "QA", title: "t", lane: "qa", labels: ["bug"] }],
+	};
+	const out = await wave(args, agent, pipeline, () => {});
+	assert.deepEqual(calls.map((c) => c.label), ["qa:#9"]);
+	assert.equal(out.cards[0].finalStatus, "bounced");
+});
+
+test("qa v2: los agentes de truth-check son independientes (sin escrituras)", async () => {
+	const { calls } = await runWave([done(90), done(90)]);
+	for (const c of calls.filter((x) => x.label.startsWith("truth:"))) {
+		assert.match(c.prompt, /independent of the Reviewer/);
+		assert.match(c.prompt, /post no GitHub comments, move no cards, push nothing/);
+		assert.deepEqual(c.schema.required, ["status", "headSha", "detail"]);
+	}
+});
+
+test("qa v2: INCONCLUSIVE + Reviewer que bloquea queda blocked, no failed", async () => {
+	const { out } = await runWave([null, done(90)]);
+	assert.equal(out.cards[0].finalStatus, "blocked");
+	assert.match(out.cards[0].lanesRun, /truth:inconclusive → review:blocked/);
+});
+
+test("qa v2: SKIPPED pide al Reviewer bloquear si ve el gate disparado", async () => {
+	const skipped = { status: "skipped", detail: "3 líneas" };
+	const { review } = await runWave([skipped, skipped]);
+	assert.match(review.prompt, /gate IS triggered.*do not merge: Block 🛡 truth-check inconclusive/);
+});
+
+test("qa v2: SCORED usa el mínimo de las dos confianzas", async () => {
+	const { review } = await runWave([done(60), done(95)]);
+	assert.match(review.prompt, /SCORED 60\/100/);
+	assert.doesNotMatch(review.prompt, /SCORED 95/);
+});
