@@ -2,6 +2,16 @@ import { Notice, Plugin, TFile, type Vault } from "obsidian";
 
 import { characterFolder, characterNote, parseCharacter, relationErrors } from "./characters";
 import { placeFolder, placeNote } from "./places";
+import {
+	chapterNumber,
+	knowledgeErrors,
+	memoryFolder,
+	memoryNote,
+	memoryNoteName,
+	parseMemory,
+	READER,
+	whatKnows,
+} from "./memory";
 import { MARKER_VIEW, MarkerView } from "./marker-view";
 import { DEFAULT_PROVIDER_SETTINGS, type ProviderSettings } from "./providers";
 import { AtlasSettingTab } from "./settings";
@@ -81,6 +91,20 @@ export default class AtlasPlugin extends Plugin {
 			},
 		});
 		this.addCommand({
+			id: "new-memory",
+			name: "Nueva memoria del capítulo",
+			callback: () => {
+				void this.newMemory();
+			},
+		});
+		this.addCommand({
+			id: "what-knows",
+			name: "Qué sabe en este capítulo",
+			editorCallback: (editor) => {
+				void this.whatKnowsHere(editor.getSelection().trim() || READER);
+			},
+		});
+		this.addCommand({
 			id: "new-project",
 			name: "Nuevo proyecto Atlas",
 			callback: () => {
@@ -143,6 +167,43 @@ export default class AtlasPlugin extends Plugin {
 		}
 		await this.app.vault.create(path, placeNote(name));
 		new Notice("Lugar creado.");
+	}
+
+	private async newMemory(): Promise<void> {
+		const active = this.app.workspace.getActiveFile();
+		const chapter = chapterNumber(active?.path ?? "");
+		if (!active || chapter === null) {
+			new Notice("Abre un capítulo (Cap NN).");
+			return;
+		}
+		const folder = memoryFolder(active.path);
+		const path = `${folder}/${memoryNoteName(chapter)}.md`;
+		if (await this.app.vault.adapter.exists(path)) {
+			new Notice("Esa memoria ya existe.");
+			return;
+		}
+		if (!(await this.app.vault.adapter.exists(folder))) {
+			await this.app.vault.createFolder(folder);
+		}
+		await this.app.vault.create(path, memoryNote(chapter));
+		new Notice("Memoria creada.");
+	}
+
+	private async whatKnowsHere(who: string): Promise<void> {
+		const active = this.app.workspace.getActiveFile();
+		const chapter = chapterNumber(active?.path ?? "");
+		if (!active || chapter === null) {
+			new Notice("Abre un capítulo (Cap NN).");
+			return;
+		}
+		const folder = `${memoryFolder(active.path)}/`;
+		const notes = this.app.vault.getMarkdownFiles().filter((file) => file.path.startsWith(folder));
+		const memories = await Promise.all(notes.map(async (file) => parseMemory(await this.app.vault.cachedRead(file))));
+		const errors = memories.flatMap(knowledgeErrors);
+		const known = whatKnows(memories, who, chapter);
+		const lines = known.map((fact) => `${fact.estado}: ${fact.texto}`);
+		const summary = lines.length > 0 ? lines.join("\n") : "Nada registrado.";
+		new Notice(`${who} en cap. ${chapter}\n${summary}${errors.length > 0 ? `\n${errors.join("\n")}` : ""}`);
 	}
 
 	async saveSettings(): Promise<void> {
