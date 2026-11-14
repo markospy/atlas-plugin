@@ -1,0 +1,5 @@
+
+> atlas@0.1.0 build
+> tsc -noEmit -skipLibCheck && node esbuild.config.mjs production
+
+exit=0
