@@ -62,3 +62,42 @@ test("la plantilla trae descripción, origen, valores y función", () => {
 	assert.equal(objectFolder("Novela/Manuscrito/Cap 01.md"), "Novela/Objetos");
 	assert.equal(objectFolder("Novela/Objetos/Anillo.md"), "Novela/Objetos");
 });
+
+const SHUFFLED = `---
+tipo: objeto
+nombre: "Llave"
+posesiones:
+  - poseedor: "[[Marcos]]"
+    capitulo: "[[Cap 09]]"
+  - poseedor: "[[Abuelo]]"
+    capitulo: "[[Cap 01]]"
+  - poseedor: "[[Prólogo sin número]]"
+    capitulo: "[[Prólogo]]"
+  - poseedor: "[[Elena]]"
+    capitulo: 4
+otro: x
+---
+`;
+
+test("qa: posesiones desordenadas y capítulo numérico siguen la línea de tiempo", () => {
+	const sheet = parseObject(SHUFFLED);
+	assert.equal(sheet.posesiones.length, 4);
+	assert.equal(holderAt(sheet, 0), "");
+	assert.equal(holderAt(sheet, 3), "[[Abuelo]]");
+	assert.equal(holderAt(sheet, 4), "[[Elena]]");
+	assert.equal(holderAt(sheet, 8), "[[Elena]]");
+	assert.equal(holderAt(sheet, 9), "[[Marcos]]");
+});
+
+test("qa: dos cambios en el mismo capítulo se quedan con el último anotado", () => {
+	const sheet = parseObject(REVOLVER.replace('"[[Cap 09]]"', '"[[Cap 04]]"'));
+	assert.equal(holderAt(sheet, 4), "[[Marcos]]");
+	assert.equal(holderAt(sheet, 3), "[[Abuelo]]");
+});
+
+test("qa: Objetos/ en la raíz y desde una nota suelta del proyecto", () => {
+	assert.equal(objectFolder("Objetos/Anillo.md"), "Objetos");
+	assert.equal(objectFolder("Manuscrito/Cap 01.md"), "Objetos");
+	assert.equal(objectFolder("Novela/Notas.md"), "Novela/Objetos");
+	assert.equal(objectFolder(""), "Objetos");
+});
