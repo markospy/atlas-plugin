@@ -49,3 +49,7 @@ Selecciona el nombre y ejecuta **Nueva skill de estilo**. Crea `Estilo/<nombre>.
 ## Marcadores
 
 En el editor, **Insertar [TK]** e **Insertar [INVESTIGAR]** dejan el marcador en el cursor. Asigna el atajo en **Settings → Hotkeys**. **Marcadores del manuscrito** abre el panel: lista los `[TK]` y `[INVESTIGAR: …]` de las notas bajo `Manuscrito/` y salta a la línea. Si borras el marcador del texto, desaparece del panel al volver a ejecutar el comando.
+
+## Índice de entidades
+
+Con una nota del proyecto abierta, ejecuta **Índice de entidades (escanear manuscrito)**. El panel lista los personajes, lugares y objetos del proyecto y, bajo cada ficha, las escenas de `Manuscrito/` que la nombran por `nombre` o por cualquiera de sus `alias` (palabra completa, sin distinguir mayúsculas). El escaneo es local, sin IA, y solo corre cuando ejecutas el comando: vuelve a ejecutarlo tras editar y el índice se rehace sin duplicar escenas.

@@ -1,3 +1,5 @@
+import { frontmatterBody, list, scalar, unquote } from "./frontmatter.ts";
+
 export interface CharacterRelation {
 	con: string;
 	tipo: string;
@@ -74,49 +76,9 @@ export function parseCharacter(note: string): CharacterSheet {
 	const frontmatter = frontmatterBody(note);
 	return {
 		nombre: scalar(frontmatter, "nombre"),
-		alias: inlineList(frontmatter, "alias"),
+		alias: list(frontmatter, "alias"),
 		relaciones: parseRelations(frontmatter),
 	};
-}
-
-function frontmatterBody(note: string): string {
-	if (!note.startsWith("---\n")) {
-		return "";
-	}
-	const end = note.indexOf("\n---", 3);
-	return end === -1 ? "" : note.slice(4, end);
-}
-
-function scalar(frontmatter: string, key: string): string {
-	const match = new RegExp(`^${key}:\\s*(.*)$`, "m").exec(frontmatter);
-	if (!match) {
-		return "";
-	}
-	return unquote(match[1] ?? "");
-}
-
-function unquote(value: string): string {
-	const trimmed = value.trim();
-	if (trimmed.startsWith('"') && trimmed.endsWith('"')) {
-		try {
-			return JSON.parse(trimmed) as string;
-		} catch {
-			return trimmed.slice(1, -1);
-		}
-	}
-	return trimmed;
-}
-
-function inlineList(frontmatter: string, key: string): string[] {
-	const match = new RegExp(`^${key}:\\s*\\[(.*)\\]\\s*$`, "m").exec(frontmatter);
-	if (!match) {
-		return [];
-	}
-	const inner = match[1] ?? "";
-	if (inner.trim().length === 0) {
-		return [];
-	}
-	return inner.split(",").map((item) => unquote(item));
 }
 
 function parseRelations(frontmatter: string): CharacterRelation[] {

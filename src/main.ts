@@ -1,6 +1,7 @@
 import { Notice, Plugin, TFile, type Vault } from "obsidian";
 
 import { characterFolder, characterNote, parseCharacter, relationErrors } from "./characters";
+import { ENTITY_VIEW, EntityView } from "./entity-view";
 import { objectFolder, objectNote } from "./objects";
 import { placeFolder, placeNote } from "./places";
 import { MARKER_VIEW, MarkerView } from "./marker-view";
@@ -39,6 +40,7 @@ export default class AtlasPlugin extends Plugin {
 		};
 		this.addSettingTab(new AtlasSettingTab(this.app, this));
 		this.registerView(MARKER_VIEW, (leaf) => new MarkerView(leaf));
+		this.registerView(ENTITY_VIEW, (leaf) => new EntityView(leaf));
 		this.addCommand({
 			id: "insert-tk",
 			name: "Insertar [TK]",
@@ -58,6 +60,13 @@ export default class AtlasPlugin extends Plugin {
 			name: "Marcadores del manuscrito",
 			callback: () => {
 				void this.openMarkers();
+			},
+		});
+		this.addCommand({
+			id: "scan-entities",
+			name: "Índice de entidades (escanear manuscrito)",
+			callback: () => {
+				void this.openEntities();
 			},
 		});
 		this.addCommand({
@@ -222,6 +231,21 @@ export default class AtlasPlugin extends Plugin {
 		}
 		await this.app.workspace.revealLeaf(leaf);
 		if (leaf.view instanceof MarkerView) {
+			await leaf.view.refresh();
+		}
+	}
+
+	private async openEntities(): Promise<void> {
+		const existing = this.app.workspace.getLeavesOfType(ENTITY_VIEW);
+		const leaf = existing[0] ?? this.app.workspace.getRightLeaf(false);
+		if (!leaf) {
+			return;
+		}
+		if (existing.length === 0) {
+			await leaf.setViewState({ type: ENTITY_VIEW, active: false });
+		}
+		await this.app.workspace.revealLeaf(leaf);
+		if (leaf.view instanceof EntityView) {
 			await leaf.view.refresh();
 		}
 	}

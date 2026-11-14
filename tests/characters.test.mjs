@@ -44,3 +44,16 @@ test("una relación sin wikilink se rechaza y la plantilla nace vacía", () => {
 	assert.match(note, /## Psicología/);
 	assert.deepEqual(parseCharacter(note).relaciones, []);
 });
+
+test("parsea alias en lista YAML de bloque", () => {
+	const sheet = parseCharacter(`---
+nombre: Elena
+alias:
+  - la Doctora
+  - "Ruiz, Elena"
+relaciones: []
+---
+`);
+	assert.deepEqual(sheet.alias, ["la Doctora", "Ruiz, Elena"]);
+	assert.deepEqual(sheet.relaciones, []);
+});
