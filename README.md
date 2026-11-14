@@ -41,3 +41,12 @@ Selecciona el nombre y ejecuta **Nuevo lugar**. Crea `Lugares/<nombre>.md` con v
 ## Marcadores
 
 En el editor, **Insertar [TK]** e **Insertar [INVESTIGAR]** dejan el marcador en el cursor. Asigna el atajo en **Settings → Hotkeys**. **Marcadores del manuscrito** abre el panel: lista los `[TK]` y `[INVESTIGAR: …]` de las notas bajo `Manuscrito/` y salta a la línea. Si borras el marcador del texto, desaparece del panel al volver a ejecutar el comando.
+
+## Memoria
+
+Con un capítulo abierto (`Cap NN`), **Nueva memoria del capítulo** crea `_Memoria/Cap NN.md` con dos listas en el frontmatter, vacías y opcionales:
+
+- `hechos`: cada uno con `id`, `texto` y `verdad` (`true` o `false`).
+- `conocimiento`: cada entrada con `hecho` (el `id`), `quien` (`lector` o `[[Personaje]]`) y `estado`: `ignora`, `sospecha`, `cree-falso` o `sabe`.
+
+**Qué sabe en este capítulo** responde por el texto seleccionado (`[[Elena]]`) o, sin selección, por el lector. Suma las memorias hasta ese capítulo y, si un hecho cambia de estado, gana el más reciente. Avisa de estados no válidos.
