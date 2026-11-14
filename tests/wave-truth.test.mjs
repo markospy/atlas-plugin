@@ -85,3 +85,45 @@ test("halted en el truth-check detiene la wave sin Reviewer", async () => {
 	assert.equal(out.halted, true);
 	assert.equal(out.cards[0].finalStatus, "halted");
 });
+
+// QA #47 — edge cases.
+test("qa: una tarjeta que pasa QA → Review en la misma wave hace truth-check antes del Reviewer", async () => {
+	const calls = [];
+	const agent = async (prompt, opts) => {
+		calls.push({ prompt, ...opts });
+		if (opts.label.startsWith("qa:")) return { status: "advanced", column: "Review", detail: "pass" };
+		if (opts.label.startsWith("truth:")) return done(85);
+		if (opts.label.startsWith("review:")) return { status: "blocked", column: "Blocked", detail: "x" };
+		throw new Error(`unexpected agent ${opts.label}`);
+	};
+	const args = {
+		configPath: ".claude/super-board/configs/atlas-plugin.json",
+		cards: [{ number: 8, status: "QA", title: "t", lane: "qa", labels: ["bug"] }],
+	};
+	const out = await wave(args, agent, pipeline, () => {});
+	const labels = calls.map((c) => c.label);
+	assert.equal(labels[0], "qa:#8");
+	assert.deepEqual(labels.slice(1, 3).sort(), ["truth:Code-grounder:#8", "truth:Historian:#8"]);
+	assert.equal(labels[3], "review:#8");
+	assert.match(calls[3].prompt, /SCORED 85\/100/);
+	assert.match(out.cards[0].lanesRun, /qa:advanced → truth:scored → review:blocked/);
+});
+
+test("qa: un agente salta el gate y el otro puntúa → INCONCLUSIVE", async () => {
+	const { review } = await runWave([{ status: "skipped", detail: "3 líneas" }, done(90)]);
+	assert.match(review.prompt, /INCONCLUSIVE/);
+	assert.match(review.prompt, /MUST NOT merge/);
+});
+
+test("qa: resultado done sin headSha → INCONCLUSIVE (no se puede fijar el head)", async () => {
+	const noHead = { status: "done", pr: 44, confidence: 90, findings: [], detail: "ok" };
+	const { review } = await runWave([noHead, noHead]);
+	assert.doesNotMatch(review.prompt, /at head undefined/);
+	assert.match(review.prompt, /INCONCLUSIVE/);
+	assert.match(review.prompt, /MUST NOT merge/);
+});
+
+test("qa: resultado sin confidence entera → INCONCLUSIVE", async () => {
+	const { review } = await runWave([done(90), { ...done(90), confidence: "90" }]);
+	assert.match(review.prompt, /INCONCLUSIVE/);
+});
