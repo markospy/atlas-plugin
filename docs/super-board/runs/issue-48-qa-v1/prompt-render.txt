@@ -1,0 +1,9 @@
+preflight:#1	language=true
+classify:#1	language=false
+build:#1	language=true
+qa:#1	language=true
+review:#1	language=true
+qa:#2	language=true
+review:#2	language=true
+review:#3	language=true
+Language: read "language" in .claude/super-board/configs/atlas-plugin.json. Set → write all comment, Block template, PR body and ticket prose in it, keeping [role] [label], Reason tag:, blocked-by:, approval-request:, done and the other machine tokens verbatim (writing-standard.md → "6 · Language"). Absent → English.
