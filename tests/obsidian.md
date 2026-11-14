@@ -42,3 +42,9 @@ Prepara el plugin una vez:
 - [ ] En una nota del manuscrito, **Insertar [TK]** y **Insertar [INVESTIGAR]** dejan el texto en el cursor. El atajo se asigna en **Settings → Hotkeys**.
 - [ ] **Marcadores del manuscrito** lista esos marcadores y el enlace abre la nota en esa línea.
 - [ ] Borrar `[TK]` del texto y volver a abrir el panel lo quita de la lista.
+
+## #8 grafo
+
+- [ ] Con dos fichas en `Personajes/` que se relacionan, **Grafo de relaciones** abre un SVG con un nodo por personaje y una arista con el tipo.
+- [ ] Elegir un tipo en el selector oculta las aristas de otros tipos.
+- [ ] Una relación con `desde: "[[Cap 07]]"` no aparece con capítulo 3 y sí con capítulo 7.
