@@ -1,0 +1,56 @@
+
+> atlas@0.1.0 test
+> node --experimental-strip-types --test tests/*.test.mjs
+
+✔ npm run build produce main.js y onload no escribe en consola (4262.52068ms)
+(node:3059686) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file://src/characters.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ parsea alias y relaciones temporales (7.691893ms)
+✔ una relación sin wikilink se rechaza y la plantilla nace vacía (1.801892ms)
+(node:3059692) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file://src/graph.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ nodos personaje y aristas tipadas desde las fichas (4.440071ms)
+✔ el filtro por tipo oculta el resto (1.00068ms)
+✔ el filtro por capítulo solo deja relaciones vigentes en N (0.457226ms)
+✔ el círculo coloca cada nodo dentro del lienzo (0.845062ms)
+✔ los enlaces con alias, encabezado o sin corchetes apuntan a la ficha (0.379471ms)
+✔ una relación de un solo capítulo solo vale en ese capítulo (0.723789ms)
+✔ un límite sin número de capítulo queda abierto (0.459831ms)
+✔ sin filtro, o con tipo vacío, se ven todas las aristas (0.308551ms)
+✔ el círculo centra un nodo solo y no falla sin nodos (1.159183ms)
+✔ manifest declara id, versión y minAppVersion para plugins de la comunidad (41.158112ms)
+(node:3059702) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file://src/markers.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ el parser encuentra TK e INVESTIGAR y los pierde al borrarlos (5.685534ms)
+✔ inserta el marcador en el cursor (0.441697ms)
+(node:3059745) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file://src/places.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ lee el lugar padre y un cambio de estado (6.193042ms)
+(node:3059746) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file://src/providers.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ localhost pasa y un host no listado falla (3.603725ms)
+✔ la nube solo entra con opt-in y el host en la lista blanca (1.014155ms)
+✔ el README explica cómo compilar y cargar el plugin en local (69.055141ms)
+(node:3059766) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file://src/vault.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ crea el árbol y el índice Longform sin pisar lo que ya existe (4.690815ms)
+ℹ tests 20
+ℹ suites 0
+ℹ pass 20
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 4424.55782

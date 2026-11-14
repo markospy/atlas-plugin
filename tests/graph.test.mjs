@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { buildGraph, chapterNumber, circleLayout, filterGraph, relationTypes } from "../src/graph.ts";
+import { buildGraph, chapterNumber, circleLayout, filterGraph, linkTarget, relationTypes } from "../src/graph.ts";
 
 const GRAPH = buildGraph([
 	{
@@ -44,4 +44,33 @@ test("el círculo coloca cada nodo dentro del lienzo", () => {
 	for (const node of placed) {
 		assert.ok(node.x >= 0 && node.x <= 400 && node.y >= 0 && node.y <= 400);
 	}
+});
+
+test("los enlaces con alias, encabezado o sin corchetes apuntan a la ficha", () => {
+	assert.equal(linkTarget("[[Marcos#Infancia|el hermano]]"), "Marcos");
+	assert.equal(linkTarget("  Marcos  "), "Marcos");
+	const graph = buildGraph([{ name: "Elena", relaciones: [{ con: "[[]]", tipo: "rival" }, { con: "Marcos", tipo: "hermano" }] }]);
+	assert.deepEqual(pairs(graph), ["Elena-hermano-Marcos"]);
+});
+
+test("una relación de un solo capítulo solo vale en ese capítulo", () => {
+	const graph = buildGraph([{ name: "Elena", relaciones: [{ con: "[[Iván]]", tipo: "aliada", desde: "[[Cap 04]]", hasta: "[[Cap 04]]" }] }]);
+	assert.deepEqual(pairs(filterGraph(graph, { capitulo: 3 })), []);
+	assert.deepEqual(pairs(filterGraph(graph, { capitulo: 4 })), ["Elena-aliada-Iván"]);
+	assert.deepEqual(pairs(filterGraph(graph, { capitulo: 5 })), []);
+});
+
+test("un límite sin número de capítulo queda abierto", () => {
+	const graph = buildGraph([{ name: "Elena", relaciones: [{ con: "[[Iván]]", tipo: "rival", desde: "[[Prólogo]]" }] }]);
+	assert.deepEqual(pairs(filterGraph(graph, { capitulo: 1 })), ["Elena-rival-Iván"]);
+});
+
+test("sin filtro, o con tipo vacío, se ven todas las aristas", () => {
+	assert.equal(filterGraph(GRAPH, {}).edges.length, 4);
+	assert.equal(filterGraph(GRAPH, { tipo: "" }).edges.length, 4);
+});
+
+test("el círculo centra un nodo solo y no falla sin nodos", () => {
+	assert.deepEqual(circleLayout(["Elena"], 400), [{ name: "Elena", x: 200, y: 200 }]);
+	assert.deepEqual(circleLayout([], 400), []);
 });
