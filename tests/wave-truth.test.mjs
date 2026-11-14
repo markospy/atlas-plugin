@@ -127,3 +127,10 @@ test("qa: resultado sin confidence entera → INCONCLUSIVE", async () => {
 	const { review } = await runWave([done(90), { ...done(90), confidence: "90" }]);
 	assert.match(review.prompt, /INCONCLUSIVE/);
 });
+
+test("resultado done con headSha vacío → INCONCLUSIVE", async () => {
+	const emptyHead = { ...done(90), headSha: " " };
+	const { review } = await runWave([emptyHead, emptyHead]);
+	assert.doesNotMatch(review.prompt, /SCORED/);
+	assert.match(review.prompt, /MUST NOT merge/);
+});

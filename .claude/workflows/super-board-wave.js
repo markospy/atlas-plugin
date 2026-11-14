@@ -188,13 +188,13 @@ const TRUTH_SCHEMA = {
     },
     detail: { type: 'string' },
   },
-  required: ['status', 'detail'],
+  required: ['status', 'headSha', 'detail'],
 }
 const truthPrompt = (role, card) => [
   READ_FAILURE,
   `You are the ${role} in the wave's adversarial truth-check for issue #${card.number} ("${card.title}").`,
   `You are independent of the Reviewer: write no code, post no GitHub comments, move no cards, push nothing.`,
-  `Find the open PR whose head branch starts with issue-${card.number}- and note its head SHA.`,
+  `Find the open PR whose head branch starts with issue-${card.number}- and note its head SHA; return it as headSha on every status (empty string if no PR).`,
   `Gate: read truth_gate in ${input.configPath} and apply super-review → "Adversarial mode" (off · non-trivial · always).`,
   `Not triggered → status skipped, detail = why. Triggered → read the merge-base diff locally (git fetch, git diff origin/<base>...<head>).`,
   `Then follow the fixed brief in .claude/skills/super-review/SKILL.md → "Adversarial mode" verbatim as the ${role}`,
@@ -219,7 +219,9 @@ const runTruth = async (card) => {
     return { state: 'skipped', detail: rs.map(said).join(' · ') }
   }
   // Triggered by either agent → both scores are required.
-  const done = rs.every((r) => r && r.status === 'done' && Number.isInteger(r.confidence))
+  // A score without a head SHA cannot be pinned to the commit that merges → not scored.
+  const done = rs.every((r) => r && r.status === 'done' && Number.isInteger(r.confidence) &&
+    typeof r.headSha === 'string' && r.headSha.trim() !== '')
   if (!done) return { state: 'inconclusive', detail: rs.map(said).join(' · ') }
   if (rs[0].headSha !== rs[1].headSha) {
     return { state: 'inconclusive', detail: `agents read different heads: ${rs.map((r) => r.headSha).join(' vs ')}` }
