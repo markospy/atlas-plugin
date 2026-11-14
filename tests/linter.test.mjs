@@ -115,3 +115,14 @@ test("qa: un patrón que casa vacío termina y no cuelga el linter", () => {
 	const rules = patternRules([parseSkill("---\nnombre: Vacío\nverificacion: patron\npatron: 'x*'\n---\n")]);
 	assert.equal(lint("ab", rules).length, 3);
 });
+
+test("qa v2: separadores de escena con espacios o más de tres signos no son diálogo", () => {
+	assert.deepEqual(ids("Fin.\n- - -\n***\n-----\n_ _ _\nOtra."), []);
+	assert.deepEqual(ids("- - Hola.\n---Hola."), ["1:raya-dialogo", "2:raya-dialogo"]);
+});
+
+test("qa v2: «ando» (4 letras) y los falsos con mayúscula no cuentan como gerundio", () => {
+	assert.deepEqual(ids("Ando cansado, comiendo y bebiendo."), []);
+	assert.deepEqual(ids("Cuando pudo, Fernando siguió corriendo y mirando."), []);
+	assert.deepEqual(ids("Siguió dando vueltas, yendo y viniendo."), ["1:gerundios-encadenados"]);
+});
