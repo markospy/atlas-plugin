@@ -1,0 +1,81 @@
+
+> atlas@0.1.0 test
+> node --experimental-strip-types --test tests/*.test.mjs
+
+✔ npm run build produce main.js y onload no escribe en consola (6528.008696ms)
+(node:3129381) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file://./src/characters.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to ./package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ parsea alias y relaciones temporales (4.283692ms)
+✔ una relación sin wikilink se rechaza y la plantilla nace vacía (1.225265ms)
+✔ parsea alias en lista YAML de bloque (0.628753ms)
+(node:3129382) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file://./src/entities.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to ./package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ el índice lista personajes, lugares y objetos del proyecto (5.119606ms)
+✔ cada ficha lista las escenas que la nombran por nombre o alias (41.594326ms)
+✔ re-escanear actualiza apariciones sin duplicar entradas (1.321775ms)
+✔ dos alias del mismo personaje cuentan como el mismo personaje (4.561475ms)
+✔ las menciones son palabras completas y sin ficha usa el título de la nota (2.814514ms)
+✔ el proyecto sale de la nota activa (0.385642ms)
+✔ qa: escenas en subcarpetas en orden numérico y sin el proyecto vecino (0.435766ms)
+✔ qa: alias entre comillas con tilde y mayúsculas acentuadas (9.959648ms)
+✔ R1: alias en lista YAML de bloque (panel Propiedades de Obsidian) (1.701807ms)
+✔ R2: alias entre comillas con coma no se parte (1.86016ms)
+✔ frontmatter con saltos CRLF (0.704683ms)
+✔ qa v2: lista de bloque seguida de otra lista no mezcla sus ítems en los alias (0.404158ms)
+✔ qa v2: re-escanear tras quitar un alias de la ficha quita sus escenas (0.479436ms)
+✔ manifest declara id, versión y minAppVersion para plugins de la comunidad (31.988963ms)
+(node:3129394) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file://./src/markers.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to ./package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ el parser encuentra TK e INVESTIGAR y los pierde al borrarlos (3.048748ms)
+✔ inserta el marcador en el cursor (0.450232ms)
+(node:3129430) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file://./src/objects.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to ./package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ lee la ficha y responde quién tiene el objeto en cada capítulo (8.681444ms)
+✔ nadie tiene el objeto antes de su primera posesión (0.749555ms)
+✔ la plantilla trae descripción, origen, valores y función (0.77879ms)
+✔ qa: posesiones desordenadas y capítulo numérico siguen la línea de tiempo (1.018413ms)
+✔ qa: dos cambios en el mismo capítulo se quedan con el último anotado (0.435295ms)
+✔ qa: Objetos/ en la raíz y desde una nota suelta del proyecto (6.333061ms)
+(node:3129431) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file://./src/places.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to ./package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ lee el lugar padre y un cambio de estado (5.117343ms)
+(node:3129445) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file://./src/providers.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to ./package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ localhost pasa y un host no listado falla (4.16429ms)
+✔ la nube solo entra con opt-in y el host en la lista blanca (0.820257ms)
+✔ el README explica cómo compilar y cargar el plugin en local (16.345635ms)
+(node:3129470) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file://./src/style.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to ./package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ la plantilla trae frontmatter completo y secciones (13.094323ms)
+✔ severidades válidas y patrón expuesto solo en verificación por patrón (1.76856ms)
+✔ filtra skills por alcance personaje (0.677583ms)
+✔ qa: la skill se crea en Estilo/ del proyecto desde cualquier nota (0.430857ms)
+✔ qa: las tres severidades se leen y el patrón se oculta con verificación ia (0.710904ms)
+✔ qa: filtro por personaje con varios destinos y alcances con tilde (0.519251ms)
+(node:3129477) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file://./src/vault.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to ./package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ crea el árbol y el índice Longform sin pisar lo que ya existe (3.186152ms)
+ℹ tests 37
+ℹ suites 0
+ℹ pass 37
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 6804.797822
