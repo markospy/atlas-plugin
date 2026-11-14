@@ -131,3 +131,13 @@ test("R5: un separador `---` en la línea 1 no es frontmatter y la primera escen
 	assert.deepEqual(ids("---\n\n- Hola.\n\n---\n\nPienso de que sí."), ["3:raya-dialogo", "7:dequeismo"]);
 	assert.deepEqual(ids("---\ntitulo: x\netiquetas:\n  - a\n---\n- Hola."), ["6:raya-dialogo"]);
 });
+
+test("qa v3: el frontmatter con listas se salta y uno sin cerrar se revisa entero", () => {
+	assert.deepEqual(ids("---\naliases:\n  - Ana\n---\n- Hola."), ["5:raya-dialogo"]);
+	assert.deepEqual(ids("---\ntitulo: x\n- Hola."), ["3:raya-dialogo"]);
+	assert.deepEqual(ids("--- \n\n- Hola."), ["3:raya-dialogo"]);
+});
+
+test("qa v3: un «dijo» del frontmatter no cuenta para la primera línea", () => {
+	assert.deepEqual(ids("---\nnota: dijo\n---\n—Hola —dijo Ana."), []);
+});
