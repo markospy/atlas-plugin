@@ -1,0 +1,3 @@
+views ["atlas-markers","atlas-graph","atlas-entities"]
+commands ["insert-tk=Insertar [TK]","insert-investigar=Insertar [INVESTIGAR]","show-markers=Marcadores del manuscrito","show-relation-graph=Grafo de relaciones","scan-entities=Índice de entidades (escanear manuscrito)","new-character=Nueva ficha de personaje","check-character-relations=Comprobar relaciones del personaje","new-place=Nuevo lugar","new-object=Nuevo objeto","new-skill=Nueva skill de estilo","new-project=Nuevo proyecto Atlas"]
+OK no duplicate ids, graph + entity views and commands present
