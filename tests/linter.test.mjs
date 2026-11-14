@@ -126,3 +126,8 @@ test("qa v2: «ando» (4 letras) y los falsos con mayúscula no cuentan como ger
 	assert.deepEqual(ids("Cuando pudo, Fernando siguió corriendo y mirando."), []);
 	assert.deepEqual(ids("Siguió dando vueltas, yendo y viniendo."), ["1:gerundios-encadenados"]);
 });
+
+test("R5: un separador `---` en la línea 1 no es frontmatter y la primera escena se revisa", () => {
+	assert.deepEqual(ids("---\n\n- Hola.\n\n---\n\nPienso de que sí."), ["3:raya-dialogo", "7:dequeismo"]);
+	assert.deepEqual(ids("---\ntitulo: x\netiquetas:\n  - a\n---\n- Hola."), ["6:raya-dialogo"]);
+});

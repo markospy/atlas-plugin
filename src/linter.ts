@@ -185,7 +185,8 @@ function ignoredRules(line: string): Set<string> {
 }
 
 function frontmatterEnd(lines: string[]): number {
-	if (lines[0] !== "---") {
+	// A `---` scene break also opens a note: frontmatter starts with a `clave:` line.
+	if (lines[0] !== "---" || !/^[\p{L}\w-]+:(\s|$)/u.test(lines[1] ?? "")) {
 		return 0;
 	}
 	const end = lines.indexOf("---", 1);
