@@ -25,6 +25,13 @@ SHA = re.compile(r"[0-9a-f]{40}\Z")
 SCOPE = re.compile(r"[0-9a-f]{64}\Z")
 BLOCK = re.compile(r"Reason tag:[^\n]*🙋|^approval-request:", re.M)
 DONE = re.compile(r"\s*done[.!]?\s*\Z", re.I)
+KEYWORD = re.compile(r"\b(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?)[ \t]*:?[ \t]+((?:[\w.-]+/[\w.-]+)?)#(\d+)", re.I)
+
+
+def body_closes(body, repo):
+    """Issues in this repo named by a closing keyword in the PR body."""
+    return {int(num) for slug, num in KEYWORD.findall(body or "")
+            if not slug or slug.lower() == repo}
 
 
 def scope_for(plan):
@@ -160,7 +167,7 @@ class GitHub:
         # Paginate linked issues too: an omitted newer request must never make
         # an older approval authoritative. Remote-repository links are ignored.
         query = '''query($owner:String!,$repo:String!,$pr:Int!,$endCursor:String){
-          repository(owner:$owner,name:$repo){pullRequest(number:$pr){headRefOid state
+          repository(owner:$owner,name:$repo){defaultBranchRef{name} pullRequest(number:$pr){headRefOid state baseRefName body
             closingIssuesReferences(first:100,after:$endCursor){
               pageInfo{hasNextPage endCursor} nodes{number repository{nameWithOwner}}
             }}}}'''
@@ -177,6 +184,10 @@ class GitHub:
             if pr["state"] != "OPEN":
                 raise ValueError("PR is not open")
             heads.add(pr["headRefOid"])
+            # GitHub only links "Closes #N" when the base is the default branch.
+            default = ((page["data"]["repository"].get("defaultBranchRef") or {}).get("name"))
+            if default and pr.get("baseRefName") and pr["baseRefName"] != default:
+                issues |= body_closes(pr.get("body"), self.repo)
             links = pr["closingIssuesReferences"]
             for issue in links["nodes"]:
                 if issue["repository"]["nameWithOwner"].lower() == self.repo:
