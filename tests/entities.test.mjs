@@ -115,3 +115,36 @@ test("el proyecto sale de la nota activa", () => {
 	assert.equal(projectOf("Personajes/Elena.md"), "");
 	assert.equal(projectOf(""), "");
 });
+
+test("qa: escenas en subcarpetas en orden numérico y sin el proyecto vecino", () => {
+	const index = buildEntityIndex("Novela", [
+		{ path: "Novela/Personajes/Elena.md", text: ELENA },
+		{ path: "Novela 2/Personajes/Intrusa.md", text: ELENA },
+		{ path: "Novela/Manuscrito/Parte 1/Cap 10.md", text: "Ele vuelve." },
+		{ path: "Novela/Manuscrito/Parte 1/Cap 2.md", text: "Ele sale." },
+		{ path: "Novela 2/Manuscrito/Cap 01.md", text: "Ele también." },
+		{ path: "Novela/Notas.md", text: "Ele en una nota suelta." },
+	]);
+	assert.equal(index.length, 1);
+	assert.deepEqual(index[0].escenas, ["Novela/Manuscrito/Parte 1/Cap 2.md", "Novela/Manuscrito/Parte 1/Cap 10.md"]);
+});
+
+test("qa: alias entre comillas con tilde y mayúsculas acentuadas", () => {
+	const sheet = `---
+tipo: personaje
+nombre: ""
+alias: ["Señora Ruiz", "Ele"]
+---
+`;
+	const index = buildEntityIndex("Novela", [
+		{ path: "Novela/Personajes/Elena.md", text: sheet },
+		{ path: "Novela/Objetos/Revólver.md", text: REVOLVER },
+		{ path: "Novela/Manuscrito/Cap 01.md", text: "—¡SEÑORA RUIZ! —gritó." },
+		{ path: "Novela/Manuscrito/Cap 02.md", text: "EL REVÓLVER cae." },
+		{ path: "Novela/Manuscrito/Cap 03.md", text: "Señora Ruizlandia no cuenta." },
+	]);
+	assert.deepEqual(index[0].nombre, "Elena");
+	assert.deepEqual(index[0].alias, ["Señora Ruiz", "Ele"]);
+	assert.deepEqual(index[0].escenas, ["Novela/Manuscrito/Cap 01.md"]);
+	assert.deepEqual(index[1].escenas, ["Novela/Manuscrito/Cap 02.md"]);
+});
