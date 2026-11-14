@@ -85,3 +85,31 @@ test("ignorar aquí suprime solo ese hallazgo en esa nota", () => {
 	const second = lint(ignored, BASE_RULES)[0];
 	assert.deepEqual(ids(ignoreHere(ignored, second)), ["3:dequeismo"]);
 });
+
+test("qa: dos gerundios en la frase no bastan; tres en frases distintas tampoco", () => {
+	assert.deepEqual(ids("Salió corriendo y mirando atrás."), []);
+	assert.deepEqual(ids("Iba corriendo. Siguió mirando. Acabó temiendo."), []);
+});
+
+test("qa: el comentario de ignorar no mueve la columna ni calla otras reglas", () => {
+	assert.deepEqual(
+		lint("Pienso de que sí. %% atlas-ignorar: otra %% Creo de que no.", BASE_RULES).map((f) => [f.column, f.match]),
+		[
+			[1, "Pienso de que"],
+			[45, "Creo de que"],
+		],
+	);
+});
+
+test("qa: ignorar aquí una skill con patrón la calla solo en esa línea", () => {
+	const rules = patternRules([parseSkill("---\nnombre: Sin \"ya\"\nverificacion: patron\npatron: '\\bya\\b'\n---\n")]);
+	const text = "Ya voy.\nYa está.";
+	const [first] = lint(text, rules);
+	assert.equal(first.rule, "skill-sin-ya");
+	assert.deepEqual(ids(ignoreHere(text, first), rules), ["2:skill-sin-ya"]);
+});
+
+test("qa: un patrón que casa vacío termina y no cuelga el linter", () => {
+	const rules = patternRules([parseSkill("---\nnombre: Vacío\nverificacion: patron\npatron: 'x*'\n---\n")]);
+	assert.equal(lint("ab", rules).length, 3);
+});
