@@ -1,6 +1,7 @@
 import { Notice, Plugin, TFile, type Vault } from "obsidian";
 
 import { characterFolder, characterNote, parseCharacter, relationErrors } from "./characters";
+import { GRAPH_VIEW, GraphView } from "./graph-view";
 import { placeFolder, placeNote } from "./places";
 import { MARKER_VIEW, MarkerView } from "./marker-view";
 import { DEFAULT_PROVIDER_SETTINGS, type ProviderSettings } from "./providers";
@@ -37,6 +38,7 @@ export default class AtlasPlugin extends Plugin {
 		};
 		this.addSettingTab(new AtlasSettingTab(this.app, this));
 		this.registerView(MARKER_VIEW, (leaf) => new MarkerView(leaf));
+		this.registerView(GRAPH_VIEW, (leaf) => new GraphView(leaf));
 		this.addCommand({
 			id: "insert-tk",
 			name: "Insertar [TK]",
@@ -56,6 +58,13 @@ export default class AtlasPlugin extends Plugin {
 			name: "Marcadores del manuscrito",
 			callback: () => {
 				void this.openMarkers();
+			},
+		});
+		this.addCommand({
+			id: "show-relation-graph",
+			name: "Grafo de relaciones",
+			callback: () => {
+				void this.openGraph();
 			},
 		});
 		this.addCommand({
@@ -147,6 +156,18 @@ export default class AtlasPlugin extends Plugin {
 
 	async saveSettings(): Promise<void> {
 		await this.saveData(this.settings);
+	}
+
+	private async openGraph(): Promise<void> {
+		const existing = this.app.workspace.getLeavesOfType(GRAPH_VIEW);
+		const leaf = existing[0] ?? this.app.workspace.getLeaf(true);
+		if (existing.length === 0) {
+			await leaf.setViewState({ type: GRAPH_VIEW, active: true });
+		}
+		await this.app.workspace.revealLeaf(leaf);
+		if (leaf.view instanceof GraphView) {
+			await leaf.view.refresh();
+		}
 	}
 
 	private async openMarkers(): Promise<void> {
