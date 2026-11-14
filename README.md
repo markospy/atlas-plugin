@@ -45,3 +45,17 @@ Selecciona el nombre y ejecuta **Nueva skill de estilo**. Crea `Estilo/<nombre>.
 ## Marcadores
 
 En el editor, **Insertar [TK]** e **Insertar [INVESTIGAR]** dejan el marcador en el cursor. Asigna el atajo en **Settings → Hotkeys**. **Marcadores del manuscrito** abre el panel: lista los `[TK]` y `[INVESTIGAR: …]` de las notas bajo `Manuscrito/` y salta a la línea. Si borras el marcador del texto, desaparece del panel al volver a ejecutar el comando.
+
+## Linter de estilo
+
+**Revisar estilo de la nota** revisa la nota abierta sin IA y lista cada hallazgo con su línea. Pulsa el hallazgo para ir a esa línea. Las reglas base, todas con severidad `aviso`:
+
+| Regla | Avisa cuando |
+|---|---|
+| `raya-dialogo` | el diálogo abre con guion (`-`, `–`) o con raya seguida de espacio (`— Hola`) |
+| `gerundios-encadenados` | hay tres o más gerundios en la misma frase |
+| `dijo-repetido` | `dijo` aparece dos veces en una línea, o en dos líneas seguidas con texto |
+| `mente-acotacion` | hay un adverbio en `-mente` en la acotación (`—No —dijo tristemente.`) |
+| `dequeismo` | aparece `de que` tras un verbo de pensar o decir (`pienso de que`) |
+
+También ejecuta las skills de `Estilo/` con `alcance: global` y `verificacion: patron`. El mensaje es el `nombre` de la skill, con su `severidad`. El patrón no distingue mayúsculas, y una expresión regular inválida se ignora. **Ignorar aquí** añade `%% atlas-ignorar: <regla> %%` al final de la línea. Así se calla esa regla en esa línea y en esa nota. Para recuperar el aviso, borra el comentario. El frontmatter no se revisa.
