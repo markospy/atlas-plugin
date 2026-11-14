@@ -363,6 +363,86 @@ Reviewer status words: `merge-ready` · `bounced` · `blocked` · `human-gated` 
 Tables plus CAPS rules (NEVER / DON'T / ALWAYS). No prose paragraphs. The managed block is
 `agents-md-block.md`, ≤ 40 lines.
 
+## 6 · Language
+
+Config `language` (a language code, e.g. `"es"`) sets the language of everything a human
+reads: comment prose, Block template fields, PR body prose, ticket prose, author notes.
+Absent → English: the templates in this pack apply as written. Every lane reads the key
+from the board config before its first comment.
+
+Translate the free text, the status word after the emoji, and the human field labels
+(`Did:`, `✅ Done:`, `❌ Not done:`, `Next:`, the Block fields from `Card:` to `Move back:`).
+NEVER translate the tokens below — scripts and the next lane read them verbatim:
+
+| Token | Read by |
+|---|---|
+| `[role] [label]` header tags | header regex, every lane |
+| `Reason tag:` + its emoji | `super-board-deps.sh` (`needsYou`), `super-board-approval.py` |
+| `blocked-by:` | `super-board-deps.sh` (wave-start sweep) |
+| `approval-request:` and the human reply `done` | `super-board-approval.py` |
+| `Local tests:` · `gh-quota-on-exit:` · `root-cause-hash:` · `move-mutation-result:` | Reviewer, run loop |
+| `Next:` values (`builder` · `qa` · `reviewer` · `Eric` · `none`) and column names | lanes, board |
+| `<!-- sb:* -->` · `<!-- super-review:report -->` · `<!-- super-board:author-note … -->` | `super-board-pr-body.sh`, Reviewer |
+| commit / PR subject `<emoji> [type] scope:` | subject regex |
+| ticket headings (`## Acceptance Criteria`, `## Blocked by`, …) | pre-flight, `super-board-deps.sh` |
+
+Spanish labels (`language: "es"`): `Did:` → `Hecho:` · `✅ Done:` → `✅ Listo:` ·
+`❌ Not done:` → `❌ Falta:` · `Next:` → `Siguiente:` · `Card:` → `Tarjeta:` ·
+`Why blocked:` → `Por qué:` · `Evidence:` → `Evidencia:` · `Checked:` → `Comprobado:` ·
+`What blocks:` → `Qué bloquea:` · `Why I (bot) cannot decide:` → `Por qué el bot no decide:` ·
+`To unblock:` → `Para desbloquear:` · `Owner:` → `Responsable:` · `Move back:` → `Volver:`.
+Another language: translate the same labels the same way.
+
+Lane report in Spanish:
+
+<!-- lang-es:report -->
+```
+[builder] [report] ✅ construido · ronda 1
+Hecho: añadida la ruta /api/stream y el consumidor SSE; sin cambios de esquema
+✅ Listo: AC1 el stream abre `streaming.test.ts:12` · `abc1234`
+❌ Falta: AC2 TTFB bajo carga — no hay arnés de carga
+Siguiente: qa
+Local tests: npm test --run streaming
+```
+
+Block comment in Spanish (block-template.md):
+
+<!-- lang-es:block -->
+```
+[builder] [blocker] 🛑 bloqueado · ❓ el AC2 contradice el código actual
+Tarjeta:     #48 comentarios de las lanes salen en inglés
+PR:          #50
+Reason tag:  ❓
+Por qué:     el AC2 pide X y `src/a.ts:12` ya hace Y
+Evidencia:   `npm test` → 1 fallo en `a.test.ts:30`
+Comprobado:  -
+Qué bloquea: una decisión sobre qué comportamiento manda
+Por qué el bot no decide:
+             las dos lecturas son válidas según el ticket
+Para desbloquear:
+             [ ] elige X o Y en un comentario
+Responsable: Eric
+Volver:      arrastra la tarjeta a Ready cuando esté hecho
+blocked-by:  -
+```
+
+🙋 request in Spanish (the human still replies `done`):
+
+<!-- lang-es:needs-you -->
+```
+[reviewer] [blocker] 🙋 Te toca en #48 — comentarios en español
+- [ ] Revisa y fusiona la PR #50 (o comenta `done` para aprobarla)
+Cuando una persona de confianza confirme esta versión, la siguiente wave la devuelve a Review.
+
+<details><summary>Por qué, y qué comprobé</summary>
+
+La PR #50 supera el límite de líneas de merge_policy.
+Reason tag: 🙋 needs you · Responsable: Eric
+approval-request: {"head":"<sha>","pr":50,"repo":"<owner>/<repo>","scope":"<scope>"}
+blocked-by: -
+</details>
+```
+
 ## Plain-words rules (when `humanizer` is not installed)
 
 - Short sentences. One idea each.

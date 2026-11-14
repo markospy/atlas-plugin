@@ -134,6 +134,12 @@ const BOARD_IO = () =>
   `Board moves and reads: .claude/bin/super-board-card.sh --config ${input.configPath} move <issue> <Status> ` +
   `(1 GraphQL point) · status <issue> · items. Comments, labels, PR reads: REST per .claude/skills/super-board/references/rate-limit-etiquette.md → "Price list". Read GitHub once per decision, never in a sleep loop.`
 
+// Prose language (writing-standard.md → "6 · Language"). Lanes copy English
+// templates literally, so the prompt names the key; absent → English as before.
+const LANGUAGE =
+  `Language: read "language" in ${input.configPath}. Set → write all comment, Block template, PR body and ticket prose in it, ` +
+  `keeping [role] [label], Reason tag:, blocked-by:, approval-request:, done and the other machine tokens verbatim (writing-standard.md → "6 · Language"). Absent → English.`
+
 const lanePrompt = (lane, card) => [
   READ_FAILURE,
   `Run ${LANE[lane].skill} on issue #${card.number} ("${card.title}") for a super-board workflow wave.`,
@@ -141,6 +147,7 @@ const lanePrompt = (lane, card) => [
   `create your own worktree under .claude/worktrees/, work on the issue branch, post the required PR/issue comments,`,
   `move the project card yourself, clean up the worktree on exit. Config: ${input.configPath}.`,
   BOARD_IO(),
+  LANGUAGE,
   `Commits, PR title, PR body blocks, comments: .claude/skills/super-board/references/writing-standard.md. Rewrite only your own PR body blocks, with .claude/bin/super-board-pr-body.sh.`,
   ...(lane === 'review' ? REVIEW_MEMORY : []),
   ...(lane === 'qa' && card.status === 'Ready'
@@ -233,6 +240,7 @@ const preflightPrompt = (batch) => [
   `Two Ready cards overlapping each other with no open PR: the lower-numbered one proceeds; sequence only the other, blockedBy [the lower]. Never both.`,
   `A sequence with nothing to wait on (empty blockedBy) leaves the card in Ready: return column Ready and it builds.`,
   BOARD_IO(),
+  LANGUAGE,
   `Return one verdict per issue: proceed | hold | sequence | skipped (pre-flight blind). Never drop a card silently.`,
 ].join('\n')
 

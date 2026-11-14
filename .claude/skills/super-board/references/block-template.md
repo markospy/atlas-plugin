@@ -51,6 +51,10 @@ need. The reader is a human deciding in ten seconds whether this is theirs: lead
 show the evidence, name the owner. No narration of what the bot tried in what order. Run the
 prose through `humanizer` when installed.
 
+Config `language` set → translate the prose and the field labels, never `Reason tag:`,
+`blocked-by:`, `approval-request:` or the `[role] [label]` tags (writing-standard.md →
+"6 · Language", which has the Spanish version of this template and of the 🙋 request).
+
 ### The `blocked-by:` line is mandatory
 
 Last line of the block, always present, machine-read. It sits alongside the other machine lines the
