@@ -1,3 +1,5 @@
+import { sheetFolder } from "./places.ts";
+
 export const PLOT_STRUCTURES = {
 	"tres-actos": {
 		nombre: "Tres actos",
@@ -49,25 +51,7 @@ export const SCENE_FIELDS = ["objetivo", "conflicto", "resultado", "pov", "subtr
 export type SceneFields = Record<(typeof SCENE_FIELDS)[number], string>;
 
 export function plotFolder(activePath: string): string {
-	const marker = "/Trama/";
-	const at = activePath.indexOf(marker);
-	if (at !== -1) {
-		return activePath.slice(0, at + marker.length - 1);
-	}
-	if (activePath === "Trama" || activePath.startsWith("Trama/")) {
-		return "Trama";
-	}
-	const parent = parentOf(activePath);
-	if (parent === "Manuscrito" || parent.endsWith("/Manuscrito")) {
-		const project = parentOf(parent);
-		return project.length > 0 ? `${project}/Trama` : "Trama";
-	}
-	return parent.length > 0 ? `${parent}/Trama` : "Trama";
-}
-
-function parentOf(path: string): string {
-	const slash = path.lastIndexOf("/");
-	return slash === -1 ? "" : path.slice(0, slash);
+	return sheetFolder(activePath, "Trama");
 }
 
 export function plotNote(name: string, structure: PlotStructure): string {
