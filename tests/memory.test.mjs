@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+	chapterNumber,
 	KNOWLEDGE_STATES,
 	knowledgeErrors,
 	memoryFolder,
@@ -93,4 +94,11 @@ test("la consulta normaliza a quién y no cuenta capítulos anteriores a la memo
 	assert.deepEqual(whatKnows(memories, " [[Elena|la Doctora]] ", 3), elena);
 	assert.equal(whatKnows(memories, "[[lector]]", 3)[0]?.estado, "sospecha");
 	assert.deepEqual(whatKnows(memories, "Elena", 2), []);
+});
+
+test("el número de capítulo sale solo de un nombre que empieza por Cap", () => {
+	assert.equal(chapterNumber("Manuscrito/Cap 05.md"), 5);
+	assert.equal(chapterNumber("Manuscrito/cap.12 El juicio.md"), 12);
+	assert.equal(chapterNumber("Manuscrito/Recap 5.md"), null);
+	assert.equal(chapterNumber("Notas/Escape 2.md"), null);
 });

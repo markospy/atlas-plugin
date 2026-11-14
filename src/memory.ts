@@ -35,7 +35,7 @@ export function memoryNoteName(chapter: number): string {
 
 export function chapterNumber(path: string): number | null {
 	const base = path.slice(path.lastIndexOf("/") + 1);
-	const match = /cap\.?\s*(\d+)/i.exec(base);
+	const match = /^cap\.?\s*(\d+)/i.exec(base);
 	return match ? Number(match[1]) : null;
 }
 
