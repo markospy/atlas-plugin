@@ -52,3 +52,9 @@ Prepara el plugin una vez:
 
 - [ ] Con el nombre seleccionado en un capítulo, **Nuevo objeto** crea `Objetos/<nombre>.md` del proyecto con descripción, origen, valor material, valor sentimental y función en la trama.
 - [ ] Ejecutarlo otra vez con el mismo nombre avisa "Ese objeto ya existe." y no pisa la nota.
+
+## #14 linter
+
+- [ ] En un capítulo con `- Hola.` y `Pienso de que sí.`, **Revisar estilo de la nota** lista `raya-dialogo` y `dequeismo` con su línea. Al pulsar uno, el cursor va a esa línea.
+- [ ] Una skill global con `verificacion: patron` y `patron: '\bya\b'` sale en la lista con su nombre y su severidad.
+- [ ] **Ignorar aquí** añade `%% atlas-ignorar: … %%` a la línea y el hallazgo desaparece de la lista. Las otras notas no cambian.
