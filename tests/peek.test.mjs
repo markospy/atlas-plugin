@@ -4,7 +4,7 @@ import test from "node:test";
 import { parseCharacter } from "../src/characters.ts";
 import { parseObject } from "../src/objects.ts";
 import { parsePlace } from "../src/places.ts";
-import { entityAt, peekAt } from "../src/peek.ts";
+import { chapterOf, entityAt, isSheetPath, peekAt, projectSheets } from "../src/peek.ts";
 
 const ENTITIES = [
 	{ tipo: "personaje", nombre: "Elena", alias: ["la nieta"], path: "Novela/Personajes/Elena.md", escenas: [] },
@@ -116,4 +116,35 @@ test("peekAt sin capítulo devuelve la entidad sin estado", () => {
 	const found = peekAt("Elena", 0, ENTITIES, SHEETS, null);
 	assert.equal(found.ok, true);
 	assert.deepEqual(found.estado, []);
+});
+
+test("projectSheets: ficha sin nombre usa el título de la nota y muestra su estado", () => {
+	const notes = [
+		{ path: "Novela/Personajes/Elena.md", text: "---\ntipo: personaje\n---\n" },
+		{
+			path: "Novela/Objetos/Revólver.md",
+			text: '---\ntipo: objeto\nposesiones:\n  - poseedor: "[[Elena]]"\n    capitulo: "[[Cap 04]]"\n---\n',
+		},
+		{ path: "Novela/Lugares/Faro.md", text: '---\ntipo: lugar\nestados:\n  - capitulo: "[[Cap 02]]"\n    descripcion: "Apagado"\n---\n' },
+		{ path: "Otra/Personajes/Ajeno.md", text: "---\ntipo: personaje\n---\n" },
+	];
+	const { entities, sheets } = projectSheets("Novela", notes);
+	assert.deepEqual(entities.map((entity) => entity.nombre), ["Elena", "Faro", "Revólver"]);
+	assert.deepEqual(peekAt("el Revólver", 4, entities, sheets, 5).estado, ["Poseedor: Elena"]);
+	assert.deepEqual(peekAt("Elena", 0, entities, sheets, 5).estado, ["Posee: Revólver"]);
+	assert.deepEqual(peekAt("el Faro", 4, entities, sheets, 3).estado, ["Estado: Apagado (desde [[Cap 02]])"]);
+});
+
+test("chapterOf: capítulo de la nota por su nombre o su carpeta", () => {
+	assert.equal(chapterOf("Novela/Manuscrito/Cap 03/escena.md"), 3);
+	assert.equal(chapterOf("Novela/Manuscrito/Cap 03.md"), 3);
+	assert.equal(chapterOf("Novela/Manuscrito/borrador.md"), null);
+});
+
+test("isSheetPath: solo fichas del proyecto, no escenas ni otros proyectos", () => {
+	assert.equal(isSheetPath("Novela", "Novela/Personajes/Elena.md"), true);
+	assert.equal(isSheetPath("Novela", "Novela/Manuscrito/Cap 03.md"), false);
+	assert.equal(isSheetPath("Novela", "Otra/Personajes/Elena.md"), false);
+	assert.equal(isSheetPath("", "Personajes/Elena.md"), true);
+	assert.equal(isSheetPath("", "Manuscrito/Cap 01.md"), false);
 });

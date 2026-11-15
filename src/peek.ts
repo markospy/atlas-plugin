@@ -1,5 +1,10 @@
-import type { EntityEntry } from "./entities";
+import { parseCharacter } from "./characters.ts";
+import { buildEntityIndex, type EntityEntry, type EntityKind, type VaultNote } from "./entities.ts";
 import { linkTarget } from "./graph.ts";
+import { chapterNumber } from "./memory.ts";
+import { parseObject } from "./objects.ts";
+import { parsePlace } from "./places.ts";
+import { inProject } from "./sheets.ts";
 import { worldAt, type WorldSheets } from "./world.ts";
 
 export type Peek = { ok: true; entidad: EntityEntry; estado: string[] } | { ok: false };
@@ -59,4 +64,34 @@ function stateOf(entity: EntityEntry, sheets: WorldSheets, chapter: number): str
 		...world.relaciones.filter((item) => is(item.con)).map((item) => `Relación: ${item.personaje} → ${item.tipo}`),
 		...world.posesiones.filter((item) => is(item.poseedor)).map((item) => `Posee: ${item.objeto}`),
 	];
+}
+
+/** Whether `path` is an entity sheet of `project`: inside the project and outside `Manuscrito/`. */
+export function isSheetPath(project: string, path: string): boolean {
+	const prefix = project.length > 0 ? `${project}/` : "";
+	return inProject(project, path) && !path.startsWith(`${prefix}Manuscrito/`);
+}
+
+/** Chapter of the note at `path`: from its own name (`Cap 03.md`), else its folder (`Cap 03/`). */
+export function chapterOf(path: string): number | null {
+	return chapterNumber(path) ?? chapterNumber(path.slice(0, Math.max(0, path.lastIndexOf("/"))));
+}
+
+/** Entity index and parsed sheets of `project`; a sheet without `nombre` takes its note title, as in the index. */
+export function projectSheets(project: string, notes: VaultNote[]): { entities: EntityEntry[]; sheets: WorldSheets } {
+	const sheetNotes = notes.filter((note) => isSheetPath(project, note.path));
+	const entities = buildEntityIndex(project, sheetNotes);
+	const text = new Map(sheetNotes.map((note) => [note.path, note.text]));
+	const parsed = <T extends { nombre: string }>(tipo: EntityKind, parse: (note: string) => T): T[] =>
+		entities
+			.filter((entity) => entity.tipo === tipo)
+			.map((entity) => ({ ...parse(text.get(entity.path) ?? ""), nombre: entity.nombre }));
+	return {
+		entities,
+		sheets: {
+			personajes: parsed("personaje", parseCharacter),
+			objetos: parsed("objeto", parseObject),
+			lugares: parsed("lugar", parsePlace),
+		},
+	};
 }

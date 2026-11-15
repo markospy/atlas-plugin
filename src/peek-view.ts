@@ -1,12 +1,7 @@
 import { debounce, ItemView, MarkdownView, TFile, type WorkspaceLeaf } from "obsidian";
 
-import { parseCharacter } from "./characters";
-import { buildEntityIndex, type EntityEntry, projectOf } from "./entities";
-import { chapterNumber } from "./memory";
-import { parseObject } from "./objects";
-import { peekAt } from "./peek";
-import { parsePlace } from "./places";
-import { inProject } from "./sheets";
+import { type EntityEntry, projectOf } from "./entities";
+import { chapterOf, isSheetPath, peekAt, projectSheets } from "./peek";
 import type { WorldSheets } from "./world";
 
 export const PEEK_VIEW = "atlas-peek";
@@ -44,7 +39,14 @@ export class PeekView extends ItemView {
 		this.registerEvent(this.app.workspace.on("editor-change", () => this.update()));
 		this.registerEvent(this.app.workspace.on("active-leaf-change", () => this.update()));
 		this.registerDomEvent(document, "selectionchange", () => this.update());
-		this.registerEvent(this.app.vault.on("modify", () => (this.cache = null)));
+		// Autosaves of the scene being written do not touch sheets: keep the cache.
+		this.registerEvent(
+			this.app.vault.on("modify", (file) => {
+				if (this.cache && isSheetPath(this.cache.project, file.path)) {
+					this.cache = null;
+				}
+			}),
+		);
 		this.registerEvent(this.app.vault.on("create", () => (this.cache = null)));
 		this.registerEvent(this.app.vault.on("delete", () => (this.cache = null)));
 		this.registerEvent(this.app.vault.on("rename", () => (this.cache = null)));
@@ -63,8 +65,7 @@ export class PeekView extends ItemView {
 		const path = view.file.path;
 		const cursor = view.editor.getCursor();
 		const { entities, sheets } = await this.projectSheets(projectOf(path));
-		const parent = path.slice(0, Math.max(0, path.lastIndexOf("/")));
-		const chapter = chapterNumber(path) ?? chapterNumber(parent);
+		const chapter = chapterOf(path);
 		const found = peekAt(view.editor.getLine(cursor.line), cursor.ch, entities, sheets, chapter);
 		if (!found.ok) {
 			this.message("Sin entidad conocida bajo el cursor.");
@@ -92,28 +93,16 @@ export class PeekView extends ItemView {
 		}
 	}
 
-	/** Sheets are read once per project and dropped on any vault change; cursor moves reuse them. */
+	/** Sheets are read once per project and dropped when a sheet changes; cursor moves reuse them. */
 	private async projectSheets(project: string): Promise<ProjectSheets> {
 		if (this.cache?.project === project) {
 			return this.cache;
 		}
-		const prefix = project.length > 0 ? `${project}/` : "";
-		const files = this.app.vault
-			.getMarkdownFiles()
-			.filter((file) => inProject(project, file.path) && !file.path.startsWith(`${prefix}Manuscrito/`));
+		const files = this.app.vault.getMarkdownFiles().filter((file) => isSheetPath(project, file.path));
 		const notes = await Promise.all(
 			files.map(async (file) => ({ path: file.path, text: await this.app.vault.cachedRead(file) })),
 		);
-		const inFolder = (folder: string) => notes.filter((note) => note.path.startsWith(`${prefix}${folder}/`));
-		this.cache = {
-			project,
-			entities: buildEntityIndex(project, notes),
-			sheets: {
-				personajes: inFolder("Personajes").map((note) => parseCharacter(note.text)),
-				objetos: inFolder("Objetos").map((note) => parseObject(note.text)),
-				lugares: inFolder("Lugares").map((note) => parsePlace(note.text)),
-			},
-		};
+		this.cache = { project, ...projectSheets(project, notes) };
 		return this.cache;
 	}
 
