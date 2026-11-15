@@ -80,3 +80,17 @@ test("R8: si la ficha de lugar no admite el estado, no se escribe nada", async (
 	assert.equal(files.store.get(MEMORIA), memoria);
 	assert.equal(files.store.get(LUGAR), ficha);
 });
+
+test("R6: una lista en flujo de varias líneas con `]` en la columna 0 pasa a bloque sin crear otro frontmatter", async () => {
+	const ficha = ["---", "nombre: Torre", "estados: [", '  {capitulo: "[[Cap 01]]", descripcion: intacta}', "]", "viajes: []", "---", "Cuerpo", ""].join("\n");
+	assert.equal(parsePlace(ficha).estados.length, 1, "parsePlace lee el flujo de varias líneas");
+	const files = mockFiles({ [LUGAR]: ficha });
+	await writeApproved(files, destino, parseProposal(RESPUESTA), new Set(["e1"]));
+	const escrita = files.store.get(LUGAR);
+	assert.equal(escrita.match(/^---$/gm).length, 2, `un solo frontmatter: ${JSON.stringify(escrita)}`);
+	assert.equal(parsePlace(escrita).nombre, "Torre");
+	assert.deepEqual(parsePlace(escrita).estados, [
+		{ capitulo: "[[Cap 01]]", descripcion: "intacta" },
+		{ capitulo: "[[Cap 03]]", descripcion: "en ruinas" },
+	]);
+});
