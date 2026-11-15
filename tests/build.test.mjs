@@ -33,6 +33,7 @@ test("npm run build produce main.js y onload no escribe en consola", async () =>
         addCommand() {}
         addSettingTab() {}
         registerView() {}
+        registerEvent() {}
         async loadData() {
           return null;
         }
@@ -68,7 +69,7 @@ test("npm run build produce main.js y onload no escribe en consola", async () =>
     delete require.cache[pluginPath];
     const loaded = require(pluginPath);
     const manifest = JSON.parse(await readFile("manifest.json", "utf8"));
-    const plugin = new loaded.default({ workspace: {} }, manifest);
+    const plugin = new loaded.default({ workspace: {}, vault: { on() { return {}; } } }, manifest);
     await plugin.onload();
     assert.equal(errors.length, 0);
   } finally {

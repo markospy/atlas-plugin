@@ -1,4 +1,4 @@
-import { type Editor, Notice, Plugin, requestUrl, TFile, type Vault } from "obsidian";
+import { type Editor, Notice, Plugin, requestUrl, type TAbstractFile, TFile, type Vault } from "obsidian";
 
 import { chronologyNotice, impossibleTravels, readChronology } from "./chronology";
 import { CoWriteSession, coWriteContext, propose, type CoWriteMode } from "./cowrite";
@@ -27,12 +27,13 @@ import { PLOT_STRUCTURES, plotFolder, plotNote, SCENE_FIELDS, type PlotStructure
 import { BASE_RULES, patternRules } from "./linter";
 import { LintModal } from "./lint-modal";
 import { MARKER_VIEW, MarkerView } from "./marker-view";
-import { DEFAULT_PROVIDER_SETTINGS, ollamaProvider, type ProviderSettings } from "./providers";
+import { DEFAULT_PROVIDER_SETTINGS, ollamaProvider } from "./providers";
 import { NO_PROVIDER, providerReady, reviewScene } from "./review";
 import { ReviewModal } from "./review-modal";
-import { AtlasSettingTab } from "./settings";
+import { type AtlasSettings, AtlasSettingTab, DEFAULT_DAILY_GOAL } from "./settings";
 import { projectOf } from "./entities";
 import { inProject } from "./sheets";
+import { dayKey, inManuscript, manuscriptWords, progress, progressNotice, recordTotal, type WritingLog } from "./stats";
 import { parseSkill, skillFolder, skillNote, skillsFor } from "./style";
 import { createAtlasProject, type AtlasFiles } from "./vault";
 
@@ -58,17 +59,24 @@ function filesFromVault(vault: Vault): AtlasFiles {
 const COWRITE_BUDGET = 8000;
 
 export default class AtlasPlugin extends Plugin {
-	settings: ProviderSettings = { ...DEFAULT_PROVIDER_SETTINGS };
+	settings: AtlasSettings = { ...DEFAULT_PROVIDER_SETTINGS, metaDiaria: DEFAULT_DAILY_GOAL };
+	/** Writing log per project folder; kept in data.json, never sent anywhere. */
+	private writing: Record<string, WritingLog> = {};
+	private writingTimer: number | undefined;
 	/** Co-write decisions for this session only. */
 	private readonly coWrite = new CoWriteSession();
 
 	async onload(): Promise<void> {
-		const stored = (await this.loadData()) as Partial<ProviderSettings> | null;
+		const data = (await this.loadData()) as (Partial<AtlasSettings> & { escritura?: Record<string, WritingLog> }) | null;
+		const { escritura, ...stored } = data ?? {};
+		this.writing = escritura ?? {};
 		this.settings = {
 			...DEFAULT_PROVIDER_SETTINGS,
+			metaDiaria: DEFAULT_DAILY_GOAL,
 			...stored,
-			allowedHosts: stored?.allowedHosts ?? [],
+			allowedHosts: stored.allowedHosts ?? [],
 		};
+		this.registerEvent(this.app.vault.on("modify", (file) => this.scheduleWordCount(file)));
 		this.addSettingTab(new AtlasSettingTab(this.app, this));
 		this.registerView(MARKER_VIEW, (leaf) => new MarkerView(leaf));
 		this.registerView(GRAPH_VIEW, (leaf) => new GraphView(leaf));
@@ -231,6 +239,13 @@ export default class AtlasPlugin extends Plugin {
 			name: "Co-escribir escena",
 			editorCallback: (editor) => {
 				new CoWriteModal(this.app, editor, this.coWrite, (modo, actual) => this.coWriteProposal(modo, actual)).open();
+			},
+		});
+		this.addCommand({
+			id: "writing-progress",
+			name: "Progreso de escritura",
+			callback: () => {
+				void this.showWritingProgress();
 			},
 		});
 		this.addCommand({
@@ -574,8 +589,45 @@ export default class AtlasPlugin extends Plugin {
 		return propose(ollamaProvider(this.settings, post), modo, actual, contexto);
 	}
 
+	onunload(): void {
+		window.clearTimeout(this.writingTimer);
+	}
+
 	async saveSettings(): Promise<void> {
-		await this.saveData(this.settings);
+		await this.saveData({ ...this.settings, escritura: this.writing });
+	}
+
+	/** Recount a project's manuscript a few seconds after one of its scenes is saved. */
+	private scheduleWordCount(file: TAbstractFile): void {
+		const root = projectOf(file.path);
+		if (!(file instanceof TFile) || !inManuscript(root, file.path)) {
+			return;
+		}
+		window.clearTimeout(this.writingTimer);
+		this.writingTimer = window.setTimeout(() => {
+			void this.recordWords(root);
+		}, 5000);
+	}
+
+	private async recordWords(root: string) {
+		const files = this.app.vault.getMarkdownFiles().filter((file) => inManuscript(root, file.path));
+		const notes = await Promise.all(files.map(async (file) => ({ path: file.path, text: await this.app.vault.cachedRead(file) })));
+		const today = dayKey(new Date());
+		const log = recordTotal(this.writing[root] ?? {}, today, manuscriptWords(root, notes));
+		if (log[today]?.total !== this.writing[root]?.[today]?.total) {
+			this.writing = { ...this.writing, [root]: log };
+			await this.saveSettings();
+		}
+		return progress(log, today, this.settings.metaDiaria);
+	}
+
+	private async showWritingProgress(): Promise<void> {
+		const active = this.app.workspace.getActiveFile();
+		if (!active) {
+			new Notice("Abre una nota del proyecto.");
+			return;
+		}
+		new Notice(progressNotice(await this.recordWords(projectOf(active.path))), 10_000);
 	}
 
 	private async openGraph(): Promise<void> {
