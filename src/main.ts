@@ -1,5 +1,6 @@
 import { type Editor, Notice, Plugin, TFile, type Vault } from "obsidian";
 
+import { chronologyNotice, impossibleTravels, readChronology } from "./chronology";
 import { characterFolder, characterNote, parseCharacter, relationErrors } from "./characters";
 import { GRAPH_VIEW, GraphView } from "./graph-view";
 import { ENTITY_VIEW, EntityView } from "./entity-view";
@@ -130,6 +131,13 @@ export default class AtlasPlugin extends Plugin {
 			name: "Añadir campos de escena",
 			callback: () => {
 				void this.addSceneFields();
+			},
+		});
+		this.addCommand({
+			id: "check-chronology",
+			name: "Revisar cronología",
+			callback: () => {
+				void this.checkChronology();
 			},
 		});
 		this.addCommand({
@@ -295,6 +303,17 @@ export default class AtlasPlugin extends Plugin {
 			return;
 		}
 		new Notice("Campos de escena listos.");
+	}
+
+	private async checkChronology(): Promise<void> {
+		const notes = await Promise.all(
+			this.app.vault
+				.getMarkdownFiles()
+				.map(async (file) => ({ path: file.path, nombre: file.basename, note: await this.app.vault.read(file) })),
+		);
+		const { scenes, travels } = readChronology(notes);
+		const found = impossibleTravels(scenes, travels);
+		new Notice(chronologyNotice(found), found.length === 0 ? undefined : 0);
 	}
 
 	private async newObject(name: string): Promise<void> {

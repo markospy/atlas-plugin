@@ -50,6 +50,10 @@ No pisa una trama que ya exista.
 
 En una escena de `Manuscrito/`, **Añadir campos de escena** agrega al frontmatter `objetivo`, `conflicto`, `resultado`, `pov` y `subtrama` vacíos, sin tocar los que ya tengan valor ni el texto. `pov` y `subtrama` admiten un `[[wikilink]]`.
 
+## Cronología
+
+Una escena declara en su frontmatter `dia` (número relativo, p. ej. `3` o `3.5`), `lugar` (`[[Puerto]]`) y quién está: `pov` y `personajes` (`["[[Marcos]]"]`). Una ficha de lugar (`tipo: lugar`) declara en `viajes` la duración mínima hasta otro lugar (`a` + `dias`); vale en los dos sentidos y, si hay dos rutas, manda la más corta. Los enlaces casan por nombre de archivo y sin distinguir mayúsculas, como en Obsidian: `[[Lugares/Puerto]]`, `[[puerto]]` y `[[Puerto]]` apuntan a `Puerto.md`, aunque su `nombre` sea otro. Los comentarios YAML (`# …`) dentro de `viajes` se ignoran. **Revisar cronología** lee las escenas de `Manuscrito/` y las rutas de las fichas de lugar, y lista los pares de escenas seguidas (por `dia`) en que un personaje cambia de lugar en menos días que el mínimo. Solo avisa, no bloquea. No se comprueban: escenas sin `dia` numérico o sin `lugar`, escenas fuera de `Manuscrito/`, rutas sin declarar o en notas sin `tipo: lugar`, viajes sin `a` o con `dias` no numérico, y los elementos de `viajes` cuya sangría no cuadra con la del primero (la lista se corta ahí). Dos lugares con el mismo nombre de archivo en carpetas distintas se toman por el mismo.
+
 ## Objetos
 
 Selecciona el nombre y ejecuta **Nuevo objeto**. Crea `Objetos/<nombre>.md` con descripción, origen, valor material, valor sentimental (para quién y por qué) y función en la trama. En el frontmatter, `funcion` marca su peso narrativo (p. ej. "pistola de Chéjov"), `foreshadowing` enlaza dónde se anuncia y `posesiones` anota cada cambio de poseedor (`poseedor` + `capitulo`, p. ej. `[[Cap 04]]`). `holderAt(ficha, N)` en `src/objects.ts` responde quién tiene el objeto en el capítulo N. No pisa una ficha que ya exista.
