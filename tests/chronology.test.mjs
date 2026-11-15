@@ -188,3 +188,20 @@ test("isManuscript reconoce Manuscrito/ en la raíz o dentro de un proyecto", ()
 	assert.equal(isManuscript("Novela/Manuscrito/Cap 01.md"), true);
 	assert.equal(isManuscript("Notas/Manuscritos.md"), false);
 });
+
+test("el mismo personaje en dos libros distintos no genera viaje imposible; en el mismo libro sí", () => {
+	const sceneNote = (dia, lugar) => `---\ndia: ${dia}\nlugar: "[[${lugar}]]"\npov: "[[Elena]]"\n---\n`;
+	const faro = { path: "Lugares/Faro.md", nombre: "Faro", note: '---\ntipo: lugar\nviajes:\n  - a: "[[Puerto]]"\n    dias: 7\n---\n' };
+	const otherBooks = readChronology([
+		faro,
+		{ path: "Libro1/Manuscrito/Manuscrito.md", nombre: "Manuscrito", note: sceneNote(1, "Faro") },
+		{ path: "Libro2/Manuscrito/Manuscrito.md", nombre: "Manuscrito", note: sceneNote(2, "Puerto") },
+	]);
+	assert.deepEqual(impossibleTravels(otherBooks.scenes, otherBooks.travels), []);
+	const sameBook = readChronology([
+		faro,
+		{ path: "Libro1/Manuscrito/Cap 01.md", nombre: "Cap 01", note: sceneNote(1, "Faro") },
+		{ path: "Libro1/Manuscrito/Cap 02.md", nombre: "Cap 02", note: sceneNote(2, "Puerto") },
+	]);
+	assert.equal(impossibleTravels(sameBook.scenes, sameBook.travels).length, 1);
+});

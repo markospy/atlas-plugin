@@ -110,3 +110,10 @@ Prepara el plugin una vez:
 - [ ] Poner **Meta diaria** a 0 en **Settings → Atlas**: el aviso dice "sin meta diaria". Tras reiniciar Obsidian, la meta y el registro siguen en `data.json`.
 - [ ] Escribir `500abc` en **Meta diaria**: avisa "escribe solo un número entero" y la meta guardada no cambia.
 - [ ] Borrar una escena, o moverla fuera de `Manuscrito/`, esperar 5 s y repetir el comando: el total baja sin editar ninguna otra escena.
+
+## #28 respaldos
+
+- [ ] Co-escribir una escena y pulsar **Aprobar** crea `.atlas/respaldos/<ruta de la escena>/<fecha>.md` con el texto de antes (míralo desde el explorador de archivos del sistema; Obsidian no muestra la carpeta).
+- [ ] **Restaurar respaldo de la nota** lista esa versión con su fecha; elegirla devuelve la escena al texto de antes y añade otro respaldo con el texto que se sustituyó.
+- [ ] En una nota sin respaldos, el mismo comando avisa "Esta nota no tiene respaldos.".
+- [ ] Tras 11 aprobaciones en la misma escena quedan 10 archivos en su carpeta de respaldos.

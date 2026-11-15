@@ -1,0 +1,297 @@
+
+> atlas@0.1.0 test
+> node --experimental-strip-types --test tests/*.test.mjs
+
+✔ PR contra staging con Closes #N cuenta el issue como vinculado (112.748279ms)
+✔ PR contra staging que no nombra el issue no lo vincula (88.759544ms)
+✔ repo ajeno en la palabra clave se ignora (90.669169ms)
+✔ contra la rama por defecto solo cuenta el enlace de GitHub (78.30102ms)
+✔ head nuevo tras un done verificado: answered sin aprobar el head nuevo (87.841079ms)
+✔ head nuevo sin ningún done: answered sigue en false (75.397964ms)
+✔ --deps: done sobre el head viejo y head nuevo marca needsYouAnswered sin needsYouDone (98.766352ms)
+✔ --deps: head nuevo sin done deja needsYouAnswered en false (106.515664ms)
+✔ --deps: un 🙋 nuevo sin done anula el done del 🙋 viejo (117.228484ms)
+✔ --deps: un done anterior al 🙋 no cuenta (87.765943ms)
+✔ el estándar define la clave language y los tokens que nunca se traducen (2.411537ms)
+✔ el informe de lane en español conserva la cabecera que leen las lanes (0.994805ms)
+✔ super-board-deps.sh lee blocked-by: de un bloqueo escrito en español (211.955628ms)
+✔ el 🙋 en español sigue marcando needsYou para deps.sh y approval.py (254.355792ms)
+✔ sin la clave language las plantillas siguen en inglés (3.321475ms)
+✔ npm run build produce main.js y onload no escribe en consola (4981.944176ms)
+(node:3483443) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file://src/characters.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ parsea alias y relaciones temporales (4.937712ms)
+✔ una relación sin wikilink se rechaza y la plantilla nace vacía (1.05738ms)
+✔ parsea alias en lista YAML de bloque (0.580225ms)
+(node:3483449) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file://src/characters.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ devuelve las secciones documentadas en orden (6.486153ms)
+✔ skills: globales, del POV y de los personajes presentes (0.898539ms)
+✔ fichas, mundo y conocimiento de lo que aparece en la escena (0.644823ms)
+✔ resúmenes previos, trama y texto de la escena (0.943071ms)
+✔ respeta el presupuesto máximo de caracteres (3.193421ms)
+✔ omite secciones vacías sin fallar (4.030998ms)
+✔ presupuesto: límite exacto, límite + 1 y límite − 1 (1.793932ms)
+✔ prioridad: con sitio solo para escena y skills, quedan esas dos (1.018399ms)
+✔ la escena cortada conserva el final; skills cortadas conservan el principio (3.403847ms)
+✔ presupuesto 1, 0 o negativo: nada entra, sin «…» suelto y sin fallar (1.58011ms)
+✔ skills de capítulo: solo las del capítulo N (1.944599ms)
+✔ un personaje entra solo por su alias, sin pov (2.910109ms)
+✔ omite secciones de solo espacios y escenas con solo frontmatter (1.124444ms)
+✔ mundo y fichas de un lugar nombrado: estado vigente en N (1.577706ms)
+✔ una escena que empieza con un corte `---` conserva todo su texto (0.70239ms)
+✔ skills de alcance escena no entran: el builder no recibe el nombre de la escena (0.570808ms)
+✔ el corte no parte un emoji (0.879915ms)
+✔ presupuesto NaN: nada entra y sin fallar; Infinity: entra todo (1.678871ms)
+✔ frontmatter real seguido de cortes `---`: sale el frontmatter, quedan los cortes (4.758623ms)
+(node:3483496) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file://src/entities.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ el índice lista personajes, lugares y objetos del proyecto (4.709434ms)
+✔ cada ficha lista las escenas que la nombran por nombre o alias (26.791298ms)
+✔ re-escanear actualiza apariciones sin duplicar entradas (1.000357ms)
+✔ dos alias del mismo personaje cuentan como el mismo personaje (1.993829ms)
+✔ las menciones son palabras completas y sin ficha usa el título de la nota (2.300723ms)
+✔ el proyecto sale de la nota activa (0.524653ms)
+✔ qa: escenas en subcarpetas en orden numérico y sin el proyecto vecino (0.692831ms)
+✔ qa: alias entre comillas con tilde y mayúsculas acentuadas (7.537723ms)
+✔ R1: alias en lista YAML de bloque (panel Propiedades de Obsidian) (1.004414ms)
+✔ R2: alias entre comillas con coma no se parte (0.517471ms)
+✔ frontmatter con saltos CRLF (0.264425ms)
+✔ qa v2: lista de bloque seguida de otra lista no mezcla sus ítems en los alias (0.326128ms)
+✔ qa v2: re-escanear tras quitar un alias de la ficha quita sus escenas (2.119641ms)
+(node:3483521) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file://src/extract.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ aceptar en una memoria sin frontmatter deja frontmatter válido y conserva la nota (8.377906ms)
+✔ aceptar en una memoria con frontmatter vacío deja frontmatter válido y conserva la nota (0.574223ms)
+✖ aceptar un hecho conserva campos y comentarios escritos a mano en _Memoria/ (1.844145ms)
+✖ aceptar un estado conserva campos escritos a mano en la ficha del lugar (1.643206ms)
+✖ aceptar en una memoria que abre con un --- de escena no mete el cuerpo en el frontmatter (1.502597ms)
+(node:3483537) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file://src/extract.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ la propuesta lista hechos, conocimiento y estados candidatos (IA simulada) (4.252194ms)
+✔ una respuesta sin JSON válido no propone nada (0.649831ms)
+✔ el prompt lista los hechos ya registrados para no duplicarlos (1.260794ms)
+✔ aceptar escribe solo los ítems marcados (aprobación parcial) (3.224117ms)
+✔ aceptar añade a una memoria existente sin pisar lo corregido a mano (0.781635ms)
+✔ rechazar todo no crea ni modifica _Memoria/ (0.389434ms)
+✔ un estado de un lugar sin ficha no crea la ficha (0.373345ms)
+(node:3483546) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file://src/entities.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ la plantilla crea una pista sembrada con los tres estados documentados (16.8368ms)
+✔ transición de estados: solo hacia delante, reforzar se puede repetir (0.594601ms)
+✔ el tablero lista solo pistas no resueltas del proyecto (17.070639ms)
+✔ objeto con peso narrativo que no reaparece genera aviso (10.084287ms)
+✔ qa: pista sin estado o con estado entre comillas; proyecto raíz (0.694765ms)
+✔ qa: aviso de objeto con cero escenas, alias cuenta, otro proyecto no (7.275452ms)
+✔ --slurp con --jq sale con 64 sin halt ni llamada a gh (90.084958ms)
+✔ --slurp con --jq=. sale con 64 sin halt ni llamada a gh (107.339014ms)
+✔ --slurp con -q sale con 64 sin halt ni llamada a gh (125.426249ms)
+✔ --slurp con --template sale con 64 sin halt ni llamada a gh (89.915948ms)
+✔ --slurp con -t sale con 64 sin halt ni llamada a gh (116.280214ms)
+✔ una lectura valida de comentarios con --slurp sigue funcionando (91.476794ms)
+✔ --jq sin --slurp sigue permitido (104.077121ms)
+(node:3483573) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file://src/characters.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ nodos personaje y aristas tipadas desde las fichas (5.130856ms)
+✔ el filtro por tipo oculta el resto (0.689254ms)
+✔ el filtro por capítulo solo deja relaciones vigentes en N (0.676622ms)
+✔ el círculo coloca cada nodo dentro del lienzo (0.679437ms)
+✔ los enlaces con alias, encabezado o sin corchetes apuntan a la ficha (0.633362ms)
+✔ el grafo y Mundo leen igual las mismas fichas: `hasta` cierra antes de ese capítulo (0.971353ms)
+✔ un límite sin número de capítulo queda abierto (0.300512ms)
+✔ sin filtro, o con tipo vacío, se ven todas las aristas (1.47136ms)
+✔ el círculo centra un nodo solo y no falla sin nodos (0.964329ms)
+✔ un enlace con carpeta apunta a la ficha, no a un nodo fantasma (0.859178ms)
+✔ el grafo solo lee las fichas del proyecto activo (0.884493ms)
+✔ un proyecto con nombre parecido no se cuela en el grafo (0.203764ms)
+✔ el capítulo sale de la nota del enlace, no de la carpeta ni de la escena (0.503012ms)
+✔ objetos leen el capítulo con el mismo helper: `[[Libro 2/Cap 07]]` es el 7 (0.243377ms)
+(node:3483580) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file://src/linter.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ hay al menos cinco reglas base, todas con mensaje y severidad aviso (1.459138ms)
+✔ raya: el guion o la raya con espacio no abren diálogo (14.474685ms)
+✔ gerundios: tres o más en la misma frase (0.439636ms)
+✔ dijo: dos veces en la misma línea o en líneas seguidas (0.525304ms)
+✔ adverbios en -mente solo en la acotación del diálogo (0.375269ms)
+✔ dequeísmo: verbo de pensar o decir + de que (0.76829ms)
+✔ el hallazgo trae línea, columna, mensaje y extracto; ignora el frontmatter (0.935176ms)
+✔ las skills con patrón se ejecutan y listan línea + mensaje (2.231165ms)
+✔ ignorar aquí suprime solo ese hallazgo en esa nota (1.25381ms)
+✔ qa: dos gerundios en la frase no bastan; tres en frases distintas tampoco (0.735741ms)
+✔ qa: el comentario de ignorar no mueve la columna ni calla otras reglas (0.422526ms)
+✔ qa: ignorar aquí una skill con patrón la calla solo en esa línea (1.145332ms)
+✔ qa: un patrón que casa vacío termina y no cuelga el linter (0.344702ms)
+✔ qa v2: separadores de escena con espacios o más de tres signos no son diálogo (0.260738ms)
+✔ qa v2: «ando» (4 letras) y los falsos con mayúscula no cuentan como gerundio (0.510176ms)
+✔ R5: un separador `---` en la línea 1 no es frontmatter y la primera escena se revisa (0.278421ms)
+✔ qa v3: el frontmatter con listas se salta y uno sin cerrar se revisa entero (0.771846ms)
+✔ qa v3: un «dijo» del frontmatter no cuenta para la primera línea (0.200749ms)
+✔ manifest declara id, versión y minAppVersion para plugins de la comunidad (14.452996ms)
+(node:3483606) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file://src/markers.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ el parser encuentra TK e INVESTIGAR y los pierde al borrarlos (3.142647ms)
+✔ inserta el marcador en el cursor (0.393962ms)
+(node:3483612) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file://src/memory.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ la plantilla trae hechos y conocimiento vacíos (4.40832ms)
+✔ el personaje sabe lo que el lector solo sospecha (1.778163ms)
+✔ cuenta solo hasta el capítulo pedido y gana el estado más reciente (1.171769ms)
+✔ acepta los cuatro estados y avisa de los demás (1.073651ms)
+✔ la consulta normaliza a quién y no cuenta capítulos anteriores a la memoria (0.503042ms)
+✔ el número de capítulo sale solo de un nombre que empieza por Cap (0.796652ms)
+✔ lee una memoria con CRLF y comillas simples (0.52338ms)
+✔ lee listas sin sangría (0.31586ms)
+(node:3483620) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file://src/objects.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ lee la ficha y responde quién tiene el objeto en cada capítulo (5.208459ms)
+✔ nadie tiene el objeto antes de su primera posesión (0.912676ms)
+✔ la plantilla trae descripción, origen, valores y función (0.813794ms)
+✔ qa: posesiones desordenadas y capítulo numérico siguen la línea de tiempo (0.527007ms)
+✔ qa: dos cambios en el mismo capítulo se quedan con el último anotado (0.435459ms)
+✔ qa: Objetos/ en la raíz y desde una nota suelta del proyecto (0.22312ms)
+(node:3483629) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file://src/places.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ lee el lugar padre y un cambio de estado (4.025678ms)
+(node:3483637) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file://src/plot.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ lee objetivo, conflicto, resultado, POV y subtrama de una escena (4.077763ms)
+✔ la plantilla de trama trae las secciones y el esqueleto elegido (1.980225ms)
+✔ la trama cae en la carpeta Trama del proyecto desde cualquier nota (0.90942ms)
+✔ una escena recién preparada se lee vacía y no confunde claves parecidas (1.00773ms)
+✔ un valor entre comillas respeta los escapes y una comilla suelta queda tal cual (0.700356ms)
+✔ una escena con CRLF se lee igual que con LF (0.328693ms)
+✔ un valor entre comillas simples se lee sin ellas (2.314357ms)
+✔ el frontmatter de cada trama se relee con el parser compartido, también con comillas en el nombre (1.683ms)
+(node:3483638) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file://src/providers.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ localhost pasa y un host no listado falla (3.517155ms)
+✔ la nube solo entra con opt-in y el host en la lista blanca (0.803715ms)
+✔ el README explica cómo compilar y cargar el plugin en local (12.84807ms)
+(node:3483660) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file://src/style.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ la plantilla trae frontmatter completo y secciones (5.313411ms)
+✔ severidades válidas y patrón expuesto solo en verificación por patrón (1.122731ms)
+✔ filtra skills por alcance personaje (0.532477ms)
+✔ qa: la skill se crea en Estilo/ del proyecto desde cualquier nota (0.497794ms)
+✔ qa: las tres severidades se leen y el patrón se oculta con verificación ia (0.86589ms)
+✔ qa: filtro por personaje con varios destinos y alcances con tilde (0.793376ms)
+(node:3483675) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file://src/vault.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ crea el árbol y el índice Longform sin pisar lo que ya existe (2.802032ms)
+✔ una tarjeta con 🙋 + done verificado que rebota a Ready entra en cards (223.556899ms)
+✔ una tarjeta con 🙋 sin done sigue con humanGated y fuera de cards (294.361775ms)
+✔ en Blocked, el done verificado va por resume y nunca por sweep (200.511575ms)
+✔ un 🙋 aprobado no libera una tarjeta con un bloqueante abierto (186.230999ms)
+✔ una tarjeta aprobada, reconstruida y rebotada otra vez a Ready entra en cards (222.778326ms)
+✔ head cambiado sin ningún done (solo approvalRefresh) sigue fuera de cards (202.608557ms)
+✔ el truth-check lo hacen dos agentes del workflow antes del Reviewer (5.691745ms)
+✔ el Reviewer nunca hace el truth-check inline (0.56613ms)
+✔ truth-check que no puede ejecutarse obliga a 🛡 Blocked (4.450698ms)
+✔ un Reviewer que avanza con truth-check inconcluso queda como failed (1.60749ms)
+✔ truth_gate sin disparar pasa SKIPPED al Reviewer (0.45749ms)
+✔ halted en el truth-check detiene la wave sin Reviewer (0.875126ms)
+✔ qa: una tarjeta que pasa QA → Review en la misma wave hace truth-check antes del Reviewer (1.765229ms)
+✔ qa: un agente salta el gate y el otro puntúa → INCONCLUSIVE (1.559492ms)
+✔ qa: resultado done sin headSha → INCONCLUSIVE (no se puede fijar el head) (1.294987ms)
+✔ qa: resultado sin confidence entera → INCONCLUSIVE (1.210581ms)
+✔ resultado done con headSha vacío → INCONCLUSIVE (1.16106ms)
+✔ qa v2: una tarjeta que falla QA no lanza truth-check ni Reviewer (0.581698ms)
+✔ qa v2: los agentes de truth-check son independientes (sin escrituras) (0.525735ms)
+✔ qa v2: INCONCLUSIVE + Reviewer que bloquea queda blocked, no failed (0.383254ms)
+✔ qa v2: SKIPPED pide al Reviewer bloquear si ve el gate disparado (0.478127ms)
+✔ qa v2: SCORED usa el mínimo de las dos confianzas (1.206124ms)
+(node:3483713) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file://src/characters.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ devuelve las relaciones vigentes en el capítulo N (17.057426ms)
+✔ incluye el poseedor de cada objeto rastreado en N (1.145262ms)
+✔ incluye el estado de cada lugar con un cambio en o antes de N (0.489899ms)
+✔ bordes: empate en el mismo capítulo, orden libre, capítulo ilegible y poseedor vacío (0.88827ms)
+ℹ tests 170
+ℹ suites 0
+ℹ pass 167
+ℹ fail 3
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 5157.125758
+
+✖ failing tests:
+
+test at tests/extract-qa.test.mjs:41:1
+✖ aceptar un hecho conserva campos y comentarios escritos a mano en _Memoria/ (1.844145ms)
+  AssertionError [ERR_ASSERTION]: el comentario a mano sigue
+      at TestContext.<anonymous> (file://tests/extract-qa.test.mjs:60:9)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: '---\ntipo: memoria\ncapitulo: 3\nhechos:\n  - id: anillo\n    texto: "El anillo"\n    verdad: true\n  - id: carta\n    texto: "La carta es falsa"\n    verdad: false\nconocimiento: []\n---\nCuerpo\n',
+    expected: /# corregido a mano/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at tests/extract-qa.test.mjs:65:1
+✖ aceptar un estado conserva campos escritos a mano en la ficha del lugar (1.643206ms)
+  AssertionError [ERR_ASSERTION]: el campo a mano sigue
+      at TestContext.<anonymous> (file://tests/extract-qa.test.mjs:72:9)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: '---\nnombre: Torre\nestados:\n  - capitulo: "[[Cap 01]]"\n    descripcion: "intacta"\n  - capitulo: "[[Cap 03]]"\n    descripcion: "en ruinas"\n---\n',
+    expected: /nota: x/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at tests/extract-qa.test.mjs:76:1
+✖ aceptar en una memoria que abre con un --- de escena no mete el cuerpo en el frontmatter (1.502597ms)
+  AssertionError [ERR_ASSERTION]: el cuerpo original queda intacto tras el frontmatter
+      at TestContext.<anonymous> (file://tests/extract-qa.test.mjs:81:9)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }

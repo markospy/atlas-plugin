@@ -71,6 +71,9 @@ function stubObsidian(state) {
 		ItemView: class extends Base {},
 		MarkdownView: class extends Base {},
 		Setting: class {},
+		FuzzySuggestModal: class extends Base {
+			setPlaceholder() {}
+		},
 		TFile: class {},
 		Modal: class extends Base {
 			open() {
