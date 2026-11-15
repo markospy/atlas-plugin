@@ -1,0 +1,30 @@
+
+> atlas@0.1.0 test
+> node --experimental-strip-types --test tests/*.test.mjs
+
+✔ npm run build produce main.js y onload no escribe en consola (4085.172372ms)
+✔ parsea alias y relaciones temporales (5.641643ms)
+✔ una relación sin wikilink se rechaza y la plantilla nace vacía (1.072423ms)
+✔ manifest declara id, versión y minAppVersion para plugins de la comunidad (19.790959ms)
+✔ el parser encuentra TK e INVESTIGAR y los pierde al borrarlos (2.846003ms)
+✔ inserta el marcador en el cursor (0.343145ms)
+✔ la plantilla trae hechos y conocimiento vacíos (4.659115ms)
+✔ el personaje sabe lo que el lector solo sospecha (1.646635ms)
+✔ cuenta solo hasta el capítulo pedido y gana el estado más reciente (1.335369ms)
+✔ acepta los cuatro estados y avisa de los demás (0.987325ms)
+✔ la consulta normaliza a quién y no cuenta capítulos anteriores a la memoria (0.562631ms)
+✔ lee el lugar padre y un cambio de estado (6.944212ms)
+✔ localhost pasa y un host no listado falla (2.69291ms)
+✔ la nube solo entra con opt-in y el host en la lista blanca (1.248188ms)
+✔ el README explica cómo compilar y cargar el plugin en local (12.020269ms)
+✔ crea el árbol y el índice Longform sin pisar lo que ya existe (3.391342ms)
+ℹ tests 16
+ℹ suites 0
+ℹ pass 16
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 4227.067295
+tsc: clean
+esbuild production: ok

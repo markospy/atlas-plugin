@@ -48,6 +48,13 @@ Prepara el plugin una vez:
 - [ ] **Marcadores del manuscrito** lista esos marcadores y el enlace abre la nota en esa línea.
 - [ ] Borrar `[TK]` del texto y volver a abrir el panel lo quita de la lista.
 
+## #8 grafo
+
+- [ ] Con dos fichas en `Personajes/` que se relacionan, **Grafo de relaciones** abre un SVG con un nodo por personaje y una arista con el tipo.
+- [ ] Elegir un tipo en el selector oculta las aristas de otros tipos.
+- [ ] Una relación con `desde: "[[Cap 07]]"` no aparece con capítulo 3 y sí con capítulo 7.
+- [ ] Con dos proyectos en la bóveda, el grafo abierto desde una nota de uno solo muestra sus personajes; `con: "[[Personajes/Marcos]]"` une la arista al nodo `Marcos`.
+
 ## #13 estilo
 
 - [ ] Con el nombre seleccionado en un capítulo, **Nueva skill de estilo** crea `Estilo/<nombre>.md` del proyecto con `alcance`, `aplica_a`, `severidad`, `verificacion`, `patron` y las secciones Regla / Ejemplo mal / Ejemplo bien.
@@ -69,3 +76,15 @@ Prepara el plugin una vez:
 - [ ] En un capítulo con `- Hola.` y `Pienso de que sí.`, **Revisar estilo de la nota** lista `raya-dialogo` y `dequeismo` con su línea. Al pulsar uno, el cursor va a esa línea.
 - [ ] Una skill global con `verificacion: patron` y `patron: '\bya\b'` sale en la lista con su nombre y su severidad.
 - [ ] **Ignorar aquí** añade `%% atlas-ignorar: … %%` a la línea y el hallazgo desaparece de la lista. Las otras notas no cambian.
+
+## #10 memoria
+
+- [ ] Con `Manuscrito/Cap 03.md` abierto, **Nueva memoria del capítulo** crea `_Memoria/Cap 03.md` del proyecto con `hechos` y `conocimiento`. Ejecutarlo otra vez avisa "Esa memoria ya existe." y no pisa la nota.
+- [ ] Con un hecho `padre` que `[[Elena]]` sabe y el `lector` sospecha, seleccionar `Elena` en el capítulo y ejecutar **Qué sabe en este capítulo** muestra `sabe: …`.
+- [ ] Sin selección, el mismo comando muestra `lector en cap. 3` con `sospecha: …`. Un `estado: intuye` sale como aviso y no se cuenta.
+
+## #11 foreshadowing
+
+- [ ] Con el nombre seleccionado en un capítulo, **Nueva pista (foreshadowing)** crea `Trama/<nombre>.md` del proyecto con `tipo: pista` y `estado: sembrado`. Otra vez con el mismo nombre avisa "Esa pista ya existe.".
+- [ ] Con la pista abierta, **Avanzar pista** pasa `estado` a `reforzado` y luego a `resuelto`; una vez resuelta no cambia.
+- [ ] **Tablero de foreshadowing** lista las pistas sembradas y reforzadas, no las resueltas. Un objeto con `funcion` nombrado en un solo capítulo sale en **Objetos que no vuelven**; al nombrarlo en un segundo capítulo y ejecutar el comando otra vez, desaparece.
