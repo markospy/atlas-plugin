@@ -165,13 +165,15 @@ function xmlText(text: string): string {
 		.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
+/** A heading is bold 16 pt with outline level 0, so Word's navigation pane lists it. */
 function paragraph(text: string, heading = false): string {
+	const outline = heading ? '<w:pPr><w:outlineLvl w:val="0"/></w:pPr>' : "";
 	const props = heading ? '<w:rPr><w:b/><w:sz w:val="32"/></w:rPr>' : "";
 	const runs = text
 		.split(/\r?\n/)
 		.map((line) => `<w:t xml:space="preserve">${xmlText(line)}</w:t>`)
 		.join("<w:br/>");
-	return `<w:p><w:r>${props}${runs}</w:r></w:p>`;
+	return `<w:p>${outline}<w:r>${props}${runs}</w:r></w:p>`;
 }
 
 const XML_HEAD = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n';

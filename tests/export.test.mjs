@@ -92,6 +92,12 @@ test("las incrustaciones ![[...]] no salen como texto (R7)", () => {
 	assert.doesNotMatch(xml, /mapa\.jpg/);
 });
 
+test("el encabezado de escena del DOCX tiene nivel de esquema para el panel de navegación (R8)", () => {
+	const xml = new TextDecoder().decode(docxFile([{ titulo: "Cap 01", texto: "Hola." }]));
+	assert.match(xml, /<w:p><w:pPr><w:outlineLvl w:val="0"\/><\/w:pPr><w:r><w:rPr><w:b\/><w:sz w:val="32"\/><\/w:rPr><w:t xml:space="preserve">Cap 01</);
+	assert.match(xml, /<w:p><w:r><w:t xml:space="preserve">Hola\.</);
+});
+
 test("el DOCX es un zip válido que Word abre, con el texto en orden", () => {
 	const escenas = [
 		{ titulo: "Cap 02", texto: "Primero va esta." },
