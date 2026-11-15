@@ -74,6 +74,10 @@ Selecciona el nombre y ejecuta **Nueva skill de estilo**. Crea `Estilo/<nombre>.
 
 En el editor, **Insertar [TK]** e **Insertar [INVESTIGAR]** dejan el marcador en el cursor. Asigna el atajo en **Settings → Hotkeys**. **Marcadores del manuscrito** abre el panel: lista los `[TK]` y `[INVESTIGAR: …]` de las notas bajo `Manuscrito/` y salta a la línea. Si borras el marcador del texto, desaparece del panel al volver a ejecutar el comando.
 
+## Metas y estadísticas
+
+Con una nota del proyecto abierta, ejecuta **Progreso de escritura**. El aviso muestra las palabras totales de las escenas bajo `Manuscrito/` (sin frontmatter; cada carácter chino, japonés o coreano cuenta como una palabra), las palabras de hoy frente a la **Meta diaria** de los ajustes (500 por defecto, 0 la desactiva) y la racha de días seguidos con palabras añadidas. Atlas vuelve a contar unos segundos después de guardar una escena. El registro diario vive en el `data.json` del plugin, en tu bóveda: no hay telemetría.
+
 ## Memoria
 
 Con un capítulo abierto (`Cap NN`), **Nueva memoria del capítulo** crea `_Memoria/Cap NN.md` con tres listas en el frontmatter, vacías y opcionales:
