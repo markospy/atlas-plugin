@@ -103,3 +103,22 @@ test("repetir una aprobación no duplica conocimiento ni estados", async () => {
 	await writeApproved(files, destino, candidatos, new Set(["c1", "e1"]));
 	assert.deepEqual([files.store.get(MEMORIA), files.store.get(LUGAR)], primera);
 });
+
+// QA #19 v3: un frontmatter real cuya primera línea no es `clave:` (comentario YAML o propiedad
+// de Obsidian con espacios) no es un `---` de escena. Aprobar no debe anteponer otro frontmatter:
+// los hechos ya registrados dejarían de leerse y `tipo`/`capitulo` pasarían al cuerpo.
+for (const [caso, primera] of [
+	["un comentario YAML", "# revisado a mano"],
+	["una propiedad con espacios", "mi nota: revisar"],
+]) {
+	test(`aceptar en una memoria cuyo frontmatter abre con ${caso} conserva los hechos ya registrados`, async () => {
+		const nota = ["---", primera, "tipo: memoria", "capitulo: 3", "hechos:", "  - id: anillo", '    texto: "El anillo"', "---", "Cuerpo", ""].join("\n");
+		assert.deepEqual(parseMemory(nota).hechos.map((h) => h.id), ["anillo"], "antes de aprobar se lee el hecho");
+		const files = mockFiles({ [MEMORIA]: nota });
+		await writeApproved(files, destino, parseProposal(RESPUESTA), new Set(["h1"]));
+		const escrita = files.store.get(MEMORIA);
+		assert.equal(escrita.split("\n").filter((line) => line === "---").length, 2, "un solo frontmatter");
+		assert.deepEqual(parseMemory(escrita).hechos.map((h) => h.id), ["anillo", "carta"]);
+		assert.equal(parseMemory(escrita).capitulo, 3);
+	});
+}
