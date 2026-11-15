@@ -83,6 +83,7 @@ function stubObsidian(state) {
 			}
 			addSettingTab() {}
 			registerView() {}
+			registerEvent() {}
 			addCommand(command) {
 				state.commands[command.id] = command;
 			}
@@ -151,6 +152,7 @@ async function setup(adapter = memoryAdapter()) {
 			getMarkdownFiles: () => files,
 			cachedRead: async (file) => SCENES[file.path],
 			getAbstractFileByPath: (path) => files.find((file) => file.path === path) ?? null,
+			on: () => ({}),
 		},
 		workspace: {
 			getActiveFile: () => ({ path: ACTIVE }),

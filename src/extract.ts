@@ -1,5 +1,5 @@
 import { KNOWLEDGE_STATES, memoryNote, memoryNoteName, parseMemory, type ChapterMemory, type Fact, type Knowledge } from "./memory.ts";
-import { frontmatterEnd } from "./frontmatter.ts";
+import { flowMaps, frontmatterEnd } from "./frontmatter.ts";
 import { parsePlace } from "./places.ts";
 
 /** One AI-proposed memory update. Nothing is written until the writer approves its `id`. */
@@ -195,7 +195,8 @@ function knowledgeKey(entry: Knowledge): string {
 
 /**
  * Appends `entries` to the end of the frontmatter list `key`. Every existing line stays byte for
- * byte (hand-written fields and comments included); an inline `key: []` becomes a block. A note
+ * byte (hand-written fields and comments included); an inline `key: [{…}, …]` becomes a block with
+ * its items first, values as written. Any other inline value throws rather than lose it. A note
  * without real frontmatter (`frontmatterEnd`: a `---` scene break is not one) gets a new one in front.
  */
 function appendToList(note: string, key: string, entries: string[][]): string {
@@ -211,7 +212,18 @@ function appendToList(note: string, key: string, entries: string[][]): string {
 	const at = lines.slice(1, close).findIndex((line) => line === `${key}:` || line.startsWith(`${key}: `)) + 1;
 	let insertAt = close;
 	let indent: string | null = null;
+	let kept: string[][] = [];
 	if (at > 0) {
+		const value = (lines[at] ?? "").slice(key.length + 1).trim();
+		if (value.length > 0 && !value.startsWith("#")) {
+			const maps = flowMaps(value);
+			if (maps === null) {
+				throw new Error(`«${key}» no es una lista en ${JSON.stringify(lines[at])}: corrígelo a mano antes de aprobar.`);
+			}
+			kept = maps.filter((pairs) => pairs.length > 0).map((pairs) => pairs.map(([field, raw]) => `${field}: ${raw}`));
+			// A flow list cannot take block items after it.
+			lines[at] = `${key}:`;
+		}
 		insertAt = at + 1;
 		for (let i = at + 1; i < close; i++) {
 			const line = lines[i] ?? "";
@@ -226,11 +238,9 @@ function appendToList(note: string, key: string, entries: string[][]): string {
 				insertAt = i + 1;
 			}
 		}
-		// An inline value (`key: []`) cannot take block items after it.
-		lines[at] = `${key}:`;
 	}
 	const pad = indent ?? "  ";
-	const block = entries.flatMap(([first, ...rest]) => [`${pad}- ${first}`, ...rest.map((line) => `${pad}  ${line}`)]);
+	const block = [...kept, ...entries].flatMap(([first, ...rest]) => [`${pad}- ${first}`, ...rest.map((line) => `${pad}  ${line}`)]);
 	lines.splice(insertAt, 0, ...(at > 0 ? [] : [`${key}:`]), ...block);
 	return lines.join(eol);
 }

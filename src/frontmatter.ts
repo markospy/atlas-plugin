@@ -1,11 +1,16 @@
-/** YAML frontmatter between the opening `---` and the next `---` line, with CRLF read as LF. */
+/** YAML frontmatter between the opening `---` and its closing `---` line, with CRLF read as LF. */
 export function frontmatterBody(note: string): string {
-	const text = note.replace(/\r\n/g, "\n");
-	if (!text.startsWith("---\n")) {
-		return "";
-	}
-	const end = text.indexOf("\n---", 3);
-	return end === -1 ? "" : text.slice(4, end);
+	const lines = note.replace(/\r\n/g, "\n").split("\n");
+	const close = closingLine(lines);
+	return close === -1 ? "" : lines.slice(1, close).join("\n");
+}
+
+/**
+ * Index of the `---` line (trailing spaces allowed, as Obsidian reads it) that closes a block
+ * opened by `---` on line 0, or -1. Reader and writer share it so they agree where it ends.
+ */
+function closingLine(lines: readonly string[]): number {
+	return lines[0] === "---" ? lines.findIndex((line, at) => at > 0 && line.trimEnd() === "---") : -1;
 }
 
 /**
@@ -18,7 +23,7 @@ export function noteBody(note: string): string {
 	if (lines[0] !== "---" || !/^[\p{L}\w-]+:(\s|$)/u.test(lines[1] ?? "")) {
 		return text.trim();
 	}
-	const end = lines.indexOf("---", 1);
+	const end = closingLine(lines);
 	return end === -1 ? text.trim() : lines.slice(end + 1).join("\n").trim();
 }
 
@@ -29,10 +34,7 @@ export function noteBody(note: string): string {
  * Obsidian Properties writes them) or an indented / `- ` continuation.
  */
 export function frontmatterEnd(lines: readonly string[]): number {
-	if (lines[0] !== "---") {
-		return -1;
-	}
-	const end = lines.indexOf("---", 1);
+	const end = closingLine(lines);
 	if (end === -1) {
 		return -1;
 	}
@@ -79,10 +81,16 @@ export function list(frontmatter: string, key: string): string[] {
 
 /**
  * Items of a top-level list of maps: `key:` then `- field: value` lines with any indent
- * (zero-indent included), each item's other fields indented deeper than its dash.
+ * (zero-indent included), each item's other fields indented deeper than its dash; or a one-line
+ * flow list `key: [{field: value, …}, …]`.
  */
 export function mapList(frontmatter: string, key: string): Record<string, string>[] {
 	const lines = frontmatter.split("\n");
+	const inline = lines.find((line) => line.startsWith(`${key}: `) && line.slice(key.length + 1).trim().startsWith("["));
+	if (inline !== undefined) {
+		const maps = flowMaps(inline.slice(key.length + 1)) ?? [];
+		return maps.map((pairs) => Object.fromEntries(pairs.map(([field, value]) => [field, unquote(value)])));
+	}
 	const start = lines.findIndex((line) => line.trimEnd() === `${key}:`);
 	if (start === -1) {
 		return [];
@@ -109,17 +117,56 @@ export function mapList(frontmatter: string, key: string): Record<string, string
 	return items;
 }
 
-/** Splits on commas that sit outside quotes. */
+/**
+ * Raw `field`, `value` pairs of each map in a one-line flow list `[{a: 1, b: "x, y"}, …]`, values
+ * as written; `[]` for an empty list; null when `value` is anything else.
+ */
+export function flowMaps(value: string): [string, string][][] | null {
+	const trimmed = value.trim();
+	if (!trimmed.startsWith("[") || !trimmed.endsWith("]")) {
+		return null;
+	}
+	const maps: [string, string][][] = [];
+	for (const part of splitOutsideQuotes(trimmed.slice(1, -1))) {
+		const item = part.trim();
+		if (item.length === 0) {
+			continue;
+		}
+		if (!item.startsWith("{") || !item.endsWith("}")) {
+			return null;
+		}
+		const pairs: [string, string][] = [];
+		for (const entry of splitOutsideQuotes(item.slice(1, -1))) {
+			if (entry.trim().length === 0) {
+				continue;
+			}
+			const pair = /^\s*([\p{L}\w-]+)\s*:(?:\s+(.*))?$/su.exec(entry);
+			if (!pair) {
+				return null;
+			}
+			pairs.push([pair[1] ?? "", (pair[2] ?? "").trim()]);
+		}
+		maps.push(pairs);
+	}
+	return maps;
+}
+
+/** Splits on commas that sit outside quotes and outside nested `{}` / `[]`. */
 export function splitOutsideQuotes(inner: string): string[] {
 	const parts: string[] = [];
 	let current = "";
 	let quote = "";
+	let depth = 0;
 	for (const char of inner) {
 		if (quote.length > 0) {
 			quote = char === quote ? "" : quote;
 		} else if (char === '"' || char === "'") {
 			quote = char;
-		} else if (char === ",") {
+		} else if (char === "{" || char === "[") {
+			depth++;
+		} else if (char === "}" || char === "]") {
+			depth = Math.max(0, depth - 1);
+		} else if (char === "," && depth === 0) {
 			parts.push(current);
 			current = "";
 			continue;

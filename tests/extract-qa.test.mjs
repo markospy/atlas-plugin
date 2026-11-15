@@ -142,3 +142,33 @@ test("aceptar un hecho no borra una lista hechos: en línea escrita a mano", asy
 	const escrita = files.store.get(MEMORIA);
 	assert.match(escrita, /anillo/, "el hecho escrito a mano sigue en la nota");
 });
+
+// #70: lector y escritor comparten el frontmatter de src/frontmatter.ts.
+test("aceptar convierte una lista hechos: en línea en bloque y el lector ve todas las entradas", async () => {
+	const nota = ["---", "tipo: memoria", "capitulo: 3", 'hechos: [{id: anillo, texto: El anillo}, {id: "llave", texto: "Una llave, rota", verdad: true}]', "---", "Cuerpo", ""].join("\n");
+	assert.deepEqual(parseMemory(nota).hechos.map((h) => h.id), ["anillo", "llave"], "el lector lee la lista en línea");
+	const files = mockFiles({ [MEMORIA]: nota });
+	await writeApproved(files, destino, parseProposal(RESPUESTA), new Set(["h1"]));
+	const escrita = files.store.get(MEMORIA);
+	assert.deepEqual(parseMemory(escrita).hechos, [
+		{ id: "anillo", texto: "El anillo", verdad: null },
+		{ id: "llave", texto: "Una llave, rota", verdad: true },
+		{ id: "carta", texto: "La carta es falsa", verdad: false },
+	]);
+	assert.equal(parseMemory(escrita).capitulo, 3);
+});
+
+test("aceptar un hecho ya escrito en una lista en línea no lo duplica", async () => {
+	const nota = ["---", "tipo: memoria", "capitulo: 3", "hechos: [{id: carta, texto: A mano}]", "---", ""].join("\n");
+	const files = mockFiles({ [MEMORIA]: nota });
+	const escritos = await writeApproved(files, destino, parseProposal(RESPUESTA), new Set(["h1"]));
+	assert.deepEqual(escritos, []);
+	assert.equal(files.store.get(MEMORIA), nota);
+});
+
+test("aceptar en una lista hechos: con un valor que no es lista falla sin tocar la nota", async () => {
+	const nota = ["---", "tipo: memoria", "capitulo: 3", "hechos: revisar", "---", ""].join("\n");
+	const files = mockFiles({ [MEMORIA]: nota });
+	await assert.rejects(writeApproved(files, destino, parseProposal(RESPUESTA), new Set(["h1"])), /hechos/);
+	assert.equal(files.store.get(MEMORIA), nota);
+});
