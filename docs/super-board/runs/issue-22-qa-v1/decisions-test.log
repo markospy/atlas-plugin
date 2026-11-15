@@ -1,0 +1,18 @@
+(node:3943268) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file://./src/decisions.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to ./package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ rename de lugar: lista solo capítulos anteriores al corte que aún nombran el valor antiguo (6.06276ms)
+✔ marcar un capítulo como alineado lo quita de la lista, sin tocar los demás (1.007655ms)
+✔ un capítulo alineado que vuelve a nombrar el valor antiguo sigue fuera: la marca es del escritor (1.268428ms)
+✔ varias decisiones llevan id propio y se validan (3.078117ms)
+✔ el almacén vacío o ausente arranca sin decisiones (0.841638ms)
+✔ el capítulo justo antes del corte entra, con todas sus escenas en orden numérico (14.375426ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 373.244741

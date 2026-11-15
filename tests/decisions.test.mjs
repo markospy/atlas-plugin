@@ -67,3 +67,16 @@ test("el almacén vacío o ausente arranca sin decisiones", () => {
 	const stored = { decisiones: { Novela: [{ id: "d1", antiguo: "a", nuevo: "b", desde: 2, alineados: [1] }] } };
 	assert.deepEqual(parseDecisions(JSON.stringify(stored)), stored);
 });
+
+test("el capítulo justo antes del corte entra, con todas sus escenas en orden numérico", () => {
+	const [decision] = addDecision([], { antiguo: "posada del Ciervo", nuevo: "El Reyezuelo", desde: 7 });
+	const notes = [
+		scene("Cap 06/Escena 10.md", "Otra vez la posada del ciervo."),
+		scene("Cap 06/Escena 2.md", "La POSADA DEL CIERVO cerraba tarde."),
+		scene("Cap 06/Escena 3.md", "Sin mención."),
+		scene("Prologo.md", "La posada del Ciervo, sin capítulo."),
+	];
+	assert.deepEqual(pendingChapters("Novela", decision, notes), [
+		{ capitulo: 6, escenas: ["Novela/Manuscrito/Cap 06/Escena 2.md", "Novela/Manuscrito/Cap 06/Escena 10.md"] },
+	]);
+});
