@@ -88,3 +88,19 @@ Con una nota del proyecto abierta, ejecuta **Índice de entidades (escanear manu
 | `dequeismo` | aparece `de que` tras un verbo de pensar o decir (`pienso de que`) |
 
 También ejecuta las skills de `Estilo/` con `alcance: global` y `verificacion: patron`. El mensaje es el `nombre` de la skill, con su `severidad`. El patrón no distingue mayúsculas, y una expresión regular inválida se ignora. **Ignorar aquí** añade `%% atlas-ignorar: <regla> %%` al final de la línea. Así se calla esa regla en esa línea y en esa nota. Para recuperar el aviso, borra el comentario. El frontmatter no se revisa.
+
+## Contexto de escena (IA)
+
+`buildSceneContext` (`src/context.ts`) arma el contexto de una escena para la IA sin mandar el libro entero. No tiene interfaz todavía: lo usarán revisar, co-escribir y extraer. Devuelve estas secciones con nombre, en este orden:
+
+| Sección | Contiene |
+|---|---|
+| `skills` | skills `global`, las de `POV` del `pov` de la escena, las de `personaje` de los presentes y las de `capítulo` del capítulo N |
+| `fichas` | personajes presentes (el `pov` o nombrados por `nombre` o `alias`), objetos y lugares nombrados |
+| `mundo` | relaciones, poseedores y estados de lugar en el capítulo N, solo de lo presente |
+| `conocimiento` | qué sabe cada personaje presente y el lector en el capítulo N |
+| `resumenes` | resúmenes de los capítulos anteriores a N, del más antiguo al más reciente |
+| `trama` | `subtrama` de la escena y la nota de trama activa |
+| `escena` | texto de la escena, sin frontmatter |
+
+Una sección vacía no aparece. `presupuesto` es el máximo de caracteres sumando todas las secciones. Si no cabe, se llenan en este orden: escena, skills, fichas, conocimiento, mundo, trama, resúmenes. La primera que no cabe se corta con `…`: la escena y los resúmenes conservan el final, las demás el principio. Las que quedan después se omiten. `recortadas` lista las secciones cortadas u omitidas, para depurar.
