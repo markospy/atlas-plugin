@@ -94,3 +94,26 @@ test("peekAt sin coincidencia lo indica sin lanzar", () => {
 	assert.deepEqual(peekAt("Nadie conocido aquí.", 3, ENTITIES, SHEETS, 5), { ok: false });
 	assert.deepEqual(peekAt("", 0, [], { personajes: [], objetos: [], lugares: [] }, 5), { ok: false });
 });
+
+test("entityAt: gana la coincidencia más larga aunque la corta venga después", () => {
+	const entities = [
+		{ tipo: "lugar", nombre: "Casa del abuelo", alias: [], path: "Novela/Lugares/Casa del abuelo.md", escenas: [] },
+		{ tipo: "lugar", nombre: "Casa", alias: [], path: "Novela/Lugares/Casa.md", escenas: [] },
+	];
+	assert.equal(entityAt("la casa del abuelo", 4, entities)?.nombre, "Casa del abuelo");
+	assert.equal(entityAt("la casa vieja", 4, entities)?.nombre, "Casa");
+});
+
+test("entityAt: solo palabra completa y el cursor fuera de la mención no cuenta", () => {
+	const line = "Elenas y a Marcos";
+	assert.equal(entityAt(line, 1, ENTITIES), null);
+	// Column just before the match start (the space) is outside the word.
+	assert.equal(entityAt(line, line.indexOf("Marcos") - 1, ENTITIES), null);
+	assert.equal(entityAt(line, line.indexOf("Marcos"), ENTITIES)?.nombre, "Marcos");
+});
+
+test("peekAt sin capítulo devuelve la entidad sin estado", () => {
+	const found = peekAt("Elena", 0, ENTITIES, SHEETS, null);
+	assert.equal(found.ok, true);
+	assert.deepEqual(found.estado, []);
+});
