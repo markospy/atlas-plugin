@@ -1,5 +1,6 @@
 import type { CharacterSheet } from "./characters";
 import { mentions } from "./entities.ts";
+import { noteBody } from "./frontmatter.ts";
 import { chapterNumber, linkTarget } from "./graph.ts";
 import { memoryNoteName, READER, whatKnows, type ChapterMemory } from "./memory.ts";
 import type { ObjectSheet } from "./objects";
@@ -55,7 +56,7 @@ export interface SceneContext {
 /** Context for one scene task: only what the scene needs, within `presupuesto` characters. */
 export function buildSceneContext(input: SceneContextInput): SceneContext {
 	const scene = parseScene(input.escena);
-	const text = sceneText(input.escena);
+	const text = noteBody(input.escena);
 	const pov = key(scene.pov);
 	const present = input.personajes.filter(
 		(sheet) => (pov.length > 0 && key(sheet.nombre) === pov) || mentions(text, [sheet.nombre, ...sheet.alias]),
@@ -75,6 +76,9 @@ export function buildSceneContext(input: SceneContextInput): SceneContext {
 				return targets.some((target) => presentNames.has(target));
 			case "capítulo":
 				return skill.aplica_a.some((target) => chapterNumber(target) === input.capitulo);
+			case "escena":
+				// The builder gets no scene name to match `aplica_a`, so scene skills stay out.
+				return false;
 			default:
 				return false;
 		}
@@ -124,7 +128,7 @@ export function buildSceneContext(input: SceneContextInput): SceneContext {
 		}
 		recortadas.push(name);
 		if (left > 1) {
-			fitted.set(name, KEEP_TAIL.has(name) ? `…${full.slice(full.length - left + 1)}` : `${full.slice(0, left - 1)}…`);
+			fitted.set(name, KEEP_TAIL.has(name) ? `…${tail(full, left - 1)}` : `${head(full, left - 1)}…`);
 			left = 0;
 		}
 	}
@@ -140,16 +144,20 @@ export function buildSceneContext(input: SceneContextInput): SceneContext {
 	};
 }
 
-function sceneText(note: string): string {
-	const text = note.replace(/\r\n/g, "\n");
-	if (text.startsWith("---\n")) {
-		const end = text.indexOf("\n---", 3);
-		if (end !== -1) {
-			const after = text.indexOf("\n", end + 1);
-			return after === -1 ? "" : text.slice(after + 1).trim();
-		}
-	}
-	return text.trim();
+/** First `n` UTF-16 units of `text`, or fewer so no surrogate pair is split. */
+function head(text: string, n: number): string {
+	return text.slice(0, isLowSurrogate(text, n) ? n - 1 : n);
+}
+
+/** Last `n` UTF-16 units of `text`, or fewer so no surrogate pair is split. */
+function tail(text: string, n: number): string {
+	const start = text.length - n;
+	return text.slice(isLowSurrogate(text, start) ? start + 1 : start);
+}
+
+function isLowSurrogate(text: string, at: number): boolean {
+	const code = text.charCodeAt(at);
+	return code >= 0xdc00 && code <= 0xdfff;
 }
 
 function key(name: string): string {

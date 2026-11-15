@@ -8,6 +8,20 @@ export function frontmatterBody(note: string): string {
 	return end === -1 ? "" : text.slice(4, end);
 }
 
+/**
+ * Note text after its frontmatter, trimmed, with CRLF read as LF. A `---` scene break also
+ * opens a note: there is frontmatter only when the next line is a `clave:` line.
+ */
+export function noteBody(note: string): string {
+	const text = note.replace(/\r\n/g, "\n");
+	const lines = text.split("\n");
+	if (lines[0] !== "---" || !/^[\p{L}\w-]+:(\s|$)/u.test(lines[1] ?? "")) {
+		return text.trim();
+	}
+	const end = lines.indexOf("---", 1);
+	return end === -1 ? text.trim() : lines.slice(end + 1).join("\n").trim();
+}
+
 /** Value of a top-level `key: value` line, unquoted; "" when missing. */
 export function scalar(frontmatter: string, key: string): string {
 	const match = new RegExp(`^${key}:[ \\t]*(.*)$`, "m").exec(frontmatter);

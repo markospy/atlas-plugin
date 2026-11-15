@@ -269,3 +269,34 @@ test("mundo y fichas de un lugar nombrado: estado vigente en N", () => {
 	assert.match(section(context, "mundo"), /- Casa del lago: quemada/);
 	assert.doesNotMatch(section(context, "mundo"), /intacta/);
 });
+
+test("una escena que empieza con un corte `---` conserva todo su texto", () => {
+	const escena = "---\nPrimera parte.\n---\nSegunda parte.";
+	const context = buildSceneContext(project({ escena }));
+	assert.equal(section(context, "escena"), escena);
+	const crlf = buildSceneContext(project({ escena: "---\r\nPrimera parte.\r\n---\r\nSegunda parte." }));
+	assert.equal(section(crlf, "escena"), escena);
+});
+
+test("skills de alcance escena no entran: el builder no recibe el nombre de la escena", () => {
+	const skills = [
+		parseSkill(`---\ntipo: skill\nnombre: "Silencio"\nalcance: escena\naplica_a: ["[[Escena 1]]"]\nseveridad: aviso\nverificacion: ia\n---\n`),
+	];
+	assert.equal(section(buildSceneContext(project({ skills })), "skills"), "");
+});
+
+test("el corte no parte un emoji", () => {
+	const base = { capitulo: 1, skills: [], personajes: [], objetos: [], lugares: [], memorias: [], resumenes: [], trama: "" };
+	const tail = buildSceneContext({ ...base, escena: "😀😀", presupuesto: 2 });
+	assert.deepEqual(tail.secciones, [{ nombre: "escena", texto: "…" }]);
+	const tail4 = buildSceneContext({ ...base, escena: "a😀😀", presupuesto: 4 });
+	assert.equal(section(tail4, "escena"), "…😀");
+	const head = buildSceneContext({ ...base, escena: "x", trama: "😀😀", presupuesto: 3 });
+	assert.equal(section(head, "trama"), "…");
+	for (const context of [tail, tail4, head]) {
+		assert.ok(context.total <= context.secciones.length + 4);
+		for (const s of context.secciones) {
+			assert.doesNotMatch(s.texto, /[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/);
+		}
+	}
+});

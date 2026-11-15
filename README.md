@@ -95,7 +95,7 @@ También ejecuta las skills de `Estilo/` con `alcance: global` y `verificacion: 
 
 | Sección | Contiene |
 |---|---|
-| `skills` | skills `global`, las de `POV` del `pov` de la escena, las de `personaje` de los presentes y las de `capítulo` del capítulo N |
+| `skills` | skills `global`, las de `POV` del `pov` de la escena, las de `personaje` de los presentes y las de `capítulo` del capítulo N; las de `escena` no entran, porque el builder no recibe el nombre de la escena |
 | `fichas` | personajes presentes (el `pov` o nombrados por `nombre` o `alias`), objetos y lugares nombrados |
 | `mundo` | relaciones, poseedores y estados de lugar en el capítulo N, solo de lo presente |
 | `conocimiento` | qué sabe cada personaje presente y el lector en el capítulo N |
@@ -103,4 +103,4 @@ También ejecuta las skills de `Estilo/` con `alcance: global` y `verificacion: 
 | `trama` | `subtrama` de la escena y la nota de trama activa |
 | `escena` | texto de la escena, sin frontmatter |
 
-Una sección vacía no aparece. `presupuesto` es el máximo de caracteres sumando todas las secciones. Si no cabe, se llenan en este orden: escena, skills, fichas, conocimiento, mundo, trama, resúmenes. La primera que no cabe se corta con `…`: la escena y los resúmenes conservan el final, las demás el principio. Las que quedan después se omiten. `recortadas` lista las secciones cortadas u omitidas, para depurar.
+El texto de la escena es la nota sin su frontmatter; un `---` inicial seguido de una línea que no es `clave:` es un corte de escena y se conserva. Una sección vacía no aparece. `presupuesto` es el máximo de caracteres sumando todas las secciones. Si no cabe, se llenan en este orden: escena, skills, fichas, conocimiento, mundo, trama, resúmenes. La primera que no cabe se corta con `…`: la escena y los resúmenes conservan el final, las demás el principio. Las que quedan después se omiten. `recortadas` lista las secciones cortadas u omitidas, para depurar.
