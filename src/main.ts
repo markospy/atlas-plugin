@@ -1,4 +1,4 @@
-import { Notice, Plugin, TFile, type Vault } from "obsidian";
+import { type Editor, Notice, Plugin, TFile, type Vault } from "obsidian";
 
 import { characterFolder, characterNote, parseCharacter, relationErrors } from "./characters";
 import { ENTITY_VIEW, EntityView } from "./entity-view";
@@ -14,10 +14,12 @@ import {
 	READER,
 	whatKnows,
 } from "./memory";
+import { BASE_RULES, patternRules } from "./linter";
+import { LintModal } from "./lint-modal";
 import { MARKER_VIEW, MarkerView } from "./marker-view";
 import { DEFAULT_PROVIDER_SETTINGS, type ProviderSettings } from "./providers";
 import { AtlasSettingTab } from "./settings";
-import { skillFolder, skillNote } from "./style";
+import { parseSkill, skillFolder, skillNote, skillsFor } from "./style";
 import { createAtlasProject, type AtlasFiles } from "./vault";
 
 function filesFromVault(vault: Vault): AtlasFiles {
@@ -127,6 +129,13 @@ export default class AtlasPlugin extends Plugin {
 			name: "Qué sabe en este capítulo",
 			editorCallback: (editor) => {
 				void this.whatKnowsHere(editor.getSelection().trim() || READER);
+			},
+		});
+		this.addCommand({
+			id: "lint-note",
+			name: "Revisar estilo de la nota",
+			editorCallback: (editor) => {
+				void this.lintNote(editor);
 			},
 		});
 		this.addCommand({
@@ -275,6 +284,13 @@ export default class AtlasPlugin extends Plugin {
 		const lines = known.map((fact) => `${fact.estado}: ${fact.texto}`);
 		const summary = lines.length > 0 ? lines.join("\n") : "Nada registrado.";
 		new Notice(`${who} en cap. ${chapter}\n${summary}${errors.length > 0 ? `\n${errors.join("\n")}` : ""}`);
+	}
+
+	private async lintNote(editor: Editor): Promise<void> {
+		const folder = skillFolder(this.app.workspace.getActiveFile()?.path ?? "");
+		const notes = this.app.vault.getMarkdownFiles().filter((file) => file.path.startsWith(`${folder}/`));
+		const skills = await Promise.all(notes.map(async (file) => parseSkill(await this.app.vault.read(file))));
+		new LintModal(this.app, editor, [...BASE_RULES, ...patternRules(skillsFor(skills, "global"))]).open();
 	}
 
 	async saveSettings(): Promise<void> {
