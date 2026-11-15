@@ -69,3 +69,9 @@ Prepara el plugin una vez:
 - [ ] En un capítulo con `- Hola.` y `Pienso de que sí.`, **Revisar estilo de la nota** lista `raya-dialogo` y `dequeismo` con su línea. Al pulsar uno, el cursor va a esa línea.
 - [ ] Una skill global con `verificacion: patron` y `patron: '\bya\b'` sale en la lista con su nombre y su severidad.
 - [ ] **Ignorar aquí** añade `%% atlas-ignorar: … %%` a la línea y el hallazgo desaparece de la lista. Las otras notas no cambian.
+
+## #10 memoria
+
+- [ ] Con `Manuscrito/Cap 03.md` abierto, **Nueva memoria del capítulo** crea `_Memoria/Cap 03.md` del proyecto con `hechos` y `conocimiento`. Ejecutarlo otra vez avisa "Esa memoria ya existe." y no pisa la nota.
+- [ ] Con un hecho `padre` que `[[Elena]]` sabe y el `lector` sospecha, seleccionar `Elena` en el capítulo y ejecutar **Qué sabe en este capítulo** muestra `sabe: …`.
+- [ ] Sin selección, el mismo comando muestra `lector en cap. 3` con `sospecha: …`. Un `estado: intuye` sale como aviso y no se cuenta.
