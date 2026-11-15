@@ -95,6 +95,10 @@ También avisa de un `hecho` del capítulo (en `usos` o `conocimiento`) que no e
 
 Con una nota del proyecto abierta, ejecuta **Índice de entidades (escanear manuscrito)**. El panel lista los personajes, lugares y objetos del proyecto y, bajo cada ficha, las escenas de `Manuscrito/` que la nombran por `nombre` o por cualquiera de sus `alias` (palabra completa, sin distinguir mayúsculas). El escaneo es local, sin IA, y solo corre cuando ejecutas el comando: vuelve a ejecutarlo tras editar y el índice se rehace sin duplicar escenas.
 
+## Vistazo de entidad
+
+Ejecuta **Vistazo de entidad (panel lateral)** y sigue escribiendo. Al situar el cursor sobre el `nombre` o un `alias` de un personaje, lugar u objeto, el panel muestra su ficha y su estado en el capítulo de la nota (`Cap NN`): relaciones vigentes, quién posee el objeto o en qué estado está el lugar. Si no hay coincidencia, el panel lo dice. Es de solo lectura, lee las fichas una vez por proyecto y se actualiza con un retardo corto para no frenar el tecleo.
+
 ## Linter de estilo
 
 **Revisar estilo de la nota** revisa la nota abierta sin IA y lista cada hallazgo con su línea. Pulsa el hallazgo para ir a esa línea. Las reglas base, todas con severidad `aviso`:

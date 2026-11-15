@@ -27,6 +27,7 @@ import { PLOT_STRUCTURES, plotFolder, plotNote, SCENE_FIELDS, type PlotStructure
 import { BASE_RULES, patternRules } from "./linter";
 import { LintModal } from "./lint-modal";
 import { MARKER_VIEW, MarkerView } from "./marker-view";
+import { PEEK_VIEW, PeekView } from "./peek-view";
 import { DEFAULT_PROVIDER_SETTINGS, ollamaProvider, type ProviderSettings } from "./providers";
 import { NO_PROVIDER, providerReady, reviewScene } from "./review";
 import { ReviewModal } from "./review-modal";
@@ -74,6 +75,7 @@ export default class AtlasPlugin extends Plugin {
 		this.registerView(GRAPH_VIEW, (leaf) => new GraphView(leaf));
 		this.registerView(ENTITY_VIEW, (leaf) => new EntityView(leaf));
 		this.registerView(FORESHADOW_VIEW, (leaf) => new ForeshadowView(leaf));
+		this.registerView(PEEK_VIEW, (leaf) => new PeekView(leaf));
 		this.addCommand({
 			id: "insert-tk",
 			name: "Insertar [TK]",
@@ -107,6 +109,13 @@ export default class AtlasPlugin extends Plugin {
 			name: "Índice de entidades (escanear manuscrito)",
 			callback: () => {
 				void this.openEntities();
+			},
+		});
+		this.addCommand({
+			id: "show-entity-peek",
+			name: "Vistazo de entidad (panel lateral)",
+			callback: () => {
+				void this.openPeek();
 			},
 		});
 		this.addCommand({
@@ -618,6 +627,19 @@ export default class AtlasPlugin extends Plugin {
 		if (leaf.view instanceof ForeshadowView) {
 			await leaf.view.refresh();
 		}
+	}
+
+	private async openPeek(): Promise<void> {
+		const existing = this.app.workspace.getLeavesOfType(PEEK_VIEW);
+		const leaf = existing[0] ?? this.app.workspace.getRightLeaf(false);
+		if (!leaf) {
+			return;
+		}
+		if (existing.length === 0) {
+			// `active: false` keeps the editor focused, so the cursor stays on the scene.
+			await leaf.setViewState({ type: PEEK_VIEW, active: false });
+		}
+		await this.app.workspace.revealLeaf(leaf);
 	}
 
 	private async openEntities(): Promise<void> {
