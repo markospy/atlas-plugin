@@ -175,3 +175,97 @@ test("omite secciones vacías sin fallar", () => {
 	);
 	assert.deepEqual(buildSceneContext({ ...project(), escena: "", presupuesto: 0 }).secciones, []);
 });
+
+// QA (v1): bordes del presupuesto, prioridad, corte y secciones vacías.
+const FULL = buildSceneContext(project()).total;
+
+test("presupuesto: límite exacto, límite + 1 y límite − 1", () => {
+	for (const presupuesto of [FULL, FULL + 1]) {
+		const context = buildSceneContext(project({ presupuesto }));
+		assert.equal(context.total, FULL);
+		assert.deepEqual(context.recortadas, []);
+	}
+	const short = buildSceneContext(project({ presupuesto: FULL - 1 }));
+	assert.equal(short.total, FULL - 1);
+	assert.deepEqual(short.recortadas, ["resumenes"]); // la de menor prioridad
+	const resumenes = section(short, "resumenes");
+	assert.ok(resumenes.startsWith("…"), resumenes); // los resúmenes conservan el final
+	assert.ok(resumenes.endsWith("Elena encuentra la carta."), resumenes);
+});
+
+test("prioridad: con sitio solo para escena y skills, quedan esas dos", () => {
+	const full = buildSceneContext(project());
+	const presupuesto = section(full, "escena").length + section(full, "skills").length;
+	const context = buildSceneContext(project({ presupuesto }));
+	assert.deepEqual(
+		context.secciones.map((s) => s.nombre),
+		["skills", "escena"],
+	);
+	assert.deepEqual(context.recortadas, ["fichas", "mundo", "conocimiento", "resumenes", "trama"]);
+	assert.equal(context.total, presupuesto);
+});
+
+test("la escena cortada conserva el final; skills cortadas conservan el principio", () => {
+	const escena = section(buildSceneContext(project()), "escena");
+	const tight = buildSceneContext(project({ presupuesto: 20 }));
+	assert.equal(section(tight, "escena"), `…${escena.slice(escena.length - 19)}`);
+	assert.deepEqual(
+		tight.secciones.map((s) => s.nombre),
+		["escena"],
+	);
+	const skills = section(buildSceneContext(project()), "skills");
+	const head = buildSceneContext(project({ presupuesto: escena.length + 10 }));
+	assert.equal(section(head, "skills"), `${skills.slice(0, 9)}…`);
+});
+
+test("presupuesto 1, 0 o negativo: nada entra, sin «…» suelto y sin fallar", () => {
+	for (const presupuesto of [1, 0, -5]) {
+		const context = buildSceneContext(project({ presupuesto }));
+		assert.deepEqual(context.secciones, []);
+		assert.equal(context.total, 0);
+		assert.deepEqual(context.recortadas, CONTEXT_SECTIONS);
+	}
+});
+
+test("skills de capítulo: solo las del capítulo N", () => {
+	const skills = [
+		parseSkill(`---\ntipo: skill\nnombre: "Ritmo lento"\nalcance: capítulo\naplica_a: ["[[Cap 03]]"]\nseveridad: aviso\nverificacion: ia\n---\n`),
+		parseSkill(`---\ntipo: skill\nnombre: "Clímax"\nalcance: capítulo\naplica_a: ["[[Cap 04]]"]\nseveridad: aviso\nverificacion: ia\n---\n`),
+	];
+	const texto = section(buildSceneContext(project({ skills })), "skills");
+	assert.match(texto, /Ritmo lento \(capítulo\)/);
+	assert.doesNotMatch(texto, /Clímax/);
+});
+
+test("un personaje entra solo por su alias, sin pov", () => {
+	const context = buildSceneContext(project({ escena: "Lena cierra la puerta." }));
+	const fichas = section(context, "fichas");
+	assert.match(fichas, /Personaje: Elena \(alias: Lena\)/);
+	assert.doesNotMatch(fichas, /Iván/);
+	assert.doesNotMatch(section(context, "skills"), /Voz seca/); // sin pov no hay skill de POV
+});
+
+test("omite secciones de solo espacios y escenas con solo frontmatter", () => {
+	const base = {
+		capitulo: 2,
+		skills: [],
+		personajes: [],
+		objetos: [],
+		lugares: [],
+		memorias: [],
+		resumenes: [{ capitulo: 1, texto: "  \n " }],
+		trama: "   \n",
+		presupuesto: 1000,
+	};
+	assert.deepEqual(buildSceneContext({ ...base, escena: `---\npov: "[[Nadie]]"\n---\n` }).secciones, []);
+	assert.deepEqual(buildSceneContext({ ...base, escena: `---\npov: "[[Nadie]]"\n---` }).secciones, []);
+	const crlf = buildSceneContext({ ...base, escena: `---\r\nsubtrama: ""\r\n---\r\nHola.\r\n` });
+	assert.deepEqual(crlf.secciones, [{ nombre: "escena", texto: "Hola." }]);
+});
+
+test("mundo y fichas de un lugar nombrado: estado vigente en N", () => {
+	const context = buildSceneContext(project({ capitulo: 4, escena: "Elena vuelve a la Casa del lago." }));
+	assert.match(section(context, "fichas"), /Lugar: Casa del lago/);
+	assert.match(section(context, "mundo"), /- Casa del lago: quemada/);
+	assert.doesNotMatch(section(context, "mundo"), /intacta/);
+});
