@@ -1,0 +1,28 @@
+(node:3972526) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file://src/export.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ el orden de escenas sale del índice Longform, anidadas aplanadas (4.669247ms)
+✔ ensambla el manuscrito en el orden del índice sin pandoc (3.763902ms)
+✔ quita el frontmatter con claves de Properties con espacios (R6) (0.656014ms)
+✔ las incrustaciones ![[...]] no salen como texto (R7) (2.606752ms)
+✔ los enlaces con ancla salen como el nombre de la nota (R13) (0.812624ms)
+✔ busca pandoc en el PATH y luego en las rutas de Homebrew de macOS (R10) (0.76702ms)
+✔ el encabezado de escena del DOCX tiene nivel de esquema para el panel de navegación (R8) (1.32995ms)
+✔ el DOCX es un zip válido que Word abre, con el texto en orden (43.177209ms)
+✔ sin pandoc solo se ofrece DOCX y EPUB/PDF avisan claro (1.677183ms)
+✔ con pandoc, EPUB y PDF pasan el manuscrito por stdin (1.804978ms)
+✔ sceneFolder `/`, vacío o ausente es la carpeta del índice; sin barras sobrantes (0.782758ms)
+✔ caracteres de control no rompen el XML del DOCX (66.890576ms)
+✔ sin escenas no exporta, y el aviso conserva las saltadas (2.532444ms)
+✔ con pandoc real, EPUB sale con los capítulos en el orden del índice (132.834461ms)
+✔ con pandoc real, un <raro> literal no se pierde en EPUB (R12) (57.337816ms)
+✔ con pandoc real, PDF se genera o avisa claro qué motor falta (141.104769ms)
+ℹ tests 16
+ℹ suites 0
+ℹ pass 16
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 777.793283
