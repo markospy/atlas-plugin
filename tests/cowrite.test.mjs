@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { CoWriteSession, diffLines, propose } from "../src/cowrite.ts";
+import { CoWriteSession, coWriteContext, diffLines, propose } from "../src/cowrite.ts";
 
 const NOTE = `---
 pov: "[[Elena]]"
@@ -81,4 +81,35 @@ test("aprobar falla si la nota cambió desde la propuesta y no registra nada", a
 	const proposal = await propose(mockProvider("Otra escena."), "borrador", NOTE, CONTEXT);
 	assert.throws(() => session.aprobar(proposal, `${NOTE}\nUna línea nueva.`), /cambió/);
 	assert.equal(session.historial.length, 0);
+});
+
+test("una escena larga no deja fuera las skills ni las fichas del prompt", async () => {
+	const escena = `---\npov: "[[Elena]]"\n---\n${"Elena caminó por el pasillo. ".repeat(330)}`;
+	assert.ok(escena.length > 9000);
+	const contexto = coWriteContext({
+		capitulo: 1,
+		escena,
+		skills: [{ nombre: "Sin adverbios", alcance: "global", aplica_a: [], severidad: "error", verificacion: "ia" }],
+		personajes: [{ nombre: "Elena", alias: [], relaciones: [] }],
+		objetos: [],
+		lugares: [],
+		memorias: [],
+		resumenes: [],
+		trama: "",
+		presupuesto: 8000,
+	});
+	assert.deepEqual(contexto.recortadas, []);
+	const provider = mockProvider("Otra escena.");
+	await propose(provider, "alternativa", escena, contexto);
+	assert.match(provider.prompts[0], /Sin adverbios/);
+	assert.match(provider.prompts[0], /Personaje: Elena/);
+	assert.ok(provider.prompts[0].includes(escena.slice(-200)));
+});
+
+test("aprobar en una nota CRLF conserva los finales de línea", async () => {
+	const crlf = NOTE.replace(/\n/g, "\r\n");
+	const alternativa = await propose(mockProvider("Otra escena.\nOtra línea."), "alternativa", crlf, CONTEXT);
+	assert.equal(alternativa.propuesta, '---\r\npov: "[[Elena]]"\r\n---\r\nOtra escena.\r\nOtra línea.');
+	const continuacion = await propose(mockProvider("Sonó un teléfono."), "continuacion", crlf, CONTEXT);
+	assert.equal(continuacion.propuesta, `${crlf}\r\n\r\nSonó un teléfono.`);
 });

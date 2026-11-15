@@ -115,7 +115,7 @@ El texto de la escena es la nota sin su frontmatter; un `---` inicial seguido de
 
 ## Co-escribir escena (IA)
 
-Comando **Co-escribir escena** en una escena abierta. Elige **Borrador**, **Alternativa** o **Continuación**. Atlas pide la propuesta al endpoint de Ollama (`/api/generate`, ajustes **Endpoint** y **Modelo**) con el contexto de escena (8000 caracteres como máximo), y la muestra como diff contra la nota actual: `-` línea quitada, `+` línea añadida.
+Comando **Co-escribir escena** en una escena abierta. Elige **Borrador**, **Alternativa** o **Continuación**. Atlas pide la propuesta al endpoint de Ollama (`/api/generate`, ajustes **Endpoint** y **Modelo**) con la nota entera y su contexto de escena (skills, fichas, conocimiento y mundo: 8000 caracteres como máximo, sin contar la escena), y la muestra como diff contra la nota actual: `-` línea quitada, `+` línea añadida.
 
 - **Rechazar** cierra el diff. La nota no cambia.
 - **Aprobar** aplica la propuesta. Si la nota cambió mientras esperabas, no se aplica y hay que pedir otra.

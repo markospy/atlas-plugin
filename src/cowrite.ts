@@ -1,4 +1,4 @@
-import type { SceneContext } from "./context";
+import { buildSceneContext, type SceneContext, type SceneContextInput } from "./context.ts";
 import { noteBody } from "./frontmatter.ts";
 
 export const COWRITE_MODES = ["borrador", "alternativa", "continuacion"] as const;
@@ -72,6 +72,14 @@ export function diffLines(before: string, after: string): DiffLine[] {
 	return diff;
 }
 
+/**
+ * Scene context for a co-write prompt. The prompt carries the whole note apart, so
+ * `presupuesto` covers skills, sheets, knowledge and world, not the scene text.
+ */
+export function coWriteContext(input: SceneContextInput): SceneContext {
+	return buildSceneContext({ ...input, presupuesto: input.presupuesto + noteBody(input.escena).length });
+}
+
 /** Ask the provider for a proposal. The note is never written here. */
 export async function propose(
 	provider: CoWriteProvider,
@@ -83,7 +91,10 @@ export async function propose(
 	if (reply.length === 0) {
 		throw new Error("El proveedor devolvió una respuesta vacía.");
 	}
-	const propuesta = modo === "continuacion" ? `${actual.trimEnd()}\n\n${reply}` : `${frontmatter(actual)}${reply}`;
+	// Keep the note's line endings: the diff ignores them, so a silent switch would go unseen.
+	const eol = actual.includes("\r\n") ? "\r\n" : "\n";
+	const text = reply.replace(/\r?\n/g, eol);
+	const propuesta = modo === "continuacion" ? `${actual.trimEnd()}${eol}${eol}${text}` : `${frontmatter(actual, eol)}${text}`;
 	return { modo, actual, propuesta, diff: diffLines(actual, propuesta) };
 }
 
@@ -122,11 +133,11 @@ function prompt(modo: CoWriteMode, actual: string, contexto: SceneContext): stri
 }
 
 /** Frontmatter block with its closing line, as `noteBody` detects it; "" when there is none. */
-function frontmatter(note: string): string {
+function frontmatter(note: string, eol: string): string {
 	const lines = note.replace(/\r\n/g, "\n").split("\n");
 	if (lines[0] !== "---" || !/^[\p{L}\w-]+:(\s|$)/u.test(lines[1] ?? "")) {
 		return "";
 	}
 	const end = lines.indexOf("---", 1);
-	return end === -1 ? "" : `${lines.slice(0, end + 1).join("\n")}\n`;
+	return end === -1 ? "" : `${lines.slice(0, end + 1).join(eol)}${eol}`;
 }

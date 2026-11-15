@@ -1,7 +1,6 @@
 import { type Editor, Notice, Plugin, requestUrl, TFile, type Vault } from "obsidian";
 
-import { buildSceneContext } from "./context";
-import { CoWriteSession, propose, type CoWriteMode } from "./cowrite";
+import { CoWriteSession, coWriteContext, propose, type CoWriteMode } from "./cowrite";
 import { CoWriteModal } from "./cowrite-modal";
 import { characterFolder, characterNote, parseCharacter, relationErrors } from "./characters";
 import { GRAPH_VIEW, GraphView } from "./graph-view";
@@ -452,7 +451,7 @@ export default class AtlasPlugin extends Plugin {
 			const notes = this.app.vault.getMarkdownFiles().filter((file) => file.path.startsWith(`${folder}/`));
 			return Promise.all(notes.map(async (file) => parse(await this.app.vault.cachedRead(file))));
 		};
-		const contexto = buildSceneContext({
+		const contexto = coWriteContext({
 			capitulo: chapterNumber(path) ?? 0,
 			escena: actual,
 			skills: await read(skillFolder(path), parseSkill),
