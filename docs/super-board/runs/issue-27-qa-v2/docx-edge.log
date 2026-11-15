@@ -1,0 +1,39 @@
+## edge-probe.mjs (v1) contra 7fe8967
+{"titulo":"Novela","carpeta":"","escenas":["A","B","C","D"]}
+[ 'Libro/A.md', 'Libro/B.md', 'Libro/C.md', 'Libro/D.md' ]
+[
+  'Libro/Escenas/A.md',
+  'Libro/Escenas/B.md',
+  'Libro/Escenas/C.md',
+  'Libro/Escenas/D.md'
+]
+[
+  'Libro/Escenas/A.md',
+  'Libro/Escenas/B.md',
+  'Libro/Escenas/C.md',
+  'Libro/Escenas/D.md'
+]
+crlf {"titulo":"Novela","carpeta":"","escenas":["A","B","C","D"]}
+
+## validación zip + XML (python zipfile + minidom)
+orden.docx testzip: None | entradas: ['[Content_Types].xml', '_rels/.rels', 'word/document.xml']
+  xml ok [Content_Types].xml
+  xml ok _rels/.rels
+  xml ok word/document.xml
+  encabezados: ['Cap 02', 'Escena hija', 'Cap 01']
+  saltos de página: 2
+edge.docx testzip: None | entradas: ['[Content_Types].xml', '_rels/.rels', 'word/document.xml']
+  xml ok [Content_Types].xml
+  xml ok _rels/.rels
+  xml ok word/document.xml
+  encabezados: ['Ñandú «uno»']
+  saltos de página: 0
+
+## herramientas en la máquina de QA
+pandoc: no
+libreoffice: no
+soffice: no
+pdflatex: no
+xelatex: no
+typst: no
+pandoc (release oficial jgm/pandoc 3.6.4): descarga a carpeta temporal denegada por los permisos de esta sesión; AC2 sin ejecutar con pandoc real
