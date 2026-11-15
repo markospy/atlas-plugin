@@ -141,7 +141,9 @@ def validate(text, kind, meta=None):
         if not files:
             require(not text.strip() and meta['additions'] == meta['deletions'] == 0, 'diff and file list disagree')
             return text
-        lines = text.splitlines()
+        # Only '\n' ends a diff line: splitlines() also breaks on \x0b, \x0c, \r,
+        # \x1c-\x1e, \x85 and  /9, which file content may legitimately hold.
+        lines = text.split('\n')
         require(sum(line.startswith('diff --git ') for line in lines) == len(files), 'diff file list incomplete')
         added = removed = 0
         old_left = new_left = 0

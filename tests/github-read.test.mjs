@@ -46,3 +46,12 @@ test("--jq sin --slurp sigue permitido", () => {
 	const { r } = run(["--kind", "json", "--", "api", "repos/o/r/issues/1", "--jq", "."]);
 	assert.equal(r.status, 0, r.stderr);
 });
+
+test("a diff line holding \\x0b or \\r is one line, not two", () => {
+	const diff = "diff --git a/x.txt b/x.txt\n--- a/x.txt\n+++ b/x.txt\n@@ -0,0 +1,2 @@\n+a\x0bb\n+c\rd\n";
+	const code = `import importlib.util,sys
+s=importlib.util.spec_from_file_location('r','${SCRIPT}');m=importlib.util.module_from_spec(s);s.loader.exec_module(m)
+m.validate(sys.stdin.read(),'diff',{'files':[{'path':'x.txt'}],'additions':2,'deletions':0})`;
+	const r = spawnSync("python3", ["-I", "-c", code], { input: diff, encoding: "utf8" });
+	assert.equal(r.status, 0, r.stderr);
+});
