@@ -148,3 +148,32 @@ test("isSheetPath: solo fichas del proyecto, no escenas ni otros proyectos", () 
 	assert.equal(isSheetPath("", "Personajes/Elena.md"), true);
 	assert.equal(isSheetPath("", "Manuscrito/Cap 01.md"), false);
 });
+
+test("entityAt: nombres con signos de regex y cursor sobre la segunda aparición", () => {
+	const entities = [
+		{ tipo: "personaje", nombre: "Dr. Ruiz (padre)", alias: ["", "  "], path: "Novela/Personajes/Ruiz.md", escenas: [] },
+		{ tipo: "personaje", nombre: "Ana", alias: [], path: "Novela/Personajes/Ana.md", escenas: [] },
+	];
+	const line = "Dr. Ruiz (padre) habló con Ana; luego Ana calló.";
+	assert.equal(entityAt(line, 5, entities)?.nombre, "Dr. Ruiz (padre)");
+	assert.equal(entityAt(line, line.lastIndexOf("Ana") + 1, entities)?.nombre, "Ana");
+	// Blank aliases never match empty text.
+	assert.equal(entityAt("   ", 1, entities), null);
+});
+
+test("chapterOf: nota en la raíz y formatos Cap.7 / cap 12", () => {
+	assert.equal(chapterOf("Cap 05.md"), 5);
+	assert.equal(chapterOf("Novela/Manuscrito/Cap.7/escena.md"), 7);
+	assert.equal(chapterOf("Novela/Manuscrito/cap 12 - final.md"), 12);
+	assert.equal(chapterOf("escena.md"), null);
+});
+
+test("projectSheets: ignora escenas del manuscrito aunque tengan tipo de ficha", () => {
+	const notes = [
+		{ path: "Novela/Personajes/Elena.md", text: '---\ntipo: personaje\nnombre: "Elena"\n---\n' },
+		{ path: "Novela/Manuscrito/Cap 01/Elena.md", text: "---\ntipo: personaje\n---\n" },
+	];
+	const { entities, sheets } = projectSheets("Novela", notes);
+	assert.deepEqual(entities.map((entity) => entity.path), ["Novela/Personajes/Elena.md"]);
+	assert.equal(sheets.personajes.length, 1);
+});
