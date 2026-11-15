@@ -97,6 +97,12 @@ También avisa de un `hecho` del capítulo (en `usos` o `conocimiento`) que no e
 
 Si un capítulo usa un hecho que ningún capítulo anterior (o el mismo) introduce, el grafo está incompleto: los dos comandos lo avisan en vez de fallar. Si el `_Memoria/` del proyecto no tiene memorias, también lo avisan en vez de dar un resultado vacío.
 
+**Propagar cambios al editar un capítulo pasado.** Con un capítulo (`Cap NN`) o su memoria abiertos:
+- **Propagar cambios:** compara los `hechos` de la memoria del capítulo con los de la última vez que se propagó y marca como desactualizados solo los capítulos posteriores que usaban un hecho eliminado o cambiado (no todo lo posterior). Cada uno lleva su motivo: «El cap. 9 usa «carta», que ya no se introduce en el cap. 3.». Un hecho añadido no marca nada. La primera vez solo guarda la base de todas las memorias del proyecto.
+- **Capítulos desactualizados:** lista los marcados, del más antiguo al más reciente, con sus motivos. **Abrir para corregir** abre el capítulo; **Confirmar: ya está reanalizado** limpia la marca, y solo se puede en el más antiguo, para reanalizar en orden. Nada se reescribe solo.
+
+La base y la lista se guardan en `.atlas/propagacion.json`, dentro de la bóveda.
+
 ## Índice de entidades
 
 Con una nota del proyecto abierta, ejecuta **Índice de entidades (escanear manuscrito)**. El panel lista los personajes, lugares y objetos del proyecto y, bajo cada ficha, las escenas de `Manuscrito/` que la nombran por `nombre` o por cualquiera de sus `alias` (palabra completa, sin distinguir mayúsculas). El escaneo es local, sin IA, y solo corre cuando ejecutas el comando: vuelve a ejecutarlo tras editar y el índice se rehace sin duplicar escenas.
