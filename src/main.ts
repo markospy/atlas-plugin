@@ -21,6 +21,7 @@ import {
 	memoryNote,
 	memoryNoteName,
 	parseMemory,
+	projectMemoryFolder,
 	READER,
 	whatKnows,
 } from "./memory";
@@ -495,11 +496,21 @@ export default class AtlasPlugin extends Plugin {
 			new Notice("Abre una nota del proyecto.");
 			return null;
 		}
-		return this.memoriesBeside(active.path);
+		const folder = projectMemoryFolder(active.path);
+		const memories = await this.memoriesIn(folder);
+		if (memories.length === 0) {
+			new Notice(`No hay memorias en ${folder}/: el grafo estaría vacío.`);
+			return null;
+		}
+		return memories;
 	}
 
 	private async memoriesBeside(activePath: string): Promise<ChapterMemory[]> {
-		const folder = `${memoryFolder(activePath)}/`;
+		return this.memoriesIn(memoryFolder(activePath));
+	}
+
+	private async memoriesIn(memoryDir: string): Promise<ChapterMemory[]> {
+		const folder = `${memoryDir}/`;
 		const notes = this.app.vault.getMarkdownFiles().filter((file) => file.path.startsWith(folder));
 		return Promise.all(notes.map(async (file) => parseMemory(await this.app.vault.cachedRead(file))));
 	}

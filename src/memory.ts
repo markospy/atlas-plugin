@@ -53,6 +53,21 @@ export function memoryFolder(activePath: string): string {
 	return sheetFolder(activePath, "_Memoria");
 }
 
+const PROJECT_FOLDERS = ["_Memoria", "Manuscrito", "Personajes", "Lugares", "Objetos", "Trama"];
+
+/** The project's `_Memoria/` for any note in it: `Novela/Personajes/Elena.md` → `Novela/_Memoria`. */
+export function projectMemoryFolder(activePath: string): string {
+	const parts = activePath.split("/");
+	let project = parts.slice(0, -1);
+	for (let at = parts.length - 2; at >= 0; at--) {
+		if (PROJECT_FOLDERS.includes(parts[at] ?? "")) {
+			project = parts.slice(0, at);
+			break;
+		}
+	}
+	return [...project, "_Memoria"].join("/");
+}
+
 export function memoryNote(chapter: number): string {
 	return [
 		"---",
