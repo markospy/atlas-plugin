@@ -178,11 +178,13 @@ function knowledgeLines(entry: Knowledge): string[] {
 /** Replaces the frontmatter list `key` (inline `[]` or block) with `entries`; the rest of the note is kept. */
 function setList(note: string, key: string, entries: string[][]): string {
 	const text = note.replace(/\r\n/g, "\n");
-	if (!text.startsWith("---\n")) {
+	// `close` is the `\n` before the closing `---`; for an empty frontmatter it is the opener's own `\n`.
+	const close = text.startsWith("---\n") ? text.indexOf("\n---", 3) : -1;
+	if (close === -1) {
 		return setList(`---\n---\n${text}`, key, entries);
 	}
 	const frontmatter = frontmatterBody(text);
-	const lines = frontmatter.split("\n");
+	const lines = frontmatter === "" ? [] : frontmatter.split("\n");
 	const block = entries.length === 0
 		? [`${key}: []`]
 		: [`${key}:`, ...entries.flatMap(([first, ...rest]) => [`  - ${first}`, ...rest.map((line) => `    ${line}`)])];
@@ -196,7 +198,7 @@ function setList(note: string, key: string, entries: string[][]): string {
 		}
 		lines.splice(at, end - at, ...block);
 	}
-	return `---\n${lines.join("\n")}${text.slice(4 + frontmatter.length)}`;
+	return `---\n${lines.join("\n")}${text.slice(close)}`;
 }
 
 function items(data: unknown, key: string): Record<string, unknown>[] {
