@@ -48,6 +48,13 @@ Prepara el plugin una vez:
 - [ ] **Marcadores del manuscrito** lista esos marcadores y el enlace abre la nota en esa línea.
 - [ ] Borrar `[TK]` del texto y volver a abrir el panel lo quita de la lista.
 
+## #8 grafo
+
+- [ ] Con dos fichas en `Personajes/` que se relacionan, **Grafo de relaciones** abre un SVG con un nodo por personaje y una arista con el tipo.
+- [ ] Elegir un tipo en el selector oculta las aristas de otros tipos.
+- [ ] Una relación con `desde: "[[Cap 07]]"` no aparece con capítulo 3 y sí con capítulo 7.
+- [ ] Con dos proyectos en la bóveda, el grafo abierto desde una nota de uno solo muestra sus personajes; `con: "[[Personajes/Marcos]]"` une la arista al nodo `Marcos`.
+
 ## #13 estilo
 
 - [ ] Con el nombre seleccionado en un capítulo, **Nueva skill de estilo** crea `Estilo/<nombre>.md` del proyecto con `alcance`, `aplica_a`, `severidad`, `verificacion`, `patron` y las secciones Regla / Ejemplo mal / Ejemplo bien.

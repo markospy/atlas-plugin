@@ -1,4 +1,5 @@
 import type { CharacterSheet } from "./characters";
+import { chapterNumber } from "./graph.ts";
 import type { ObjectSheet } from "./objects";
 import type { PlaceSheet } from "./places";
 
@@ -59,8 +60,8 @@ export function worldAt(sheets: WorldSheets, chapter: number): WorldState {
 
 /** A relation starts at `desde` and ends when `hasta` begins; a missing bound is open. */
 function inForce(desde: string | undefined, hasta: string | undefined, chapter: number): boolean {
-	const start = desde ? chapterNumber(desde) : null;
-	const end = hasta ? chapterNumber(hasta) : null;
+	const start = chapterNumber(desde);
+	const end = chapterNumber(hasta);
 	return (start === null || start <= chapter) && (end === null || chapter < end);
 }
 
@@ -76,9 +77,4 @@ function latestAt<T extends { capitulo: string }>(changes: T[], chapter: number)
 		}
 	}
 	return current;
-}
-
-function chapterNumber(chapter: string): number | null {
-	const match = /\d+/.exec(chapter);
-	return match ? Number(match[0]) : null;
 }
