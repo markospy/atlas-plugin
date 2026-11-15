@@ -212,3 +212,26 @@ test("runtime: Progreso de escritura con Manuscrito/ vacío avisa 0 palabras", a
 	await settle();
 	assert.deepEqual(state.notices, ["Manuscrito: 0 palabras\nHoy: 0 / 500 (0 %)\nRacha: 0 días"]);
 });
+
+// QA v3: a scene in a chapter subfolder belongs to the project, not to the subfolder.
+test("runtime: guardar una escena en una subcarpeta de Manuscrito/ recuenta el proyecto", async () => {
+	const { state, files } = await startPlugin(null);
+	const TFile = files[0].constructor;
+	state.onModify(new TFile("Novela/Manuscrito/Parte 1/Cap 03.md"));
+	assert.deepEqual(state.timers.map((timer) => timer.ms), [5000]);
+	state.timers[0].run();
+	await settle();
+	assert.deepEqual(state.saved.at(-1).escritura, { Novela: { [today]: { inicio: 5, total: 5 } } });
+});
+
+// QA v3: moving a scene out of Manuscrito/ (to a sheet folder) recounts the project it left.
+test("runtime: mover una escena fuera de Manuscrito/ recuenta solo el origen", async () => {
+	const { state, files } = await startPlugin({ escritura: { Novela: { [today]: { inicio: 5, total: 5 } } } });
+	const TFile = files[0].constructor;
+	files.splice(1, 1, new TFile("Novela/Personajes/Cap 02.md"));
+	state.on.rename(files[1], "Novela/Manuscrito/Cap 02.md");
+	assert.equal(state.timers.length, 1, "la ruta nueva no está en el manuscrito");
+	state.timers[0].run();
+	await settle();
+	assert.deepEqual(state.saved.at(-1).escritura.Novela[today], { inicio: 5, total: 3 });
+});
