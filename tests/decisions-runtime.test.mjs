@@ -83,6 +83,7 @@ function stubObsidian(state) {
 			}
 			addSettingTab() {}
 			registerView() {}
+			registerEvent() {}
 			addCommand(command) {
 				state.commands[command.id] = command;
 			}
@@ -131,6 +132,10 @@ async function loadPlugin(state) {
 	const module = { exports: {} };
 	const obsidian = stubObsidian(state);
 	new Function("module", "exports", "require", bundle)(module, module.exports, (id) => {
+		// The node build of `yaml` needs node builtins; the plugin bundle uses its browser build.
+		if (id.startsWith("node:") || id === "process" || id === "buffer") {
+			return process.getBuiltinModule(id);
+		}
 		assert.equal(id, "obsidian");
 		return obsidian;
 	});
@@ -151,6 +156,7 @@ async function setup(adapter = memoryAdapter()) {
 			getMarkdownFiles: () => files,
 			cachedRead: async (file) => SCENES[file.path],
 			getAbstractFileByPath: (path) => files.find((file) => file.path === path) ?? null,
+			on: () => ({}),
 		},
 		workspace: {
 			getActiveFile: () => ({ path: ACTIVE }),

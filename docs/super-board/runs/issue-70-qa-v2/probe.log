@@ -1,0 +1,63 @@
+== wikilink
+"---\ntipo: memoria\ncapitulo: 3\nhechos:\n  - id: anillo\n    texto: El anillo\n  - id: carta\n    texto: La carta es falsa\n    verdad: false\nconocimiento:\n  - hecho: anillo\n    quien: [ [ Ana ] ]\n    estado: sabe\n---\nCuerpo\n"
+---
+tipo: memoria
+capitulo: 3
+hechos:
+  - id: anillo
+    texto: El anillo
+  - id: carta
+    texto: La carta es falsa
+    verdad: false
+conocimiento:
+  - hecho: anillo
+    quien: [ [ Ana ] ]
+    estado: sabe
+---
+Cuerpo
+
+parsed: [{"id":"anillo","texto":"El anillo","verdad":null},{"id":"carta","texto":"La carta es falsa","verdad":false}] [{"hecho":"anillo","quien":"[[Ana]]","estado":"sabe"}]
+== crlf_tab
+"---\r\ntipo: memoria\r\ncapitulo: 3\r\nhechos:\r\n  - id: anillo\r\n    texto: 'El anillo'\r\n  - id: carta\r\n    texto: La carta es falsa\r\n    verdad: false\r\n---\t\r\nCuerpo\r\n"
+---
+tipo: memoria
+capitulo: 3
+hechos:
+  - id: anillo
+    texto: 'El anillo'
+  - id: carta
+    texto: La carta es falsa
+    verdad: false
+---	
+Cuerpo
+
+parsed: [{"id":"anillo","texto":"El anillo","verdad":null},{"id":"carta","texto":"La carta es falsa","verdad":false}] []
+== blanklines
+"---\ntipo: memoria\n\ncapitulo: 3 # cap\naliases: [ a, b ]\ntags:\n  - x\nhechos:\n  - id: anillo\n    texto: El anillo\n  - id: carta\n    texto: La carta es falsa\n    verdad: false\n---\nCuerpo con: dos puntos\n"
+---
+tipo: memoria
+
+capitulo: 3 # cap
+aliases: [ a, b ]
+tags:
+  - x
+hechos:
+  - id: anillo
+    texto: El anillo
+  - id: carta
+    texto: La carta es falsa
+    verdad: false
+---
+Cuerpo con: dos puntos
+
+parsed: [{"id":"anillo","texto":"El anillo","verdad":null},{"id":"carta","texto":"La carta es falsa","verdad":false}] []
+== nofm_scene THREW: El frontmatter de la nota no es YAML válido: corrígelo a mano antes de aprobar. unchanged: true
+== trailing_no_nl
+"---\nhechos:\n  - id: carta\n    texto: La carta es falsa\n    verdad: false\n---"
+---
+hechos:
+  - id: carta
+    texto: La carta es falsa
+    verdad: false
+---
+parsed: [{"id":"carta","texto":"La carta es falsa","verdad":false}] []

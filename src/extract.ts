@@ -1,5 +1,7 @@
 import { KNOWLEDGE_STATES, memoryNote, memoryNoteName, parseMemory, type ChapterMemory, type Fact, type Knowledge } from "./memory.ts";
-import { frontmatterEnd } from "./frontmatter.ts";
+import { Document, isMap, isScalar, isSeq } from "yaml";
+
+import { memoryFrontmatter } from "./memory-frontmatter.ts";
 import { parsePlace } from "./places.ts";
 
 /** One AI-proposed memory update. Nothing is written until the writer approves its `id`. */
@@ -140,8 +142,8 @@ export async function writeApproved(
 	});
 	if (hechos.length > 0 || conocimiento.length > 0) {
 		const note = memoryNow ?? memoryNote(target.capitulo);
-		let updated = appendToList(note, "hechos", hechos.map(factLines));
-		updated = appendToList(updated, "conocimiento", conocimiento.map(knowledgeLines));
+		let updated = appendToList(note, "hechos", hechos.map(factEntry));
+		updated = appendToList(updated, "conocimiento", conocimiento.map(knowledgeEntry));
 		if (memoryNow === null) {
 			const folder = target.memoria.slice(0, Math.max(0, target.memoria.lastIndexOf("/")));
 			if (folder.length > 0 && !(await files.exists(folder))) {
@@ -168,8 +170,7 @@ export async function writeApproved(
 		if (recorded) {
 			continue;
 		}
-		const entry = [`capitulo: ${JSON.stringify(chapter)}`, `descripcion: ${JSON.stringify(candidate.descripcion)}`];
-		await files.write(path, appendToList(note, "estados", [entry]));
+		await files.write(path, appendToList(note, "estados", [{ capitulo: chapter, descripcion: candidate.descripcion }]));
 		if (!written.includes(path)) {
 			written.push(path);
 		}
@@ -177,16 +178,12 @@ export async function writeApproved(
 	return written;
 }
 
-function factLines(fact: Fact): string[] {
-	return [
-		`id: ${fact.id}`,
-		`texto: ${JSON.stringify(fact.texto)}`,
-		...(fact.verdad === null ? [] : [`verdad: ${fact.verdad}`]),
-	];
+function factEntry(fact: Fact): Record<string, unknown> {
+	return { id: fact.id, texto: fact.texto, ...(fact.verdad === null ? {} : { verdad: fact.verdad }) };
 }
 
-function knowledgeLines(entry: Knowledge): string[] {
-	return [`hecho: ${entry.hecho}`, `quien: ${JSON.stringify(entry.quien)}`, `estado: ${entry.estado}`];
+function knowledgeEntry(entry: Knowledge): Record<string, unknown> {
+	return { hecho: entry.hecho, quien: entry.quien, estado: entry.estado };
 }
 
 function knowledgeKey(entry: Knowledge): string {
@@ -194,45 +191,85 @@ function knowledgeKey(entry: Knowledge): string {
 }
 
 /**
- * Appends `entries` to the end of the frontmatter list `key`. Every existing line stays byte for
- * byte (hand-written fields and comments included); an inline `key: []` becomes a block. A note
- * without real frontmatter (`frontmatterEnd`: a `---` scene break is not one) gets a new one in front.
+ * Appends `entries` to the frontmatter list `key`. The frontmatter is read with the `yaml`
+ * library, but only that list changes: a block list gets the new items after its last line, at
+ * its own indent; a flow list (one line or several) gets them before its closing `]`; an empty
+ * value or a missing key becomes a block list. Every other line, and the body after the closing
+ * `---`, stays byte for byte. A value that is not a list, or frontmatter that is not valid YAML,
+ * throws rather than lose what the author wrote. A note without frontmatter (a `---` scene break
+ * is not one) gets a new one in front.
  */
-function appendToList(note: string, key: string, entries: string[][]): string {
+function appendToList(note: string, key: string, entries: Record<string, unknown>[]): string {
 	if (entries.length === 0) {
 		return note;
 	}
 	const eol = note.includes("\r\n") ? "\r\n" : "\n";
 	const lines = note.replace(/\r\n/g, "\n").split("\n");
-	const close = frontmatterEnd(lines);
-	if (close === -1) {
+	const { end, doc, invalid } = memoryFrontmatter(lines);
+	if (invalid) {
+		throw new Error("El frontmatter de la nota no es YAML válido: corrígelo a mano antes de aprobar.");
+	}
+	if (end === -1 || doc === null) {
 		return appendToList(`---${eol}---${eol}${note}`, key, entries);
 	}
-	const at = lines.slice(1, close).findIndex((line) => line === `${key}:` || line.startsWith(`${key}: `)) + 1;
-	let insertAt = close;
-	let indent: string | null = null;
-	if (at > 0) {
-		insertAt = at + 1;
-		for (let i = at + 1; i < close; i++) {
-			const line = lines[i] ?? "";
-			if (line.trim().length > 0 && !/^[\s-]/.test(line)) {
-				break;
-			}
-			const item = /^(\s*)- /.exec(line);
-			if (item && indent === null) {
-				indent = item[1] ?? "";
-			}
-			if (line.trim().length > 0) {
-				insertAt = i + 1;
-			}
-		}
-		// An inline value (`key: []`) cannot take block items after it.
-		lines[at] = `${key}:`;
+	const source = lines.slice(1, end).join("\n");
+	const pair = isMap(doc.contents) ? doc.contents.items.find((item) => isScalar(item.key) && item.key.value === key) : undefined;
+	const value = pair?.value;
+	const empty =
+		value === null ||
+		value === undefined ||
+		(isSeq(value) && value.items.length === 0) ||
+		(isScalar(value) && (value.value === null || (value.type === "PLAIN" && /^(|~|null|Null|NULL)$/.test(String(value.value)))));
+	if (!empty && !isSeq(value)) {
+		throw new Error(`«${key}» no es una lista en la nota: corrígelo a mano antes de aprobar.`);
 	}
-	const pad = indent ?? "  ";
-	const block = entries.flatMap(([first, ...rest]) => [`${pad}- ${first}`, ...rest.map((line) => `${pad}  ${line}`)]);
-	lines.splice(insertAt, 0, ...(at > 0 ? [] : [`${key}:`]), ...block);
-	return lines.join(eol);
+	const frontmatter = source.length === 0 ? [] : source.split("\n");
+	if (isSeq(value) && value.flow && value.range && value.items.length > 0) {
+		// Flow list: the new items go in flow form before its closing `]`.
+		let at = value.range[1] - 1;
+		while (at > 0 && /\s/.test(source[at - 1] ?? "")) {
+			at--;
+		}
+		const lead = source[at - 1] === "," ? " " : ", ";
+		const flow = entries.map((entry) => {
+			const item = new Document(entry);
+			if (isMap(item.contents)) {
+				item.contents.flow = true;
+			}
+			return item.toString({ lineWidth: 0 }).trim();
+		});
+		const updated = `${source.slice(0, at)}${lead}${flow.join(", ")}${source.slice(at)}`;
+		return ["---", ...updated.split("\n"), ...lines.slice(end)].join(eol);
+	}
+	const added = blockLines(new Document(entries).toString({ lineWidth: 0 }));
+	if (isSeq(value) && !value.flow && value.range) {
+		// Block list: the new items go after its last line, at its own indent.
+		const last = lineOf(source, value.range[1]);
+		const indent = " ".repeat(value.range[0] - source.lastIndexOf("\n", value.range[0] - 1) - 1);
+		frontmatter.splice(last + 1, 0, ...added.map((line) => indent + line));
+	} else if (pair && isScalar(pair.key) && pair.key.range) {
+		// Empty value (`key:`, `key: []`, `key: ~`): its lines become a block list.
+		const from = lineOf(source, pair.key.range[0] + 1);
+		const to = lineOf(source, Math.max(pair.key.range[1], value && "range" in value && value.range ? value.range[1] : 0)) + 1;
+		frontmatter.splice(from, to - from, `${key}:`, ...added.map((line) => `  ${line}`));
+	} else {
+		frontmatter.push(`${key}:`, ...added.map((line) => `  ${line}`));
+	}
+	return ["---", ...frontmatter, ...lines.slice(end)].join(eol);
+}
+
+/** Lines of a YAML block as `yaml` prints it, without the trailing newline. */
+function blockLines(yaml: string): string[] {
+	return yaml.replace(/\n$/, "").split("\n");
+}
+
+/** Index of the line holding the last non-blank character before `offset` in `source`. */
+function lineOf(source: string, offset: number): number {
+	let at = offset;
+	while (at > 0 && /\s/.test(source[at - 1] ?? "")) {
+		at--;
+	}
+	return source.slice(0, Math.max(at - 1, 0)).split("\n").length - 1;
 }
 
 function items(data: unknown, key: string): Record<string, unknown>[] {

@@ -108,6 +108,10 @@ async function loadPlugin(state) {
 	const module = { exports: {} };
 	const obsidian = stubObsidian(state);
 	new Function("module", "exports", "require", built.outputFiles[0].text)(module, module.exports, (id) => {
+		// The node build of `yaml` needs node builtins; the plugin bundle uses its browser build.
+		if (id.startsWith("node:") || id === "process" || id === "buffer") {
+			return process.getBuiltinModule(id);
+		}
 		assert.equal(id, "obsidian");
 		return obsidian;
 	});

@@ -1,0 +1,18 @@
+== crlf_close_spaces
+"---\r\ncapitulo: 3\r\nhechos:\r\n  - id: anillo\r\n    texto: El anillo\r\n  - id: \"007\"\r\n    texto: 'Dice: \"no\" # y [[Ana]], {x}'\r\n    verdad: true\r\nconocimiento:\r\n  - hecho: \"007\"\r\n    quien: \"[[Ana]]\"\r\n    estado: sabe\r\n---  \r\nCuerpo\r\n"
+frontmatters=1 hechos=[{"id":"anillo","texto":"El anillo","verdad":null},{"id":"007","texto":"Dice: \"no\" # y [[Ana]], {x}","verdad":true}] conocimiento=[{"hecho":"007","quien":"[[Ana]]","estado":"sabe"}] capitulo=3 lineas_perdidas=[]
+== close_tab
+"---\ncapitulo: 3\nhechos: [{id: anillo, texto: El anillo}, { id: \"007\", texto: 'Dice: \"no\" # y [[Ana]], {x}', verdad: true }]\nconocimiento:\n  - hecho: \"007\"\n    quien: \"[[Ana]]\"\n    estado: sabe\n---\t\nCuerpo\n"
+frontmatters=1 hechos=[{"id":"anillo","texto":"El anillo","verdad":null},{"id":"007","texto":"Dice: \"no\" # y [[Ana]], {x}","verdad":true}] conocimiento=[{"hecho":"007","quien":"[[Ana]]","estado":"sabe"}] capitulo=3 lineas_perdidas=["hechos: [{id: anillo, texto: El anillo}]"]
+== body_scene_break
+"---\ncapitulo: 3\nhechos:\n  - id: anillo\n    texto: El anillo\n  - id: \"007\"\n    texto: 'Dice: \"no\" # y [[Ana]], {x}'\n    verdad: true\nconocimiento:\n  - hecho: \"007\"\n    quien: \"[[Ana]]\"\n    estado: sabe\n---\nCuerpo\n---\nhechos: falso\n---\n"
+frontmatters=4 hechos=[{"id":"anillo","texto":"El anillo","verdad":null},{"id":"007","texto":"Dice: \"no\" # y [[Ana]], {x}","verdad":true}] conocimiento=[{"hecho":"007","quien":"[[Ana]]","estado":"sabe"}] capitulo=3 lineas_perdidas=[]
+== flow_inline_spaces_close
+"---\ncapitulo: 3\nhechos: [{id: anillo, texto: El anillo}, { id: \"007\", texto: 'Dice: \"no\" # y [[Ana]], {x}', verdad: true }]\nconocimiento:\n  - hecho: \"007\"\n    quien: \"[[Ana]]\"\n    estado: sabe\n--- \nCuerpo\n"
+frontmatters=1 hechos=[{"id":"anillo","texto":"El anillo","verdad":null},{"id":"007","texto":"Dice: \"no\" # y [[Ana]], {x}","verdad":true}] conocimiento=[{"hecho":"007","quien":"[[Ana]]","estado":"sabe"}] capitulo=3 lineas_perdidas=["hechos: [{id: anillo, texto: El anillo}]"]
+== comments_and_spaced_props
+"---\n# a mano\nmi propiedad: valor con espacios\ncapitulo: 3 # cap\nhechos:\n  - id: anillo # fijo\n    texto: El anillo\n  - id: \"007\"\n    texto: 'Dice: \"no\" # y [[Ana]], {x}'\n    verdad: true\nconocimiento:\n  - hecho: \"007\"\n    quien: \"[[Ana]]\"\n    estado: sabe\n---\n"
+frontmatters=2 hechos=[{"id":"anillo","texto":"El anillo","verdad":null},{"id":"007","texto":"Dice: \"no\" # y [[Ana]], {x}","verdad":true}] conocimiento=[{"hecho":"007","quien":"[[Ana]]","estado":"sabe"}] capitulo=0 lineas_perdidas=[]
+== export dialogo_comillas: "---\n\"Hola\", dijo ella.\n---\nTras una pausa."
+== export nota_autor: "---\n{Nota del autor}\n---\nTras una pausa."
+== export frontmatter_real: "Texto."

@@ -142,3 +142,105 @@ test("aceptar un hecho no borra una lista hechos: en línea escrita a mano", asy
 	const escrita = files.store.get(MEMORIA);
 	assert.match(escrita, /anillo/, "el hecho escrito a mano sigue en la nota");
 });
+
+// #70: lector y escritor comparten el frontmatter de src/frontmatter.ts.
+test("aceptar añade a una lista hechos: en línea sin reescribirla y el lector ve todas las entradas", async () => {
+	const nota = ["---", "tipo: memoria", "capitulo: 3", 'hechos: [{id: anillo, texto: El anillo}, {id: "llave", texto: "Una llave, rota", verdad: true}]', "---", "Cuerpo", ""].join("\n");
+	assert.deepEqual(parseMemory(nota).hechos.map((h) => h.id), ["anillo", "llave"], "el lector lee la lista en línea");
+	const files = mockFiles({ [MEMORIA]: nota });
+	await writeApproved(files, destino, parseProposal(RESPUESTA), new Set(["h1"]));
+	const escrita = files.store.get(MEMORIA);
+	assert.deepEqual(parseMemory(escrita).hechos, [
+		{ id: "anillo", texto: "El anillo", verdad: null },
+		{ id: "llave", texto: "Una llave, rota", verdad: true },
+		{ id: "carta", texto: "La carta es falsa", verdad: false },
+	]);
+	assert.equal(parseMemory(escrita).capitulo, 3);
+	assert.ok(escrita.includes('hechos: [{id: anillo, texto: El anillo}, {id: "llave", texto: "Una llave, rota", verdad: true}, {'), "las entradas a mano quedan tal cual");
+});
+
+test("aceptar un hecho ya escrito en una lista en línea no lo duplica", async () => {
+	const nota = ["---", "tipo: memoria", "capitulo: 3", "hechos: [{id: carta, texto: A mano}]", "---", ""].join("\n");
+	const files = mockFiles({ [MEMORIA]: nota });
+	const escritos = await writeApproved(files, destino, parseProposal(RESPUESTA), new Set(["h1"]));
+	assert.deepEqual(escritos, []);
+	assert.equal(files.store.get(MEMORIA), nota);
+});
+
+test("aceptar en una lista hechos: con un valor que no es lista falla sin tocar la nota", async () => {
+	const nota = ["---", "tipo: memoria", "capitulo: 3", "hechos: revisar", "---", ""].join("\n");
+	const files = mockFiles({ [MEMORIA]: nota });
+	await assert.rejects(writeApproved(files, destino, parseProposal(RESPUESTA), new Set(["h1"])), /hechos/);
+	assert.equal(files.store.get(MEMORIA), nota);
+});
+
+// QA #70 v1: una lista de flujo en varias líneas es YAML válido (Obsidian la lee). Su `]` en la
+// columna 0 no debe hacer que aprobar tome el bloque por un `---` de escena y anteponga otro
+// frontmatter: `tipo`/`capitulo` y los hechos a mano pasarían al cuerpo.
+test("aceptar en una memoria con hechos: en flujo de varias líneas no antepone otro frontmatter", async () => {
+	const nota = ["---", "tipo: memoria", "capitulo: 3", "hechos: [", "  {id: anillo, texto: El anillo}", "]", "---", "Cuerpo", ""].join("\n");
+	const files = mockFiles({ [MEMORIA]: nota });
+	await writeApproved(files, destino, parseProposal(RESPUESTA), new Set(["h1"]));
+	const escrita = files.store.get(MEMORIA);
+	assert.equal(escrita.split("\n").filter((line) => line === "---").length, 2, "un solo frontmatter");
+	assert.equal(parseMemory(escrita).capitulo, 3);
+	assert.deepEqual(parseMemory(escrita).hechos.map((h) => h.id), ["anillo", "carta"]);
+});
+
+// #70 v2: lector y escritor leen el frontmatter con la librería `yaml`, sin parseo a mano.
+test("el lector ve los hechos de una lista en flujo de varias líneas y con comentario al final", () => {
+	const varias = ["---", "capitulo: 3", "hechos: [", "  {id: anillo, texto: El anillo},", "  {id: llave, texto: \"Una llave, rota\", verdad: true}", "]", "---", ""].join("\n");
+	assert.deepEqual(parseMemory(varias).hechos.map((h) => h.id), ["anillo", "llave"]);
+	const comentario = ["---", "capitulo: 3", "hechos: [{id: anillo, texto: El anillo}] # a mano", "---", ""].join("\n");
+	assert.deepEqual(parseMemory(comentario).hechos.map((h) => h.id), ["anillo"]);
+});
+
+test("aceptar en una memoria cuyo frontmatter no es YAML válido falla sin tocar la nota", async () => {
+	const nota = ["---", "tipo: memoria", "hechos:", "  - id: anillo", "    texto: El anillo: dorado", "---", "Cuerpo", ""].join("\n");
+	const files = mockFiles({ [MEMORIA]: nota });
+	await assert.rejects(writeApproved(files, destino, parseProposal(RESPUESTA), new Set(["h1"])), /YAML/);
+	assert.equal(files.store.get(MEMORIA), nota);
+});
+
+// #70 R2: aprobar solo añade líneas a la lista; el resto del frontmatter queda byte a byte.
+test("aceptar un hecho deja intactos byte a byte los campos que no toca", async () => {
+	const antes = ["---", "tipo: memoria", "capitulo: 03", "alias:", "- x", "conocimiento:", "  - hecho: anillo", "    quien: [[Ana]]", "    estado: sabe", "hechos:", "  - id: anillo", "    texto: El anillo # a mano", "otro: 'sí'"];
+	const nota = [...antes, "---", "Cuerpo", ""].join("\n");
+	const files = mockFiles({ [MEMORIA]: nota });
+	await writeApproved(files, destino, parseProposal(RESPUESTA), new Set(["h1"]));
+	const escrita = files.store.get(MEMORIA);
+	const nuevas = ["  - id: carta", "    texto: La carta es falsa", "    verdad: false"];
+	assert.equal(escrita, [...antes.slice(0, 12), ...nuevas, ...antes.slice(12), "---", "Cuerpo", ""].join("\n"));
+	assert.deepEqual(parseMemory(escrita).hechos.map((h) => h.id), ["anillo", "carta"]);
+});
+
+test("aceptar un estado en una ficha con CRLF añade solo sus líneas", async () => {
+	const LUGAR = "Proyecto/Lugares/Torre.md";
+	const ficha = ["---", "nombre: Torre", "estados:", "- capitulo: '[[Cap 01]]'", "  descripcion: intacta", "---", ""].join("\r\n");
+	const files = mockFiles({ [LUGAR]: ficha });
+	const respuesta = JSON.stringify({ estados: [{ lugar: "Torre", descripcion: "en ruinas" }] });
+	await writeApproved(files, destino, parseProposal(respuesta), new Set(["e1"]));
+	assert.equal(
+		files.store.get(LUGAR),
+		["---", "nombre: Torre", "estados:", "- capitulo: '[[Cap 01]]'", "  descripcion: intacta", '- capitulo: "[[Cap 03]]"', "  descripcion: en ruinas", "---", ""].join("\r\n"),
+	);
+});
+
+// QA #70 v4: CRLF y cierre `---` con espacios; hechos y conocimiento se añaden al mismo frontmatter.
+test("aceptar un hecho y su conocimiento en una memoria CRLF cuyo cierre --- lleva espacios", async () => {
+	const nota = ["---", "capitulo: 3", "hechos:", "  - id: anillo", "    texto: El anillo", "---  ", "Cuerpo", ""].join("\r\n");
+	const respuesta = JSON.stringify({ hechos: [{ id: "007", texto: "Dice: \"no\" # y [[Ana]]", verdad: true }], conocimiento: [{ hecho: "007", quien: "[[Ana]]", estado: "sabe" }] });
+	const files = mockFiles({ [MEMORIA]: nota });
+	await writeApproved(files, destino, parseProposal(respuesta), new Set(["h1", "c1"]));
+	const escrita = files.store.get(MEMORIA);
+	assert.ok(escrita.startsWith("---\r\ncapitulo: 3\r\nhechos:\r\n  - id: anillo\r\n    texto: El anillo\r\n"), "lo escrito a mano queda delante, sin otro frontmatter");
+	assert.ok(escrita.endsWith("---  \r\nCuerpo\r\n"), "el cierre y el cuerpo quedan byte a byte");
+	assert.ok(!/(^|[^\r])\n/.test(escrita), "solo CRLF");
+	const memoria = parseMemory(escrita);
+	assert.deepEqual(memoria.hechos, [
+		{ id: "anillo", texto: "El anillo", verdad: null },
+		{ id: "007", texto: "Dice: \"no\" # y [[Ana]]", verdad: true },
+	]);
+	assert.deepEqual(memoria.conocimiento, [{ hecho: "007", quien: "[[Ana]]", estado: "sabe" }]);
+	assert.equal(memoria.capitulo, 3);
+});

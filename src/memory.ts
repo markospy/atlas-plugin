@@ -1,4 +1,5 @@
-import { frontmatterBody, mapList, scalar } from "./frontmatter.ts";
+import { scalar } from "./frontmatter.ts";
+import { memoryFrontmatterBody, memoryMapList } from "./memory-frontmatter.ts";
 import { sheetFolder } from "./sheets.ts";
 
 export const KNOWLEDGE_STATES = ["ignora", "sospecha", "cree-falso", "sabe"] as const;
@@ -86,21 +87,21 @@ export function memoryNote(chapter: number): string {
 }
 
 export function parseMemory(note: string): ChapterMemory {
-	const frontmatter = frontmatterBody(note);
+	const frontmatter = memoryFrontmatterBody(note);
 	const chapter = Number(scalar(frontmatter, "capitulo"));
 	return {
 		capitulo: Number.isFinite(chapter) ? chapter : 0,
-		hechos: mapList(frontmatter, "hechos").map((item) => ({
+		hechos: memoryMapList(frontmatter, "hechos").map((item) => ({
 			id: item.id ?? "",
 			texto: item.texto ?? "",
 			verdad: truth(item.verdad ?? ""),
 		})),
-		conocimiento: mapList(frontmatter, "conocimiento").map((item) => ({
+		conocimiento: memoryMapList(frontmatter, "conocimiento").map((item) => ({
 			hecho: item.hecho ?? "",
 			quien: item.quien ?? "",
 			estado: item.estado ?? "",
 		})),
-		usos: mapList(frontmatter, "usos").map((item) => ({
+		usos: memoryMapList(frontmatter, "usos").map((item) => ({
 			hecho: item.hecho ?? "",
 			quien: item.quien ?? "",
 			modo: item.modo ?? "",

@@ -1,0 +1,152 @@
+(node:4074855) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file://src/extract.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+== block_trailing_comment
+---
+tipo: memoria
+capitulo: 3
+hechos:
+  - id: anillo
+    texto: El anillo
+  - id: carta
+    texto: La carta es falsa
+    verdad: false
+  # fin de hechos
+otro: x
+---
+Cuerpo
+parsed hechos=["anillo","carta"] conocimiento=[] capitulo=3
+== block_blank_before_close
+---
+tipo: memoria
+capitulo: 3
+hechos:
+  - id: anillo
+    texto: El anillo
+  - id: carta
+    texto: La carta es falsa
+    verdad: false
+
+---
+Cuerpo
+parsed hechos=["anillo","carta"] conocimiento=[] capitulo=3
+== block_literal_scalar
+---
+tipo: memoria
+capitulo: 3
+hechos:
+  - id: anillo
+    texto: |
+      Línea uno
+      Línea dos
+  - id: carta
+    texto: La carta es falsa
+    verdad: false
+otro: x
+---
+Cuerpo
+parsed hechos=["anillo","carta"] conocimiento=[] capitulo=3
+== block_zero_indent
+---
+tipo: memoria
+capitulo: 3
+hechos:
+- id: anillo
+  texto: El anillo
+- id: carta
+  texto: La carta es falsa
+  verdad: false
+otro: x
+---
+Cuerpo
+parsed hechos=["anillo","carta"] conocimiento=[] capitulo=3
+== flow_trailing_comma
+---
+tipo: memoria
+capitulo: 3
+hechos: [{id: anillo, texto: El anillo}, { id: carta, texto: La carta es falsa, verdad: false }]
+---
+Cuerpo
+parsed hechos=["anillo","carta"] conocimiento=[] capitulo=3
+== flow_with_comment
+---
+tipo: memoria
+capitulo: 3
+hechos: [{id: anillo, texto: El anillo}, { id: carta, texto: La carta es falsa, verdad: false }] # a mano
+---
+Cuerpo
+parsed hechos=["anillo","carta"] conocimiento=[] capitulo=3
+== flow_multiline_trailing_comma
+---
+tipo: memoria
+capitulo: 3
+hechos: [
+  {id: anillo, texto: El anillo}, { id: carta, texto: La carta es falsa, verdad: false }
+]
+---
+Cuerpo
+parsed hechos=["anillo","carta"] conocimiento=[] capitulo=3
+== empty_flow_comment
+---
+tipo: memoria
+capitulo: 3
+hechos:
+  - id: carta
+    texto: La carta es falsa
+    verdad: false
+otro: x
+---
+Cuerpo
+parsed hechos=["carta"] conocimiento=[] capitulo=3
+== empty_tilde
+---
+tipo: memoria
+capitulo: 3
+hechos:
+  - id: carta
+    texto: La carta es falsa
+    verdad: false
+otro: x
+---
+Cuerpo
+parsed hechos=["carta"] conocimiento=[] capitulo=3
+== empty_key_then_key
+---
+tipo: memoria
+capitulo: 3
+hechos:
+  - id: carta
+    texto: La carta es falsa
+    verdad: false
+otro: x
+---
+Cuerpo
+parsed hechos=["carta"] conocimiento=[] capitulo=3
+== missing_key_comment_last
+---
+tipo: memoria
+capitulo: 3
+# comentario final
+hechos:
+  - id: carta
+    texto: La carta es falsa
+    verdad: false
+---
+Cuerpo
+parsed hechos=["carta"] conocimiento=[] capitulo=3
+== quoted_key
+---
+tipo: memoria
+capitulo: 3
+"hechos":
+  - id: anillo
+  - id: carta
+    texto: La carta es falsa
+    verdad: false
+---
+Cuerpo
+parsed hechos=["anillo","carta"] conocimiento=[] capitulo=3
+== export dialogo_comillas: "Tras una pausa."
+== export dos_puntos: "Tras una pausa."
+== export linea_suelta: "---\nUna línea suelta\n---\nTras una pausa."
