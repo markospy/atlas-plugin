@@ -36,3 +36,48 @@ for (const [caso, nota] of [
 		assert.match(escrita, /Notas a mano\./);
 	});
 }
+
+// QA #19 v2: aprobar un ítem no debe borrar lo que el escritor corrigió a mano en las demás entradas.
+test("aceptar un hecho conserva campos y comentarios escritos a mano en _Memoria/", async () => {
+	const nota = [
+		"---",
+		"tipo: memoria",
+		"capitulo: 3",
+		"hechos:",
+		"  # corregido a mano",
+		"  - id: anillo",
+		'    texto: "El anillo"',
+		"    verdad: true",
+		'    nota: "revisar en cap 5"',
+		"conocimiento: []",
+		"---",
+		"Cuerpo",
+		"",
+	].join("\n");
+	const files = mockFiles({ [MEMORIA]: nota });
+	await writeApproved(files, destino, parseProposal(RESPUESTA), new Set(["h1"]));
+	const escrita = files.store.get(MEMORIA);
+	assert.match(escrita, /# corregido a mano/, "el comentario a mano sigue");
+	assert.match(escrita, /nota: "revisar en cap 5"/, "el campo a mano sigue");
+	assert.deepEqual(parseMemory(escrita).hechos.map((h) => h.id), ["anillo", "carta"]);
+});
+
+test("aceptar un estado conserva campos escritos a mano en la ficha del lugar", async () => {
+	const LUGAR = "Proyecto/Lugares/Torre.md";
+	const ficha = ["---", "nombre: Torre", "estados:", '  - capitulo: "[[Cap 01]]"', '    descripcion: "intacta"', "    nota: x", "---", ""].join("\n");
+	const files = mockFiles({ [LUGAR]: ficha });
+	const respuesta = JSON.stringify({ estados: [{ lugar: "Torre", descripcion: "en ruinas" }] });
+	await writeApproved(files, destino, parseProposal(respuesta), new Set(["e1"]));
+	const escrita = files.store.get(LUGAR);
+	assert.match(escrita, /nota: x/, "el campo a mano sigue");
+	assert.match(escrita, /en ruinas/);
+});
+
+test("aceptar en una memoria que abre con un --- de escena no mete el cuerpo en el frontmatter", async () => {
+	const nota = "---\nEl capítulo empieza.\n---\nmás\n";
+	const files = mockFiles({ [MEMORIA]: nota });
+	await writeApproved(files, destino, parseProposal(RESPUESTA), new Set(["h1"]));
+	const escrita = files.store.get(MEMORIA);
+	assert.ok(escrita.endsWith(nota), "el cuerpo original queda intacto tras el frontmatter");
+	assert.deepEqual(parseMemory(escrita).hechos, [{ id: "carta", texto: "La carta es falsa", verdad: false }]);
+});
