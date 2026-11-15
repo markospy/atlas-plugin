@@ -1,0 +1,7 @@
+1 hecho sin declarar avisa {"errors":["Hecho «venen» sin declarar en hechos hasta el cap. 5."],"alerts":[["omnisciente","venen","[[Elena]]",true],["ironia","veneno","[[Elena]]",false]]}
+2 declarado en N+1 avisa en N {"errors":["Hecho «puñal» sin declarar en hechos hasta el cap. 5."],"alerts":[["spoiler","puñal","Iván",true]]}
+3 declarado en N no avisa {"errors":[],"alerts":[["spoiler","puñal","Iván",true]]}
+4 sospecha actua = omnisciente {"errors":[],"alerts":[["omnisciente","veneno","[[Elena]]",true]]}
+5 ironia sospecha {"errors":[],"alerts":[["ironia","veneno","[[Elena]]",false]]}
+6 capitulo vacio {"errors":[],"alerts":[]}
+7 lector aprende en N {"errors":[],"alerts":[]}
