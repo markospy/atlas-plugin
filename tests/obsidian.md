@@ -117,3 +117,10 @@ Prepara el plugin una vez:
 - [ ] **Restaurar respaldo de la nota** lista esa versión con su fecha; elegirla devuelve la escena al texto de antes y añade otro respaldo con el texto que se sustituyó.
 - [ ] En una nota sin respaldos, el mismo comando avisa "Esta nota no tiene respaldos.".
 - [ ] Tras 11 aprobaciones en la misma escena quedan 10 archivos en su carpeta de respaldos.
+
+## #21 propagar cambios
+
+- [ ] En un proyecto con `_Memoria/Cap 03` (`hechos: carta`) y `Cap 09` / `Cap 14` que la usan, abrir `Cap 03` y ejecutar **Propagar cambios** avisa "Base guardada para el cap. 3…".
+- [ ] Quitar `carta` de los `hechos` de `Cap 03`, guardar y ejecutar **Propagar cambios** avisa "1 eliminados · 2 capítulos desactualizados" y abre la lista con cap. 9 y cap. 14 y el motivo "ya no se introduce en el cap. 3".
+- [ ] Solo el cap. 9 tiene **Confirmar: ya está reanalizado**; pulsarlo lo quita y el cap. 14 pasa a tenerlo. **Abrir para corregir** abre el capítulo de `Manuscrito/`.
+- [ ] Cerrar y reabrir Obsidian: **Capítulos desactualizados** sigue mostrando lo que no se confirmó.
