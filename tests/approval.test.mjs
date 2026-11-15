@@ -84,3 +84,59 @@ test("head nuevo sin ningún done: answered sigue en false", () => {
 	assert.equal(out.headChanged, true);
 	assert.equal(out.answered, false);
 });
+
+// QA v2 (#55): la ruta real del planner, `super-board-approval.py --deps`, de punta a punta.
+function depsEntry(comments) {
+	const graph = { 55: { number: 55, needsYou: true, humanGated: true } };
+	const code = `
+import importlib.util, io, json, sys
+spec = importlib.util.spec_from_file_location("approval", ${JSON.stringify(SCRIPT)})
+m = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)
+data = json.loads(sys.argv[1])
+m.GitHub.pr = lambda self, n: (${JSON.stringify(HEAD)}, {55})
+m.GitHub.comments = lambda self, n: [dict(c, source=n) for c in data if n == 55]
+m.GitHub.permission = lambda self, login: "admin"
+sys.argv = ["approval", "--deps", "--repo", "o/r"]
+sys.stdin = io.StringIO(${JSON.stringify(JSON.stringify(graph))})
+m.main()`;
+	const r = spawnSync("python3", ["-I", "-c", code, JSON.stringify(comments)], { encoding: "utf8" });
+	assert.equal(r.status, 0, r.stderr);
+	return JSON.parse(r.stdout)["55"];
+}
+
+const OWNER = { login: "owner", type: "User" };
+const ask = (id, head, at) => ({
+	id, user: OWNER, created_at: at, updated_at: at,
+	body: "Reason tag: 🙋 needs you\napproval-request: "
+		+ JSON.stringify({ repo: "o/r", pr: 5, head, scope: "c".repeat(64) }) + "\nblocked-by: -",
+});
+const done = (id, at) => ({ id, user: OWNER, body: "done", created_at: at, updated_at: at });
+const OLD = "b".repeat(40);
+
+test("--deps: done sobre el head viejo y head nuevo marca needsYouAnswered sin needsYouDone", () => {
+	const e = depsEntry([ask(1, OLD, "2026-11-14T10:00:00Z"), done(2, "2026-11-14T11:00:00Z")]);
+	assert.equal(e.needsYouAnswered, true);
+	assert.equal(e.needsYouDone, false);
+	assert.equal(e.approvalRefresh, true);
+});
+
+test("--deps: head nuevo sin done deja needsYouAnswered en false", () => {
+	const e = depsEntry([ask(1, OLD, "2026-11-14T10:00:00Z")]);
+	assert.equal(e.needsYouAnswered, false);
+	assert.equal(e.needsYouDone, false);
+});
+
+test("--deps: un 🙋 nuevo sin done anula el done del 🙋 viejo", () => {
+	const e = depsEntry([
+		ask(1, OLD, "2026-11-14T10:00:00Z"), done(2, "2026-11-14T11:00:00Z"),
+		ask(3, HEAD, "2026-11-14T12:00:00Z"),
+	]);
+	assert.equal(e.needsYouAnswered, false);
+	assert.equal(e.needsYouDone, false);
+	assert.equal(e.approvalRefresh, false);
+});
+
+test("--deps: un done anterior al 🙋 no cuenta", () => {
+	const e = depsEntry([done(2, "2026-11-14T09:00:00Z"), ask(1, OLD, "2026-11-14T10:00:00Z")]);
+	assert.equal(e.needsYouAnswered, false);
+});
