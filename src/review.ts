@@ -110,18 +110,39 @@ function replyText(reply: unknown): string | null {
 	return typeof content === "string" ? content : null;
 }
 
-/** The first JSON array in `reply`, also inside a ```json fence. */
+/**
+ * The findings array in `reply`: a ```json fence first, then each `[`…`]` span. Prose with
+ * brackets around it (`Mira [1]: [...]`) is skipped; an array needs an object or no items.
+ */
 function jsonArray(reply: string): unknown[] | null {
-	const start = reply.indexOf("[");
-	const end = reply.lastIndexOf("]");
-	if (start === -1 || end < start) {
-		return null;
+	const fence = /```(?:json)?\s*([\s\S]*?)```/.exec(reply);
+	return (fence?.[1] === undefined ? null : firstArray(fence[1])) ?? firstArray(reply);
+}
+
+function firstArray(text: string): unknown[] | null {
+	const ends: number[] = [];
+	for (let at = text.lastIndexOf("]"); at !== -1; at = at === 0 ? -1 : text.lastIndexOf("]", at - 1)) {
+		ends.push(at);
 	}
+	for (let start = text.indexOf("["); start !== -1; start = text.indexOf("[", start + 1)) {
+		for (const end of ends) {
+			if (end <= start) {
+				break;
+			}
+			const value = parsed(text.slice(start, end + 1));
+			if (Array.isArray(value) && (value.length === 0 || value.some((item) => typeof item === "object" && item !== null))) {
+				return value;
+			}
+		}
+	}
+	return null;
+}
+
+function parsed(json: string): unknown {
 	try {
-		const value: unknown = JSON.parse(reply.slice(start, end + 1));
-		return Array.isArray(value) ? value : null;
+		return JSON.parse(json);
 	} catch {
-		return null;
+		return undefined;
 	}
 }
 

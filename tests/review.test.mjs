@@ -132,3 +132,17 @@ test("el prompt respeta el presupuesto de contexto", () => {
 	const prompt = reviewPrompt(input({ escena: long, presupuesto: 100_000 }));
 	assert.ok(prompt.length < 13_000, String(prompt.length));
 });
+
+test("encuentra el JSON aunque haya corchetes en la prosa del proveedor", () => {
+	const hallazgo = '{"tipo":"estilo","cita":"Elena","mensaje":"x"}';
+	for (const reply of [
+		`Mira [1]: [${hallazgo}]`,
+		`[${hallazgo}] — ver [nota]`,
+		`Antes [a]\n\`\`\`json\n[${hallazgo}]\n\`\`\`\nDespués [b]`,
+	]) {
+		const parsed = parseFindings(reply, "Elena entra.\n");
+		assert.notEqual(parsed, null, reply);
+		assert.deepEqual(parsed.hallazgos.map((h) => [h.tipo, h.linea, h.columna]), [["estilo", 1, 1]], reply);
+	}
+	assert.equal(parseFindings("Solo [1] y [2], sin hallazgos.", "Elena entra.\n"), null);
+});
