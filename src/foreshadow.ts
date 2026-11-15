@@ -1,7 +1,7 @@
 import { buildEntityIndex, type VaultNote } from "./entities.ts";
 import { frontmatterBody, scalar } from "./frontmatter.ts";
 import { parseObject } from "./objects.ts";
-import { sheetFolder } from "./places.ts";
+import { sheetFolder } from "./sheets.ts";
 
 export const CLUE_STATES = ["sembrado", "reforzado", "resuelto"] as const;
 
