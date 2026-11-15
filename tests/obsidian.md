@@ -102,3 +102,10 @@ Prepara el plugin una vez:
 - [ ] **Aprobar** escribe la propuesta en la nota y conserva el frontmatter; **Continuación** añade al final sin tocar lo anterior.
 - [ ] Editar la nota mientras se espera la propuesta y pulsar **Aprobar** avisa "La nota cambió desde la propuesta." y no escribe.
 - [ ] Con **Modelo** vacío, el comando avisa "Configura endpoint y modelo…" y no abre el diff.
+
+## #28 respaldos
+
+- [ ] Co-escribir una escena y pulsar **Aprobar** crea `.atlas/respaldos/<ruta de la escena>/<fecha>.md` con el texto de antes (míralo desde el explorador de archivos del sistema; Obsidian no muestra la carpeta).
+- [ ] **Restaurar respaldo de la nota** lista esa versión con su fecha; elegirla devuelve la escena al texto de antes y añade otro respaldo con el texto que se sustituyó.
+- [ ] En una nota sin respaldos, el mismo comando avisa "Esta nota no tiene respaldos.".
+- [ ] Tras 11 aprobaciones en la misma escena quedan 10 archivos en su carpeta de respaldos.

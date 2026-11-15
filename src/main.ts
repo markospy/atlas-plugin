@@ -1,5 +1,6 @@
 import { type Editor, Notice, Plugin, requestUrl, TFile, type Vault } from "obsidian";
 
+import { backup, type BackupFiles, listBackups, restore } from "./backup";
 import { chronologyNotice, impossibleTravels, readChronology } from "./chronology";
 import { CoWriteSession, coWriteContext, propose, type CoWriteMode } from "./cowrite";
 import { CoWriteModal } from "./cowrite-modal";
@@ -29,6 +30,7 @@ import { LintModal } from "./lint-modal";
 import { MARKER_VIEW, MarkerView } from "./marker-view";
 import { DEFAULT_PROVIDER_SETTINGS, ollamaProvider, type ProviderSettings } from "./providers";
 import { NO_PROVIDER, providerReady, reviewScene } from "./review";
+import { RestoreModal } from "./restore-modal";
 import { ReviewModal } from "./review-modal";
 import { AtlasSettingTab } from "./settings";
 import { projectOf } from "./entities";
@@ -51,6 +53,18 @@ function filesFromVault(vault: Vault): AtlasFiles {
 			}
 			await vault.create(path, data);
 		},
+	};
+}
+
+function backupsFromVault(vault: Vault): BackupFiles {
+	const adapter = vault.adapter;
+	return {
+		exists: (path) => adapter.exists(path),
+		mkdir: (path) => adapter.mkdir(path),
+		read: (path) => adapter.read(path),
+		write: (path, data) => adapter.write(path, data),
+		list: async (folder) => (await adapter.list(folder)).files,
+		remove: (path) => adapter.remove(path),
 	};
 }
 
@@ -230,7 +244,29 @@ export default class AtlasPlugin extends Plugin {
 			id: "co-write-scene",
 			name: "Co-escribir escena",
 			editorCallback: (editor) => {
-				new CoWriteModal(this.app, editor, this.coWrite, (modo, actual) => this.coWriteProposal(modo, actual)).open();
+				const path = this.app.workspace.getActiveFile()?.path;
+				if (!path) {
+					new Notice("Abre la escena que quieres co-escribir.");
+					return;
+				}
+				new CoWriteModal(
+					this.app,
+					editor,
+					this.coWrite,
+					(modo, actual) => this.coWriteProposal(modo, actual),
+					async (actual) => {
+						await backup(backupsFromVault(this.app.vault), path, actual);
+					},
+				).open();
+			},
+		});
+		this.addCommand({
+			id: "restore-backup",
+			name: "Restaurar respaldo de la nota",
+			editorCallback: (editor) => {
+				this.restoreBackup(editor).catch((error: unknown) => {
+					new Notice(`No se pudo restaurar: ${error instanceof Error ? error.message : String(error)}`, 0);
+				});
 			},
 		});
 		this.addCommand({
@@ -549,6 +585,30 @@ export default class AtlasPlugin extends Plugin {
 			return;
 		}
 		new ReviewModal(this.app, editor, result.hallazgos, result.descartados, result.escenaRecortada).open();
+	}
+
+	private async restoreBackup(editor: Editor): Promise<void> {
+		const path = this.app.workspace.getActiveFile()?.path;
+		if (!path) {
+			new Notice("Abre la nota que quieres restaurar.");
+			return;
+		}
+		const files = backupsFromVault(this.app.vault);
+		const versions = await listBackups(files, path);
+		if (versions.length === 0) {
+			new Notice("Esta nota no tiene respaldos.");
+			return;
+		}
+		new RestoreModal(this.app, versions, (version) => {
+			restore(files, path, version.path, editor.getValue())
+				.then((text) => {
+					editor.setValue(text);
+					new Notice("Versión restaurada. El texto anterior quedó respaldado.");
+				})
+				.catch((error: unknown) => {
+					new Notice(`No se pudo restaurar: ${error instanceof Error ? error.message : String(error)}`, 0);
+				});
+		}).open();
 	}
 
 	private async coWriteProposal(modo: CoWriteMode, actual: string) {

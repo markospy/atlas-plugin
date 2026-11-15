@@ -132,5 +132,14 @@ Comando **Co-escribir escena** en una escena abierta. Elige **Borrador**, **Alte
 - **Rechazar** cierra el diff. La nota no cambia.
 - **Aprobar** aplica la propuesta. Si la nota cambió mientras esperabas, no se aplica y hay que pedir otra.
 - Borrador y alternativa conservan el frontmatter; continuación añade el texto al final.
-- Cada decisión queda en el historial de la sesión (en memoria; se pierde al cerrar Obsidian). Aún no hay copia de seguridad antes de aplicar: es otro ticket.
+- Cada decisión queda en el historial de la sesión (en memoria; se pierde al cerrar Obsidian).
+- **Aprobar** guarda antes un respaldo de la nota (ver abajo). Si el respaldo falla, la nota no cambia.
 - El contexto lleva skills, fichas, mundo y conocimiento; resúmenes y trama todavía no se cargan.
+
+## Respaldos antes de cambios de IA
+
+Antes de aplicar un cambio de IA, Atlas copia la nota tal como estaba en `.atlas/respaldos/<ruta de la nota sin .md>/<fecha ISO>.md`, dentro de la bóveda. Es una carpeta oculta: Obsidian no la indexa, así que no sale en búsquedas, enlaces ni en el grafo.
+
+- **Restaurar respaldo de la nota**, con la nota abierta, lista sus versiones de la más nueva a la más vieja. Al elegir una, la nota vuelve a ese texto. El texto que tenía antes también se respalda, así que restaurar se puede deshacer.
+- Retención, por nota y cada vez que se crea un respaldo: se quedan las 10 versiones más nuevas y se borran las de más de 7 días. La más nueva no se borra nunca.
+- Atlas solo borra en esa carpeta archivos con nombre de respaldo (`2026-11-15T10-30-00.000Z.md`); los demás no se tocan.
