@@ -168,8 +168,22 @@ usos:
 });
 
 test("only the chapter under review is checked", () => {
+	assert.deepEqual(checkContinuity([CAP_02, CAP_05], 4), []);
+	const later = parseMemory(`---
+capitulo: 6
+conocimiento:
+  - hecho: padre
+    quien: lector
+    estado: sabe
+---
+`);
+	const alerts = checkContinuity([CAP_02, CAP_05, later], 5);
 	assert.deepEqual(
-		checkContinuity([CAP_02, CAP_05], 4).filter((alert) => alert.tipo !== "ironia"),
-		[],
+		alerts.map((alert) => [alert.tipo, alert.hecho]),
+		[
+			["spoiler", "padre"],
+			["omnisciente", "veneno"],
+			["ironia", "veneno"],
+		],
 	);
 });
