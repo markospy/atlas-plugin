@@ -1,5 +1,6 @@
 import { type DataAdapter, type Editor, FileSystemAdapter, Notice, Platform, Plugin, requestUrl, TFile, type Vault } from "obsidian";
 
+import { backup, type BackupFiles, listBackups, restore } from "./backup";
 import { chronologyNotice, impossibleTravels, readChronology } from "./chronology";
 import { CoWriteSession, coWriteContext, propose, type CoWriteMode } from "./cowrite";
 import { CoWriteModal } from "./cowrite-modal";
@@ -7,6 +8,7 @@ import { characterFolder, characterNote, parseCharacter, relationErrors } from "
 import { frontmatterBody, scalar } from "./frontmatter";
 import { GRAPH_VIEW, GraphView } from "./graph-view";
 import { checkContinuity, usageErrors } from "./continuity";
+import { buildFactGraph, dependents, graphDump } from "./dependencies";
 import { ENTITY_VIEW, EntityView } from "./entity-view";
 import { type ExportIO, exportManuscript, exportMessage, manuscriptScenes, sceneOrder } from "./export";
 import { ExportModal } from "./export-modal";
@@ -22,6 +24,7 @@ import {
 	memoryNote,
 	memoryNoteName,
 	parseMemory,
+	projectMemoryFolder,
 	READER,
 	whatKnows,
 } from "./memory";
@@ -29,9 +32,14 @@ import { PLOT_STRUCTURES, plotFolder, plotNote, SCENE_FIELDS, type PlotStructure
 import { BASE_RULES, patternRules } from "./linter";
 import { LintModal } from "./lint-modal";
 import { MARKER_VIEW, MarkerView } from "./marker-view";
+import { chapterOf } from "./peek";
+import { PEEK_VIEW, PeekView } from "./peek-view";
 import { DEFAULT_PROVIDER_SETTINGS, ollamaProvider, type ProviderSettings } from "./providers";
 import { NO_PROVIDER, providerReady, reviewScene } from "./review";
+import { RestoreModal } from "./restore-modal";
 import { ReviewModal } from "./review-modal";
+import { confirmReanalysis, factChanges, mergeStale, parseStore, staleFrom, type PropagationStore, type StaleChapter } from "./stale";
+import { StaleModal } from "./stale-modal";
 import { AtlasSettingTab } from "./settings";
 import { projectOf } from "./entities";
 import { inProject } from "./sheets";
@@ -82,6 +90,21 @@ async function findPandoc(adapter: DataAdapter): Promise<ExportIO["pandoc"]> {
 	return run;
 }
 
+function backupsFromVault(vault: Vault): BackupFiles {
+	const adapter = vault.adapter;
+	return {
+		exists: (path) => adapter.exists(path),
+		mkdir: (path) => adapter.mkdir(path),
+		read: (path) => adapter.read(path),
+		write: (path, data) => adapter.write(path, data),
+		list: async (folder) => (await adapter.list(folder)).files,
+		remove: (path) => adapter.remove(path),
+	};
+}
+
+/** Last seen facts per memory note and stale chapters per project; hidden, so Obsidian does not index it. */
+const PROPAGATION_PATH = ".atlas/propagacion.json";
+
 /** Characters of context sent with a co-write request. */
 const COWRITE_BUDGET = 8000;
 
@@ -102,6 +125,7 @@ export default class AtlasPlugin extends Plugin {
 		this.registerView(GRAPH_VIEW, (leaf) => new GraphView(leaf));
 		this.registerView(ENTITY_VIEW, (leaf) => new EntityView(leaf));
 		this.registerView(FORESHADOW_VIEW, (leaf) => new ForeshadowView(leaf));
+		this.registerView(PEEK_VIEW, (leaf) => new PeekView(leaf));
 		this.addCommand({
 			id: "insert-tk",
 			name: "Insertar [TK]",
@@ -135,6 +159,13 @@ export default class AtlasPlugin extends Plugin {
 			name: "Índice de entidades (escanear manuscrito)",
 			callback: () => {
 				void this.openEntities();
+			},
+		});
+		this.addCommand({
+			id: "show-entity-peek",
+			name: "Vistazo de entidad (panel lateral)",
+			callback: () => {
+				void this.openPeek();
 			},
 		});
 		this.addCommand({
@@ -239,6 +270,34 @@ export default class AtlasPlugin extends Plugin {
 			},
 		});
 		this.addCommand({
+			id: "fact-dependents",
+			name: "Quién depende de este hecho",
+			editorCallback: (editor) => {
+				void this.factDependentsHere(editor.getSelection().trim());
+			},
+		});
+		this.addCommand({
+			id: "dump-fact-graph",
+			name: "Copiar grafo de dependencias (JSON)",
+			callback: () => {
+				void this.dumpFactGraph();
+			},
+		});
+		this.addCommand({
+			id: "propagate-changes",
+			name: "Propagar cambios",
+			callback: () => {
+				void this.propagateChanges();
+			},
+		});
+		this.addCommand({
+			id: "stale-chapters",
+			name: "Capítulos desactualizados",
+			callback: () => {
+				void this.showStale();
+			},
+		});
+		this.addCommand({
 			id: "lint-note",
 			name: "Revisar estilo de la nota",
 			editorCallback: (editor) => {
@@ -258,7 +317,29 @@ export default class AtlasPlugin extends Plugin {
 			id: "co-write-scene",
 			name: "Co-escribir escena",
 			editorCallback: (editor) => {
-				new CoWriteModal(this.app, editor, this.coWrite, (modo, actual) => this.coWriteProposal(modo, actual)).open();
+				const path = this.app.workspace.getActiveFile()?.path;
+				if (!path) {
+					new Notice("Abre la escena que quieres co-escribir.");
+					return;
+				}
+				new CoWriteModal(
+					this.app,
+					editor,
+					this.coWrite,
+					(modo, actual) => this.coWriteProposal(modo, actual),
+					async (actual) => {
+						await backup(backupsFromVault(this.app.vault), path, actual);
+					},
+				).open();
+			},
+		});
+		this.addCommand({
+			id: "restore-backup",
+			name: "Restaurar respaldo de la nota",
+			editorCallback: (editor) => {
+				this.restoreBackup(editor).catch((error: unknown) => {
+					new Notice(`No se pudo restaurar: ${error instanceof Error ? error.message : String(error)}`, 0);
+				});
 			},
 		});
 		this.addCommand({
@@ -539,10 +620,33 @@ export default class AtlasPlugin extends Plugin {
 			new Notice("Abre un capítulo (Cap NN).");
 			return null;
 		}
-		const folder = `${memoryFolder(active.path)}/`;
+		return { chapter, memories: await this.memoriesBeside(active.path) };
+	}
+
+	/** Every `_Memoria/` note of the project holding `activePath`; no chapter needed. */
+	private async projectMemories(): Promise<ChapterMemory[] | null> {
+		const active = this.app.workspace.getActiveFile();
+		if (!active) {
+			new Notice("Abre una nota del proyecto.");
+			return null;
+		}
+		const folder = projectMemoryFolder(active.path);
+		const memories = await this.memoriesIn(folder);
+		if (memories.length === 0) {
+			new Notice(`No hay memorias en ${folder}/: el grafo estaría vacío.`);
+			return null;
+		}
+		return memories;
+	}
+
+	private async memoriesBeside(activePath: string): Promise<ChapterMemory[]> {
+		return this.memoriesIn(memoryFolder(activePath));
+	}
+
+	private async memoriesIn(memoryDir: string): Promise<ChapterMemory[]> {
+		const folder = `${memoryDir}/`;
 		const notes = this.app.vault.getMarkdownFiles().filter((file) => file.path.startsWith(folder));
-		const memories = await Promise.all(notes.map(async (file) => parseMemory(await this.app.vault.cachedRead(file))));
-		return { chapter, memories };
+		return Promise.all(notes.map(async (file) => parseMemory(await this.app.vault.cachedRead(file))));
 	}
 
 	private async checkContinuityHere(): Promise<void> {
@@ -554,6 +658,123 @@ export default class AtlasPlugin extends Plugin {
 		const lines = [...errors, ...checkContinuity(found.memories, found.chapter).map((alert) => alert.mensaje)];
 		const summary = lines.length > 0 ? lines.join("\n") : "Sin alertas.";
 		new Notice(`Continuidad cap. ${found.chapter}\n${summary}`);
+	}
+
+	private async factDependentsHere(fact: string): Promise<void> {
+		if (fact.length === 0) {
+			new Notice("Selecciona el id de un hecho.");
+			return;
+		}
+		const memories = await this.projectMemories();
+		if (!memories) {
+			return;
+		}
+		const graph = buildFactGraph(memories);
+		const chapters = dependents(graph, fact);
+		const summary = chapters.length > 0 ? chapters.map((chapter) => `Cap. ${chapter}`).join(", ") : "Ningún capítulo lo usa.";
+		const warnings = graph.avisos.length > 0 ? `\nGrafo incompleto:\n${graph.avisos.join("\n")}` : "";
+		new Notice(`Dependen de «${fact}»: ${summary}${warnings}`);
+	}
+
+	private async dumpFactGraph(): Promise<void> {
+		const memories = await this.projectMemories();
+		if (!memories) {
+			return;
+		}
+		const graph = buildFactGraph(memories);
+		await navigator.clipboard.writeText(graphDump(graph));
+		const warnings = graph.avisos.length > 0 ? ` · ${graph.avisos.length} avisos de grafo incompleto` : "";
+		new Notice(`Grafo copiado: ${graph.edges.length} aristas${warnings}.`);
+	}
+
+	/** Diffs the active chapter's facts against the last run and flags the later chapters that relied on them. */
+	private async propagateChanges(): Promise<void> {
+		const active = this.app.workspace.getActiveFile();
+		const chapter = chapterNumber(active?.path ?? "");
+		if (!active || chapter === null) {
+			new Notice("Abre un capítulo (Cap NN) o su memoria.");
+			return;
+		}
+		const folder = projectMemoryFolder(active.path);
+		const notes = this.app.vault.getMarkdownFiles().filter((file) => file.path.startsWith(`${folder}/`));
+		const read = await Promise.all(
+			notes.map(async (file) => ({ path: file.path, memory: parseMemory(await this.app.vault.cachedRead(file)) })),
+		);
+		const edited = read.find((note) => note.memory.capitulo === chapter);
+		if (!edited) {
+			new Notice(`No hay memoria del cap. ${chapter} en ${folder}/.`);
+			return;
+		}
+		const store = await this.readPropagation();
+		const before = store.base[edited.path];
+		const changes = before ? factChanges(before, edited.memory.hechos) : [];
+		const stale = staleFrom(buildFactGraph(read.map((note) => note.memory)), chapter, changes);
+		store.stale[folder] = mergeStale(store.stale[folder] ?? [], stale);
+		for (const note of read) {
+			if (note === edited || !store.base[note.path]) {
+				store.base[note.path] = note.memory.hechos;
+			}
+		}
+		await this.writePropagation(store);
+		if (!before) {
+			new Notice(`Base guardada para el cap. ${chapter}: el próximo «Propagar cambios» comparará sus hechos con esta.`);
+			return;
+		}
+		const count = (kind: string) => changes.filter((change) => change.cambio === kind).length;
+		new Notice(
+			`Cap. ${chapter}: ${count("añadido")} añadidos, ${count("eliminado")} eliminados, ${count("cambiado")} cambiados · ${stale.length} capítulos desactualizados.`,
+		);
+		if (stale.length > 0) {
+			this.openStale(folder, store.stale[folder] ?? []);
+		}
+	}
+
+	private async showStale(): Promise<void> {
+		const active = this.app.workspace.getActiveFile();
+		if (!active) {
+			new Notice("Abre una nota del proyecto.");
+			return;
+		}
+		const folder = projectMemoryFolder(active.path);
+		this.openStale(folder, (await this.readPropagation()).stale[folder] ?? []);
+	}
+
+	private openStale(folder: string, list: StaleChapter[]): void {
+		const root = folder.slice(0, folder.length - "_Memoria".length);
+		new StaleModal(
+			this.app,
+			list,
+			async (chapter) => {
+				const store = await this.readPropagation();
+				store.stale[folder] = confirmReanalysis(store.stale[folder] ?? [], chapter);
+				await this.writePropagation(store);
+				return store.stale[folder];
+			},
+			(chapter) => {
+				const files = this.app.vault.getMarkdownFiles().filter((file) => chapterNumber(file.path) === chapter);
+				const file =
+					files.find((candidate) => candidate.path.startsWith(`${root}Manuscrito/`)) ??
+					files.find((candidate) => candidate.path.startsWith(`${folder}/`));
+				if (file) {
+					void this.app.workspace.getLeaf(false).openFile(file);
+				} else {
+					new Notice(`No encuentro el cap. ${chapter} en el proyecto.`);
+				}
+			},
+		).open();
+	}
+
+	private async readPropagation(): Promise<PropagationStore> {
+		const adapter = this.app.vault.adapter;
+		return parseStore((await adapter.exists(PROPAGATION_PATH)) ? await adapter.read(PROPAGATION_PATH) : null);
+	}
+
+	private async writePropagation(store: PropagationStore): Promise<void> {
+		const adapter = this.app.vault.adapter;
+		if (!(await adapter.exists(".atlas"))) {
+			await adapter.mkdir(".atlas");
+		}
+		await adapter.write(PROPAGATION_PATH, JSON.stringify(store, null, 2));
 	}
 
 	private async whatKnowsHere(who: string): Promise<void> {
@@ -579,8 +800,7 @@ export default class AtlasPlugin extends Plugin {
 	private async reviewWithAi(editor: Editor): Promise<void> {
 		const active = this.app.workspace.getActiveFile();
 		const path = active?.path ?? "";
-		const parent = path.slice(0, Math.max(0, path.lastIndexOf("/")));
-		const chapter = chapterNumber(path) ?? chapterNumber(parent);
+		const chapter = chapterOf(path);
 		if (!active || chapter === null) {
 			new Notice("Abre una escena de un capítulo (Cap NN).");
 			return;
@@ -618,6 +838,30 @@ export default class AtlasPlugin extends Plugin {
 			return;
 		}
 		new ReviewModal(this.app, editor, result.hallazgos, result.descartados, result.escenaRecortada).open();
+	}
+
+	private async restoreBackup(editor: Editor): Promise<void> {
+		const path = this.app.workspace.getActiveFile()?.path;
+		if (!path) {
+			new Notice("Abre la nota que quieres restaurar.");
+			return;
+		}
+		const files = backupsFromVault(this.app.vault);
+		const versions = await listBackups(files, path);
+		if (versions.length === 0) {
+			new Notice("Esta nota no tiene respaldos.");
+			return;
+		}
+		new RestoreModal(this.app, versions, (version) => {
+			restore(files, path, version.path, editor.getValue())
+				.then((text) => {
+					editor.setValue(text);
+					new Notice("Versión restaurada. El texto anterior quedó respaldado.");
+				})
+				.catch((error: unknown) => {
+					new Notice(`No se pudo restaurar: ${error instanceof Error ? error.message : String(error)}`, 0);
+				});
+		}).open();
 	}
 
 	private async coWriteProposal(modo: CoWriteMode, actual: string) {
@@ -687,6 +931,19 @@ export default class AtlasPlugin extends Plugin {
 		if (leaf.view instanceof ForeshadowView) {
 			await leaf.view.refresh();
 		}
+	}
+
+	private async openPeek(): Promise<void> {
+		const existing = this.app.workspace.getLeavesOfType(PEEK_VIEW);
+		const leaf = existing[0] ?? this.app.workspace.getRightLeaf(false);
+		if (!leaf) {
+			return;
+		}
+		if (existing.length === 0) {
+			// `active: false` keeps the editor focused, so the cursor stays on the scene.
+			await leaf.setViewState({ type: PEEK_VIEW, active: false });
+		}
+		await this.app.workspace.revealLeaf(leaf);
 	}
 
 	private async openEntities(): Promise<void> {

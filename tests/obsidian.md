@@ -102,3 +102,17 @@ Prepara el plugin una vez:
 - [ ] **Aprobar** escribe la propuesta en la nota y conserva el frontmatter; **Continuación** añade al final sin tocar lo anterior.
 - [ ] Editar la nota mientras se espera la propuesta y pulsar **Aprobar** avisa "La nota cambió desde la propuesta." y no escribe.
 - [ ] Con **Modelo** vacío, el comando avisa "Configura endpoint y modelo…" y no abre el diff.
+
+## #28 respaldos
+
+- [ ] Co-escribir una escena y pulsar **Aprobar** crea `.atlas/respaldos/<ruta de la escena>/<fecha>.md` con el texto de antes (míralo desde el explorador de archivos del sistema; Obsidian no muestra la carpeta).
+- [ ] **Restaurar respaldo de la nota** lista esa versión con su fecha; elegirla devuelve la escena al texto de antes y añade otro respaldo con el texto que se sustituyó.
+- [ ] En una nota sin respaldos, el mismo comando avisa "Esta nota no tiene respaldos.".
+- [ ] Tras 11 aprobaciones en la misma escena quedan 10 archivos en su carpeta de respaldos.
+
+## #21 propagar cambios
+
+- [ ] En un proyecto con `_Memoria/Cap 03` (`hechos: carta`) y `Cap 09` / `Cap 14` que la usan, abrir `Cap 03` y ejecutar **Propagar cambios** avisa "Base guardada para el cap. 3…".
+- [ ] Quitar `carta` de los `hechos` de `Cap 03`, guardar y ejecutar **Propagar cambios** avisa "1 eliminados · 2 capítulos desactualizados" y abre la lista con cap. 9 y cap. 14 y el motivo "ya no se introduce en el cap. 3".
+- [ ] Solo el cap. 9 tiene **Confirmar: ya está reanalizado**; pulsarlo lo quita y el cap. 14 pasa a tenerlo. **Abrir para corregir** abre el capítulo de `Manuscrito/`.
+- [ ] Cerrar y reabrir Obsidian: **Capítulos desactualizados** sigue mostrando lo que no se confirmó.
