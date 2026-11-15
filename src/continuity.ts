@@ -67,10 +67,22 @@ export function checkContinuity(memories: ChapterMemory[], chapter: number): Con
 
 const MODES = ["menciona", "actua"];
 
-export function usageErrors(memory: ChapterMemory): string[] {
-	return memory.usos
+export function usageErrors(memories: ChapterMemory[], chapter: number): string[] {
+	const here = memories.filter((memory) => memory.capitulo === chapter);
+	const declared = new Set(
+		memories.filter((memory) => memory.capitulo <= chapter).flatMap((memory) => memory.hechos.map((fact) => fact.id)),
+	);
+	const modes = here
+		.flatMap((memory) => memory.usos)
 		.filter((use) => !MODES.includes(use.modo))
 		.map((use) => `Modo «${use.modo}» no válido para ${use.hecho || "un hecho"}: usa menciona o actua.`);
+	const undeclared = new Set(
+		here
+			.flatMap((memory) => [...memory.conocimiento, ...memory.usos])
+			.map((entry) => entry.hecho)
+			.filter((fact) => fact && !declared.has(fact)),
+	);
+	return [...modes, ...[...undeclared].map((fact) => `Hecho «${fact}» sin declarar en hechos hasta el cap. ${chapter}.`)];
 }
 
 function states(memories: ChapterMemory[], who: string, chapter: number): Map<string, string> {

@@ -46,7 +46,7 @@ conocimiento:
 ---
 `;
 
-test("la plantilla trae hechos y conocimiento vacíos", () => {
+test("la plantilla trae hechos, conocimiento y usos vacíos", () => {
 	assert.equal(memoryNoteName(3), "Cap 03");
 	assert.equal(memoryFolder("Novela/Manuscrito/Cap 03.md"), "Novela/_Memoria");
 	const note = memoryNote(3);

@@ -113,10 +113,40 @@ usos:
     modo: actúa
 ---
 `);
-	assert.deepEqual(usageErrors(typo), [
+	assert.deepEqual(usageErrors([CAP_02, typo], 6), [
 		"Modo «actúa» no válido para veneno: usa menciona o actua.",
 	]);
-	assert.deepEqual(usageErrors(CAP_05), []);
+	assert.deepEqual(usageErrors([CAP_02, CAP_05], 5), []);
+});
+
+test("a fact used but never declared in hechos up to N is reported", () => {
+	const typo = parseMemory(`---
+capitulo: 5
+conocimiento:
+  - hecho: venen
+    quien: "[[Elena]]"
+    estado: sabe
+usos:
+  - hecho: venen
+    quien: "[[Elena]]"
+    modo: actua
+  - hecho: puñal
+    quien: "[[Iván]]"
+    modo: menciona
+---
+`);
+	const later = parseMemory(`---
+capitulo: 6
+hechos:
+  - id: puñal
+    texto: "El puñal era de Iván"
+    verdad: true
+---
+`);
+	assert.deepEqual(usageErrors([CAP_02, typo, later], 5), [
+		"Hecho «venen» sin declarar en hechos hasta el cap. 5.",
+		"Hecho «puñal» sin declarar en hechos hasta el cap. 5.",
+	]);
 });
 
 test("an aliased link and a plain name give one irony alert", () => {

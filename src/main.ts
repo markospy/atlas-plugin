@@ -366,7 +366,7 @@ export default class AtlasPlugin extends Plugin {
 		if (!found) {
 			return;
 		}
-		const errors = found.memories.filter((memory) => memory.capitulo === found.chapter).flatMap(usageErrors);
+		const errors = usageErrors(found.memories, found.chapter);
 		const lines = [...errors, ...checkContinuity(found.memories, found.chapter).map((alert) => alert.mensaje)];
 		const summary = lines.length > 0 ? lines.join("\n") : "Sin alertas.";
 		new Notice(`Continuidad cap. ${found.chapter}\n${summary}`);

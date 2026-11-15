@@ -77,6 +77,8 @@ Con un capítulo abierto (`Cap NN`), **Nueva memoria del capítulo** crea `_Memo
 - **Personaje omnisciente:** un personaje actúa según un hecho que no `sabe` (actuar según un `cree-falso` propio se respeta y no avisa).
 - **Ironía dramática (intencional):** el lector sabe un hecho y un personaje del capítulo no; se marca como ironía, no como error.
 
+También avisa de un `hecho` del capítulo (en `usos` o `conocimiento`) que no está declarado en ningún `hechos` hasta ese capítulo: suele ser un `id` mal escrito.
+
 ## Índice de entidades
 
 Con una nota del proyecto abierta, ejecuta **Índice de entidades (escanear manuscrito)**. El panel lista los personajes, lugares y objetos del proyecto y, bajo cada ficha, las escenas de `Manuscrito/` que la nombran por `nombre` o por cualquiera de sus `alias` (palabra completa, sin distinguir mayúsculas). El escaneo es local, sin IA, y solo corre cuando ejecutas el comando: vuelve a ejecutarlo tras editar y el índice se rehace sin duplicar escenas.
