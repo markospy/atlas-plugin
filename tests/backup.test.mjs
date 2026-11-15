@@ -127,3 +127,22 @@ test("retención: los archivos que no son respaldos no se tocan", async () => {
 	assert.equal(fs.files.get(`${folder}/LEEME.txt`), "mío");
 	assert.equal((await listBackups(fs, NOTE)).length, 1);
 });
+
+test("retención (QA): límites exactos — N versiones se quedan todas; justo N días se queda, N días + 1 ms se borra", async () => {
+	const fs = memoryFiles();
+	const start = at("2026-11-15T00:00:00.000Z").getTime();
+	for (let i = 0; i < RETENTION.maxVersiones; i++) {
+		await backup(fs, NOTE, `v${i}`, new Date(start + i * 60_000));
+	}
+	assert.equal((await listBackups(fs, NOTE)).length, RETENTION.maxVersiones);
+
+	const edge = memoryFiles();
+	const now = at("2026-11-15T12:00:00.000Z").getTime();
+	await backup(edge, NOTE, "pasada", new Date(now - RETENTION.maxDias * DAY - 1));
+	await backup(edge, NOTE, "justo", new Date(now - RETENTION.maxDias * DAY));
+	await backup(edge, NOTE, "hoy", new Date(now));
+	assert.deepEqual(
+		(await listBackups(edge, NOTE)).map((version) => edge.files.get(version.path)),
+		["hoy", "justo"],
+	);
+});
