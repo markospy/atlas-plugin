@@ -16,10 +16,17 @@ export interface Knowledge {
 	estado: string;
 }
 
+export interface FactUse {
+	hecho: string;
+	quien: string;
+	modo: string;
+}
+
 export interface ChapterMemory {
 	capitulo: number;
 	hechos: Fact[];
 	conocimiento: Knowledge[];
+	usos: FactUse[];
 }
 
 export interface KnownFact {
@@ -65,10 +72,12 @@ export function memoryNote(chapter: number): string {
 		`capitulo: ${chapter}`,
 		"hechos: []",
 		"conocimiento: []",
+		"usos: []",
 		"---",
 		"",
 		"<!-- hechos: id, texto, verdad (true/false) -->",
 		"<!-- conocimiento: hecho (id), quien (lector o [[Personaje]]), estado (ignora | sospecha | cree-falso | sabe) -->",
+		"<!-- usos: hecho (id), quien ([[Personaje]]), modo (menciona | actua) -->",
 		"",
 	].join("\n");
 }
@@ -87,6 +96,11 @@ export function parseMemory(note: string): ChapterMemory {
 			hecho: item.hecho ?? "",
 			quien: item.quien ?? "",
 			estado: item.estado ?? "",
+		})),
+		usos: listItems(frontmatter, "usos").map((item) => ({
+			hecho: item.hecho ?? "",
+			quien: item.quien ?? "",
+			modo: item.modo ?? "",
 		})),
 	};
 }

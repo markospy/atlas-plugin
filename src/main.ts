@@ -2,10 +2,12 @@ import { type Editor, Notice, Plugin, TFile, type Vault } from "obsidian";
 
 import { characterFolder, characterNote, parseCharacter, relationErrors } from "./characters";
 import { GRAPH_VIEW, GraphView } from "./graph-view";
+import { checkContinuity } from "./continuity";
 import { ENTITY_VIEW, EntityView } from "./entity-view";
 import { objectFolder, objectNote } from "./objects";
 import { placeFolder, placeNote } from "./places";
 import {
+	type ChapterMemory,
 	chapterNumber,
 	knowledgeErrors,
 	memoryFolder,
@@ -155,6 +157,13 @@ export default class AtlasPlugin extends Plugin {
 			name: "Qué sabe en este capítulo",
 			editorCallback: (editor) => {
 				void this.whatKnowsHere(editor.getSelection().trim() || READER);
+			},
+		});
+		this.addCommand({
+			id: "check-continuity",
+			name: "Revisar continuidad",
+			callback: () => {
+				void this.checkContinuityHere();
 			},
 		});
 		this.addCommand({
@@ -339,16 +348,35 @@ export default class AtlasPlugin extends Plugin {
 		new Notice("Memoria creada.");
 	}
 
-	private async whatKnowsHere(who: string): Promise<void> {
+	private async chapterMemories(): Promise<{ chapter: number; memories: ChapterMemory[] } | null> {
 		const active = this.app.workspace.getActiveFile();
 		const chapter = chapterNumber(active?.path ?? "");
 		if (!active || chapter === null) {
 			new Notice("Abre un capítulo (Cap NN).");
-			return;
+			return null;
 		}
 		const folder = `${memoryFolder(active.path)}/`;
 		const notes = this.app.vault.getMarkdownFiles().filter((file) => file.path.startsWith(folder));
 		const memories = await Promise.all(notes.map(async (file) => parseMemory(await this.app.vault.cachedRead(file))));
+		return { chapter, memories };
+	}
+
+	private async checkContinuityHere(): Promise<void> {
+		const found = await this.chapterMemories();
+		if (!found) {
+			return;
+		}
+		const alerts = checkContinuity(found.memories, found.chapter);
+		const summary = alerts.length > 0 ? alerts.map((alert) => alert.mensaje).join("\n") : "Sin alertas.";
+		new Notice(`Continuidad cap. ${found.chapter}\n${summary}`);
+	}
+
+	private async whatKnowsHere(who: string): Promise<void> {
+		const found = await this.chapterMemories();
+		if (!found) {
+			return;
+		}
+		const { chapter, memories } = found;
 		const errors = memories.flatMap(knowledgeErrors);
 		const known = whatKnows(memories, who, chapter);
 		const lines = known.map((fact) => `${fact.estado}: ${fact.texto}`);

@@ -64,12 +64,18 @@ En el editor, **Insertar [TK]** e **Insertar [INVESTIGAR]** dejan el marcador en
 
 ## Memoria
 
-Con un capítulo abierto (`Cap NN`), **Nueva memoria del capítulo** crea `_Memoria/Cap NN.md` con dos listas en el frontmatter, vacías y opcionales:
+Con un capítulo abierto (`Cap NN`), **Nueva memoria del capítulo** crea `_Memoria/Cap NN.md` con tres listas en el frontmatter, vacías y opcionales:
 
 - `hechos`: cada uno con `id`, `texto` y `verdad` (`true` o `false`).
 - `conocimiento`: cada entrada con `hecho` (el `id`), `quien` (`lector` o `[[Personaje]]`) y `estado`: `ignora`, `sospecha`, `cree-falso` o `sabe`.
+- `usos`: cada entrada con `hecho` (el `id`), `quien` (`[[Personaje]]`) y `modo`: `menciona` o `actua`.
 
 **Qué sabe en este capítulo** responde por el texto seleccionado (`[[Elena]]`) o, sin selección, por el lector. Suma las memorias hasta ese capítulo y, si un hecho cambia de estado, gana el más reciente. Avisa de estados no válidos.
+
+**Revisar continuidad** compara los `usos` del capítulo abierto con lo que se sabe hasta ese capítulo, sin IA:
+- **Posible spoiler:** alguien menciona un hecho que el lector aún ignora (o no tiene registrado).
+- **Personaje omnisciente:** un personaje actúa según un hecho que no `sabe` (un `cree-falso` se nombra en el aviso).
+- **Ironía dramática (intencional):** el lector sabe un hecho y un personaje del capítulo no; se marca como ironía, no como error.
 
 ## Índice de entidades
 
