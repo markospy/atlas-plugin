@@ -119,23 +119,52 @@ function jsonArray(reply: string): unknown[] | null {
 	return (fence?.[1] === undefined ? null : firstArray(fence[1])) ?? firstArray(reply);
 }
 
+/**
+ * Only a `[` that opens `{` or `]` can start the findings array, and each is parsed once, up to
+ * its matching `]` (brackets inside strings skipped). Linear per start, so `[[enlaces]]` and
+ * truncated replies fail fast.
+ */
 function firstArray(text: string): unknown[] | null {
-	const ends: number[] = [];
-	for (let at = text.lastIndexOf("]"); at !== -1; at = at === 0 ? -1 : text.lastIndexOf("]", at - 1)) {
-		ends.push(at);
-	}
 	for (let start = text.indexOf("["); start !== -1; start = text.indexOf("[", start + 1)) {
-		for (const end of ends) {
-			if (end <= start) {
-				break;
-			}
-			const value = parsed(text.slice(start, end + 1));
-			if (Array.isArray(value) && (value.length === 0 || value.some((item) => typeof item === "object" && item !== null))) {
-				return value;
-			}
+		if (!/^\[\s*[{\]]/.test(text.slice(start, start + 64))) {
+			continue;
+		}
+		const end = closing(text, start);
+		if (end === -1) {
+			continue;
+		}
+		const value = parsed(text.slice(start, end + 1));
+		if (Array.isArray(value) && (value.length === 0 || value.some((item) => typeof item === "object" && item !== null))) {
+			return value;
 		}
 	}
 	return null;
+}
+
+/** Index of the `]` that closes the `[` at `start`, or -1; brackets inside JSON strings do not count. */
+function closing(text: string, start: number): number {
+	let depth = 0;
+	let inString = false;
+	for (let at = start; at < text.length; at++) {
+		const char = text[at];
+		if (inString) {
+			if (char === "\\") {
+				at++;
+			} else if (char === '"') {
+				inString = false;
+			}
+		} else if (char === '"') {
+			inString = true;
+		} else if (char === "[" || char === "{") {
+			depth++;
+		} else if (char === "]" || char === "}") {
+			depth--;
+			if (depth === 0) {
+				return char === "]" ? at : -1;
+			}
+		}
+	}
+	return -1;
 }
 
 function parsed(json: string): unknown {

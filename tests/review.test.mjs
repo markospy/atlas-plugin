@@ -146,3 +146,21 @@ test("encuentra el JSON aunque haya corchetes en la prosa del proveedor", () => 
 	}
 	assert.equal(parseFindings("Solo [1] y [2], sin hallazgos.", "Elena entra.\n"), null);
 });
+
+test("respuesta cortada llena de [[enlaces]]: falla rápido, sin congelar la UI", () => {
+	const item = '{"tipo":"continuidad","cita":"[[Elena]] entra","mensaje":"[[Elena]] estaba en [[Faro]] y [[Puerto]]"}';
+	const truncated = `[${Array.from({ length: 200 }, () => item).join(",")}`.slice(0, -10);
+	const prose = Array.from({ length: 1000 }, (_, at) => `[[Nota ${at}]]`).join(" ");
+	for (const reply of [truncated, prose, `${prose} ${truncated}`]) {
+		const started = performance.now();
+		assert.equal(parseFindings(reply, "[[Elena]] entra.\n"), null);
+		assert.ok(performance.now() - started < 200, `tardó ${Math.round(performance.now() - started)} ms`);
+	}
+});
+
+test("encuentra el array aunque las citas lleven corchetes y siga prosa después", () => {
+	const reply = 'Hallazgos: [{"tipo":"estilo","cita":"[[Elena]] entra","mensaje":"usa ] y [ sueltos"}] y nada más [fin].';
+	const parsed = parseFindings(reply, "[[Elena]] entra.\n");
+	assert.equal(parsed?.hallazgos.length, 1);
+	assert.equal(parsed?.hallazgos[0].cita, "[[Elena]] entra");
+});
