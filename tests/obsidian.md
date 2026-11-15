@@ -89,6 +89,12 @@ Prepara el plugin una vez:
 - [ ] Con la pista abierta, **Avanzar pista** pasa `estado` a `reforzado` y luego a `resuelto`; una vez resuelta no cambia.
 - [ ] **Tablero de foreshadowing** lista las pistas sembradas y reforzadas, no las resueltas. Un objeto con `funcion` nombrado en un solo capítulo sale en **Objetos que no vuelven**; al nombrarlo en un segundo capítulo y ejecutar el comando otra vez, desaparece.
 
+## #17 revisar con IA
+
+- [ ] Con endpoint o modelo vacíos, **Revisar escena con IA** muestra el aviso de configurar proveedor y no falla.
+- [ ] Con Ollama local (`http://127.0.0.1:11434`, modelo instalado) sobre una escena en `Manuscrito/Cap 01/`, abre la lista de hallazgos con tipo y línea; un clic lleva el cursor a la cita.
+- [ ] Tras la revisión, la escena y el resto de notas siguen sin cambios (no hay deshacer pendiente ni archivo modificado).
+
 ## #18 co-escritura
 
 - [ ] Con Ollama en `http://127.0.0.1:11434` y **Modelo** `llama3.2` en **Settings → Atlas**, abrir una escena y ejecutar **Co-escribir escena** → **Alternativa** muestra "Pidiendo propuesta…" y luego el diff con líneas `-` y `+`.

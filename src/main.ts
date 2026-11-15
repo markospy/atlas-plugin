@@ -4,6 +4,7 @@ import { chronologyNotice, impossibleTravels, readChronology } from "./chronolog
 import { CoWriteSession, coWriteContext, propose, type CoWriteMode } from "./cowrite";
 import { CoWriteModal } from "./cowrite-modal";
 import { characterFolder, characterNote, parseCharacter, relationErrors } from "./characters";
+import { frontmatterBody, scalar } from "./frontmatter";
 import { GRAPH_VIEW, GraphView } from "./graph-view";
 import { checkContinuity, usageErrors } from "./continuity";
 import { ENTITY_VIEW, EntityView } from "./entity-view";
@@ -27,7 +28,11 @@ import { BASE_RULES, patternRules } from "./linter";
 import { LintModal } from "./lint-modal";
 import { MARKER_VIEW, MarkerView } from "./marker-view";
 import { DEFAULT_PROVIDER_SETTINGS, ollamaProvider, type ProviderSettings } from "./providers";
+import { NO_PROVIDER, providerReady, reviewScene } from "./review";
+import { ReviewModal } from "./review-modal";
 import { AtlasSettingTab } from "./settings";
+import { projectOf } from "./entities";
+import { inProject } from "./sheets";
 import { parseSkill, skillFolder, skillNote, skillsFor } from "./style";
 import { createAtlasProject, type AtlasFiles } from "./vault";
 
@@ -210,6 +215,15 @@ export default class AtlasPlugin extends Plugin {
 			name: "Revisar estilo de la nota",
 			editorCallback: (editor) => {
 				void this.lintNote(editor);
+			},
+		});
+		this.addCommand({
+			id: "review-scene-ai",
+			name: "Revisar escena con IA",
+			editorCallback: (editor) => {
+				this.reviewWithAi(editor).catch((error: unknown) => {
+					new Notice(`La revisión con IA falló: ${error instanceof Error ? error.message : String(error)}`, 0);
+				});
 			},
 		});
 		this.addCommand({
@@ -491,6 +505,50 @@ export default class AtlasPlugin extends Plugin {
 		const notes = this.app.vault.getMarkdownFiles().filter((file) => file.path.startsWith(`${folder}/`));
 		const skills = await Promise.all(notes.map(async (file) => parseSkill(await this.app.vault.read(file))));
 		new LintModal(this.app, editor, [...BASE_RULES, ...patternRules(skillsFor(skills, "global"))]).open();
+	}
+
+	private async reviewWithAi(editor: Editor): Promise<void> {
+		const active = this.app.workspace.getActiveFile();
+		const path = active?.path ?? "";
+		const parent = path.slice(0, Math.max(0, path.lastIndexOf("/")));
+		const chapter = chapterNumber(path) ?? chapterNumber(parent);
+		if (!active || chapter === null) {
+			new Notice("Abre una escena de un capítulo (Cap NN).");
+			return;
+		}
+		if (!providerReady(this.settings)) {
+			new Notice(NO_PROVIDER, 0);
+			return;
+		}
+		// Read-only: the project's notes are read, none is written.
+		const root = projectOf(path);
+		const files = this.app.vault.getMarkdownFiles().filter((file) => inProject(root, file.path));
+		const notes = await Promise.all(files.map(async (file) => this.app.vault.cachedRead(file)));
+		const byType = (tipo: string) => notes.filter((note) => scalar(frontmatterBody(note), "tipo") === tipo);
+		new Notice("Revisando la escena con IA…");
+		const result = await reviewScene(
+			{
+				capitulo: chapter,
+				escena: editor.getValue(),
+				skills: byType("skill").map(parseSkill),
+				personajes: byType("personaje").map(parseCharacter),
+				objetos: byType("objeto").map(parseObject),
+				lugares: byType("lugar").map(parsePlace),
+				memorias: byType("memoria").map(parseMemory),
+				resumenes: [],
+				trama: "",
+				presupuesto: 12_000,
+			},
+			this.settings,
+			ollamaProvider(this.settings, async (url, body) =>
+				(await requestUrl({ url, method: "POST", contentType: "application/json", body: JSON.stringify(body) })).json,
+			),
+		);
+		if (!result.ok) {
+			new Notice(result.mensaje, 0);
+			return;
+		}
+		new ReviewModal(this.app, editor, result.hallazgos, result.descartados, result.escenaRecortada).open();
 	}
 
 	private async coWriteProposal(modo: CoWriteMode, actual: string) {

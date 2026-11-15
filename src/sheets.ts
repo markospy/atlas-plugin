@@ -20,6 +20,11 @@ export function sheetFolder(activePath: string, folderName: string): string {
 	return parent.length > 0 ? `${parent}/${folderName}` : folderName;
 }
 
+/** Whether `path` sits inside the project folder `root` (`""` holds every note). */
+export function inProject(root: string, path: string): boolean {
+	return root.length === 0 || path.startsWith(`${root}/`);
+}
+
 function parentOf(path: string): string {
 	const slash = path.lastIndexOf("/");
 	return slash === -1 ? "" : path.slice(0, slash);

@@ -109,3 +109,16 @@ test("una sola función resuelve la carpeta de cada ficha", () => {
 	assert.equal(sheetFolder("Novela/Lugares/Casa/Cocina.md", "Lugares"), "Novela/Lugares");
 	assert.equal(sheetFolder("Suelta.md", "Lugares"), "Lugares");
 });
+
+test("inProject: solo las notas del proyecto de la escena activa", async () => {
+	const { inProject } = await import("../src/sheets.ts");
+	const { projectOf } = await import("../src/entities.ts");
+	assert.equal(projectOf("Novela A/Manuscrito/Cap 02/Escena 1.md"), "Novela A");
+	assert.equal(projectOf("Sagas/Novela A/Manuscrito/Cap 02.md"), "Sagas/Novela A");
+	assert.equal(projectOf("Manuscrito/Cap 02.md"), "");
+	assert.equal(projectOf("Borradores/Cap 02.md"), "Borradores");
+	const root = projectOf("Novela A/Manuscrito/Cap 02/Escena 1.md");
+	const paths = ["Novela A/Personajes/Elena.md", "Novela B/Personajes/Elena.md", "Novela AB/Estilo/x.md", "Otra.md"];
+	assert.deepEqual(paths.filter((path) => inProject(root, path)), ["Novela A/Personajes/Elena.md"]);
+	assert.deepEqual(paths.filter((path) => inProject("", path)), paths);
+});
