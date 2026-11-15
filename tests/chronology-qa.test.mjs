@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { impossibleTravels, parseSceneTime, parseTravels } from "../src/chronology.ts";
+import { impossibleTravels, parseSceneTime, parseTravels, readChronology } from "../src/chronology.ts";
 
 test("qa: escena con CRLF, alias en los enlaces y personajes en lista de bloque", () => {
 	const note = '---\r\ndia: "2.5"\r\nlugar: "[[Puerto|el puerto]]"\r\npov: "[[Elena|la doctora]]"\r\npersonajes:\r\n  - "[[Marcos]]"\r\n  - "[[Elena]]"\r\n---\r\nTexto.\r\n';
@@ -43,5 +43,17 @@ test("qa: dos escenas el mismo día en lugares con ruta declarada se avisan una 
 	assert.deepEqual(
 		impossibleTravels([{ nombre: "Cap 01", dia: 1, lugar: "Puerto", personajes: [] }], travels),
 		[],
+	);
+});
+
+test("qa: ruta en minúsculas, con carpeta y comentario casa en sentido inverso", () => {
+	const { scenes, travels } = readChronology([
+		{ path: "Lugares/Faro.md", nombre: "Faro", note: '---\ntipo: lugar\nviajes:\n  - a: "[[Lugares/puerto]]" # en barco\n    dias: 7\n---\n' },
+		{ path: "Manuscrito/Cap 01.md", nombre: "Cap 01", note: '---\ndia: 1\nlugar: "[[Puerto]]"\npov: "[[Elena]]"\n---\n' },
+		{ path: "Manuscrito/Cap 02.md", nombre: "Cap 02", note: '---\ndia: 3\nlugar: "[[FARO]]"\npov: "[[Elena]]"\n---\n' },
+	]);
+	assert.deepEqual(
+		impossibleTravels(scenes, travels).map(({ desde, hasta, dias, minimo }) => [desde, hasta, dias, minimo]),
+		[["Cap 01", "Cap 02", 2, 7]],
 	);
 });
