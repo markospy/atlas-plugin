@@ -1,3 +1,5 @@
+import { frontmatterBody, scalar, unquote } from "./frontmatter.ts";
+
 export const KNOWLEDGE_STATES = ["ignora", "sospecha", "cree-falso", "sabe"] as const;
 
 export type KnowledgeState = (typeof KNOWLEDGE_STATES)[number];
@@ -150,52 +152,29 @@ function parentOf(path: string): string {
 	return slash === -1 ? "" : path.slice(0, slash);
 }
 
-function frontmatterBody(note: string): string {
-	if (!note.startsWith("---\n")) {
-		return "";
-	}
-	const end = note.indexOf("\n---", 3);
-	return end === -1 ? "" : note.slice(4, end);
-}
-
-function scalar(frontmatter: string, key: string): string {
-	const match = new RegExp(`^${key}:\\s*(.*)$`, "m").exec(frontmatter);
-	return match ? unquote(match[1] ?? "") : "";
-}
-
-function unquote(value: string): string {
-	const trimmed = value.trim();
-	if (trimmed.startsWith('"') && trimmed.endsWith('"')) {
-		try {
-			return JSON.parse(trimmed) as string;
-		} catch {
-			return trimmed.slice(1, -1);
-		}
-	}
-	return trimmed;
-}
-
 function listItems(frontmatter: string, key: string): Record<string, string>[] {
 	const lines = frontmatter.split("\n");
-	const start = lines.findIndex((line) => line === `${key}:`);
+	const start = lines.findIndex((line) => line.trimEnd() === `${key}:`);
 	if (start === -1) {
 		return [];
 	}
 	const items: Record<string, string>[] = [];
 	let current: Record<string, string> | null = null;
+	let itemIndent = -1;
 	for (const line of lines.slice(start + 1)) {
-		if (line.length > 0 && !line.startsWith(" ") && !line.startsWith("-")) {
+		if (line.length > 0 && !/^[\s-]/.test(line)) {
 			break;
 		}
-		const item = /^ {2}- (\w+):\s*(.*)$/.exec(line);
+		const item = /^(\s*)- (\w+):\s*(.*)$/.exec(line);
 		if (item) {
-			current = { [item[1] ?? ""]: unquote(item[2] ?? "") };
+			itemIndent = (item[1] ?? "").length;
+			current = { [item[2] ?? ""]: unquote(item[3] ?? "") };
 			items.push(current);
 			continue;
 		}
-		const field = /^ {4}(\w+):\s*(.*)$/.exec(line);
-		if (field && current) {
-			current[field[1] ?? ""] = unquote(field[2] ?? "");
+		const field = /^(\s*)(\w+):\s*(.*)$/.exec(line);
+		if (field && current && (field[1] ?? "").length > itemIndent) {
+			current[field[2] ?? ""] = unquote(field[3] ?? "");
 		}
 	}
 	return items;

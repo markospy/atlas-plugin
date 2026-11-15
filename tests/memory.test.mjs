@@ -102,3 +102,31 @@ test("el número de capítulo sale solo de un nombre que empieza por Cap", () =>
 	assert.equal(chapterNumber("Manuscrito/Recap 5.md"), null);
 	assert.equal(chapterNumber("Notas/Escape 2.md"), null);
 });
+
+test("lee una memoria con CRLF y comillas simples", () => {
+	const note = CAP_03.replace(`quien: "[[Elena]]"`, `quien: '[[Elena]]'`).replace(/\n/g, "\r\n");
+	const memory = parseMemory(note);
+	assert.equal(memory.capitulo, 3);
+	assert.equal(memory.hechos.length, 1);
+	assert.deepEqual(whatKnows([memory], "Elena", 3), [
+		{ hecho: "padre", texto: "El juez es el padre de Elena", verdad: true, estado: "sabe" },
+	]);
+});
+
+test("lee listas sin sangría", () => {
+	const note = `---
+capitulo: 3
+hechos:
+- id: padre
+  texto: "El juez es el padre de Elena"
+  verdad: true
+conocimiento:
+- hecho: padre
+  quien: lector
+  estado: sospecha
+---
+`;
+	const memory = parseMemory(note);
+	assert.deepEqual(memory.hechos, [{ id: "padre", texto: "El juez es el padre de Elena", verdad: true }]);
+	assert.deepEqual(memory.conocimiento, [{ hecho: "padre", quien: "lector", estado: "sospecha" }]);
+});
