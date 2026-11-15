@@ -112,3 +112,13 @@ También ejecuta las skills de `Estilo/` con `alcance: global` y `verificacion: 
 | `escena` | texto de la escena, sin frontmatter |
 
 El texto de la escena es la nota sin su frontmatter; un `---` inicial seguido de una línea que no es `clave:` es un corte de escena y se conserva. Una sección vacía no aparece. `presupuesto` es el máximo de caracteres sumando todas las secciones. Si no cabe, se llenan en este orden: escena, skills, fichas, conocimiento, mundo, trama, resúmenes. La primera que no cabe se corta con `…`: la escena y los resúmenes conservan el final, las demás el principio. Las que quedan después se omiten. `recortadas` lista las secciones cortadas u omitidas, para depurar.
+
+## Co-escribir escena (IA)
+
+Comando **Co-escribir escena** en una escena abierta. Elige **Borrador**, **Alternativa** o **Continuación**. Atlas pide la propuesta al endpoint de Ollama (`/api/generate`, ajustes **Endpoint** y **Modelo**) con el contexto de escena (8000 caracteres como máximo), y la muestra como diff contra la nota actual: `-` línea quitada, `+` línea añadida.
+
+- **Rechazar** cierra el diff. La nota no cambia.
+- **Aprobar** aplica la propuesta. Si la nota cambió mientras esperabas, no se aplica y hay que pedir otra.
+- Borrador y alternativa conservan el frontmatter; continuación añade el texto al final.
+- Cada decisión queda en el historial de la sesión (en memoria; se pierde al cerrar Obsidian). Aún no hay copia de seguridad antes de aplicar: es otro ticket.
+- El contexto lleva skills, fichas, mundo y conocimiento; resúmenes y trama todavía no se cargan.

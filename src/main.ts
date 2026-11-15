@@ -1,12 +1,15 @@
-import { type Editor, Notice, Plugin, TFile, type Vault } from "obsidian";
+import { type Editor, Notice, Plugin, requestUrl, TFile, type Vault } from "obsidian";
 
+import { buildSceneContext } from "./context";
+import { CoWriteSession, propose, type CoWriteMode } from "./cowrite";
+import { CoWriteModal } from "./cowrite-modal";
 import { characterFolder, characterNote, parseCharacter, relationErrors } from "./characters";
 import { GRAPH_VIEW, GraphView } from "./graph-view";
 import { ENTITY_VIEW, EntityView } from "./entity-view";
 import { clueFolder, clueNote, nextState } from "./foreshadow";
 import { FORESHADOW_VIEW, ForeshadowView } from "./foreshadow-view";
-import { objectFolder, objectNote } from "./objects";
-import { placeFolder, placeNote } from "./places";
+import { objectFolder, objectNote, parseObject } from "./objects";
+import { parsePlace, placeFolder, placeNote } from "./places";
 import {
 	chapterNumber,
 	knowledgeErrors,
@@ -21,7 +24,7 @@ import { PLOT_STRUCTURES, plotFolder, plotNote, SCENE_FIELDS, type PlotStructure
 import { BASE_RULES, patternRules } from "./linter";
 import { LintModal } from "./lint-modal";
 import { MARKER_VIEW, MarkerView } from "./marker-view";
-import { DEFAULT_PROVIDER_SETTINGS, type ProviderSettings } from "./providers";
+import { DEFAULT_PROVIDER_SETTINGS, ollamaProvider, type ProviderSettings } from "./providers";
 import { AtlasSettingTab } from "./settings";
 import { parseSkill, skillFolder, skillNote, skillsFor } from "./style";
 import { createAtlasProject, type AtlasFiles } from "./vault";
@@ -44,8 +47,13 @@ function filesFromVault(vault: Vault): AtlasFiles {
 	};
 }
 
+/** Characters of context sent with a co-write request. */
+const COWRITE_BUDGET = 8000;
+
 export default class AtlasPlugin extends Plugin {
 	settings: ProviderSettings = { ...DEFAULT_PROVIDER_SETTINGS };
+	/** Co-write decisions for this session only. */
+	private readonly coWrite = new CoWriteSession();
 
 	async onload(): Promise<void> {
 		const stored = (await this.loadData()) as Partial<ProviderSettings> | null;
@@ -186,6 +194,13 @@ export default class AtlasPlugin extends Plugin {
 			name: "Revisar estilo de la nota",
 			editorCallback: (editor) => {
 				void this.lintNote(editor);
+			},
+		});
+		this.addCommand({
+			id: "co-write-scene",
+			name: "Co-escribir escena",
+			editorCallback: (editor) => {
+				new CoWriteModal(this.app, editor, this.coWrite, (modo, actual) => this.coWriteProposal(modo, actual)).open();
 			},
 		});
 		this.addCommand({
@@ -429,6 +444,29 @@ export default class AtlasPlugin extends Plugin {
 		const notes = this.app.vault.getMarkdownFiles().filter((file) => file.path.startsWith(`${folder}/`));
 		const skills = await Promise.all(notes.map(async (file) => parseSkill(await this.app.vault.read(file))));
 		new LintModal(this.app, editor, [...BASE_RULES, ...patternRules(skillsFor(skills, "global"))]).open();
+	}
+
+	private async coWriteProposal(modo: CoWriteMode, actual: string) {
+		const path = this.app.workspace.getActiveFile()?.path ?? "";
+		const read = async <T>(folder: string, parse: (note: string) => T): Promise<T[]> => {
+			const notes = this.app.vault.getMarkdownFiles().filter((file) => file.path.startsWith(`${folder}/`));
+			return Promise.all(notes.map(async (file) => parse(await this.app.vault.cachedRead(file))));
+		};
+		const contexto = buildSceneContext({
+			capitulo: chapterNumber(path) ?? 0,
+			escena: actual,
+			skills: await read(skillFolder(path), parseSkill),
+			personajes: await read(characterFolder(path), parseCharacter),
+			objetos: await read(objectFolder(path), parseObject),
+			lugares: await read(placeFolder(path), parsePlace),
+			memorias: await read(memoryFolder(path), parseMemory),
+			resumenes: [],
+			trama: "",
+			presupuesto: COWRITE_BUDGET,
+		});
+		const post = async (url: string, body: unknown) =>
+			(await requestUrl({ url, method: "POST", contentType: "application/json", body: JSON.stringify(body) })).json;
+		return propose(ollamaProvider(this.settings, post), modo, actual, contexto);
 	}
 
 	async saveSettings(): Promise<void> {
