@@ -1,7 +1,7 @@
 import { GraphView } from "../../../../../src/graph-view.ts";
-// v4: same fixture as v3, run against the rebased head (merge of staging).
+// v5: v4 fixture plus R7 (Elena–Iván aliado `hasta` Cap 10, enemigo `desde` Cap 10). Shim: ./obsidian-shim.js.
 const notes = {
-  "Novela/Personajes/Elena.md": `---\nrelaciones:\n  - con: "[[Personajes/Marcos]]"\n    tipo: hermano\n  - con: "[[Iván|el traidor]]"\n    tipo: rival\n    desde: "[[Cap 07 - parte 2]]"\n  - con: "[[Lucía]]"\n    tipo: amiga\n    desde: "[[Cap 02]]"\n    hasta: "[[Cap 05]]"\n---\n`,
+  "Novela/Personajes/Elena.md": `---\nrelaciones:\n  - con: "[[Personajes/Marcos]]"\n    tipo: hermano\n  - con: "[[Iván|el traidor]]"\n    tipo: rival\n    desde: "[[Cap 07 - parte 2]]"\n  - con: "[[Lucía]]"\n    tipo: amiga\n    desde: "[[Cap 02]]"\n    hasta: "[[Cap 05]]"\n  - con: "[[Iván]]"\n    tipo: aliado\n    hasta: "[[Cap 10]]"\n  - con: "[[Iván]]"\n    tipo: enemigo\n    desde: "[[Libro 2/Cap 10]]"\n---\n`,
   "Novela/Personajes/Marcos.md": `---\nrelaciones:\n  - con: "[[Iván]]"\n    tipo: rival\n    hasta: "[[Cap 03]]"\n---\n`,
   "Novela/Personajes/Iván.md": `---\n---\n`,
   "Novela/Personajes/Lucía.md": `---\n---\n`,
@@ -18,7 +18,10 @@ await view.onOpen();
 const sel = document.querySelector("select");
 if (q.get("tipo") && sel) { sel.value = q.get("tipo"); sel.dispatchEvent(new Event("change")); }
 if (q.get("cap")) { const n = document.querySelector("input"); n.value = q.get("cap"); n.dispatchEvent(new Event("change")); }
-window.__edges = document.querySelectorAll("svg line").length;
-window.__nodes = [...document.querySelectorAll("svg circle")].map((c) => c.nextElementSibling.textContent);
-window.__labels = [...document.querySelectorAll("svg line + text")].map((t) => t.textContent);
-document.body.dataset.ready = "1";
+const nodes = [...document.querySelectorAll("svg circle")].map((c) => c.nextElementSibling.textContent);
+const labels = [...document.querySelectorAll("svg line + text")].map((t) => t.textContent);
+const out = document.createElement("pre");
+out.id = "check";
+out.hidden = true;
+out.textContent = JSON.stringify({ edges: document.querySelectorAll("svg line").length, nodes, labels });
+document.body.appendChild(out);
