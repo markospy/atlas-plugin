@@ -10,10 +10,13 @@ export interface ExportScene {
 
 export interface SceneOrder {
 	titulo: string;
+	/** Scene folder relative to the index note; "" is the index's own folder. */
 	carpeta: string;
 	/** Scene note names in index order; Longform's nested scenes come flattened. */
 	escenas: string[];
 }
+
+export const NO_SCENES = "Ninguna escena del índice tiene nota: no se exportó nada.";
 
 export const NO_PANDOC = "EPUB y PDF necesitan pandoc instalado (https://pandoc.org). DOCX sigue disponible.";
 
@@ -61,7 +64,10 @@ export function sceneOrder(indexNote: string): SceneOrder | null {
 	}
 	return {
 		titulo: unquote(field("title")?.value ?? ""),
-		carpeta: unquote(field("sceneFolder")?.value ?? "") || "Manuscrito",
+		// Longform's default `/` (or none) means the index's own folder.
+		carpeta: unquote(field("sceneFolder")?.value ?? "")
+			.replace(/^\/+|\/+$/g, "")
+			.replace(/^\.$/, ""),
 		escenas: escenas.filter((name) => name.length > 0),
 	};
 }
@@ -72,12 +78,13 @@ export async function manuscriptScenes(
 	order: SceneOrder,
 	read: (path: string) => Promise<string>,
 ): Promise<{ escenas: ExportScene[]; faltan: string[] }> {
-	const folder = childPath(parentPath(indexPath), order.carpeta);
+	const parent = parentPath(indexPath);
+	const folder = order.carpeta.length > 0 ? childPath(parent, order.carpeta) : parent;
 	const escenas: ExportScene[] = [];
 	const faltan: string[] = [];
 	for (const titulo of order.escenas) {
 		try {
-			escenas.push({ titulo, texto: noteBody(await read(`${folder}/${titulo}.md`)) });
+			escenas.push({ titulo, texto: noteBody(await read(childPath(folder, `${titulo}.md`))) });
 		} catch {
 			faltan.push(titulo);
 		}
@@ -114,6 +121,9 @@ export async function exportManuscript(
 	folder: string,
 	io: ExportIO,
 ): Promise<ExportResult> {
+	if (escenas.length === 0) {
+		return { ok: false, mensaje: NO_SCENES };
+	}
 	const ruta = childPath(folder, `${titulo.replace(/[\\/:*?"<>|]/g, "-")}.${format}`);
 	if (format === "docx") {
 		await io.writeBinary(ruta, docxFile(escenas));
@@ -130,14 +140,26 @@ export async function exportManuscript(
 	return { ok: true, ruta };
 }
 
+/** Notice text for an export, naming the scenes skipped for having no note. */
+export function exportMessage(result: ExportResult, faltan: string[]): string {
+	const head = result.ok ? `Exportado: ${result.ruta}` : result.mensaje;
+	return faltan.length > 0 ? `${head}\nSin nota, se saltaron: ${faltan.join(", ")}.` : head;
+}
+
+/** Characters XML 1.0 forbids; one of them leaves document.xml unreadable. */
+// eslint-disable-next-line no-control-regex
+const XML_ILLEGAL = /[\u0000-\u0008\u000b\u000c\u000e-\u001f\ufffe\uffff]/g;
+
 function xmlText(text: string): string {
-	return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+	return text
+		.replace(XML_ILLEGAL, "")
+		.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
 function paragraph(text: string, heading = false): string {
 	const props = heading ? '<w:rPr><w:b/><w:sz w:val="32"/></w:rPr>' : "";
 	const runs = text
-		.split("\n")
+		.split(/\r?\n/)
 		.map((line) => `<w:t xml:space="preserve">${xmlText(line)}</w:t>`)
 		.join("<w:br/>");
 	return `<w:p><w:r>${props}${runs}</w:r></w:p>`;

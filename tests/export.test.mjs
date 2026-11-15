@@ -10,6 +10,7 @@ import {
 	docxFile,
 	exportFormats,
 	exportManuscript,
+	exportMessage,
 	manuscriptScenes,
 	pandocArgs,
 	sceneOrder,
@@ -145,4 +146,51 @@ test("con pandoc, EPUB y PDF pasan el manuscrito por stdin", async () => {
 		"--output",
 		"out.pdf",
 	]);
+});
+
+test("sceneFolder `/`, vacío o ausente es la carpeta del índice; sin barras sobrantes", async () => {
+	const paths = [];
+	const read = async (path) => {
+		paths.push(path);
+		return "Texto.";
+	};
+	const index = (folder) => `---\nlongform:\n  title: Libro\n${folder}  scenes: [A]\n---\n`;
+	for (const folder of ["  sceneFolder: /\n", "  sceneFolder: .\n", "  sceneFolder: \"\"\n", ""]) {
+		assert.equal(sceneOrder(index(folder)).carpeta, "", folder);
+	}
+	assert.equal(sceneOrder(index("  sceneFolder: /Escenas/\n")).carpeta, "Escenas");
+
+	await manuscriptScenes("Libro/Libro.md", sceneOrder(index("  sceneFolder: /\n")), read);
+	await manuscriptScenes("Libro/Libro.md", sceneOrder(index("  sceneFolder: /Escenas\n")), read);
+	await manuscriptScenes("Libro.md", sceneOrder(index("")), read);
+	assert.deepEqual(paths, ["Libro/A.md", "Libro/Escenas/A.md", "A.md"]);
+});
+
+test("caracteres de control no rompen el XML del DOCX", () => {
+	const dir = mkdtempSync(join(tmpdir(), "atlas-docx-"));
+	const file = join(dir, "control.docx");
+	writeFileSync(file, docxFile([{ titulo: "Cap\u0001 01", texto: "Hola\u000bmundo\u0000.\r\nOtra\u001f línea\ttab." }]));
+	const xml = spawnSync("unzip", ["-p", file, "word/document.xml"], { encoding: "utf8" }).stdout;
+	// eslint-disable-next-line no-control-regex
+	assert.doesNotMatch(xml, /[\u0000-\u0008\u000b\u000c\u000e-\u001f]/);
+	assert.match(xml, /Holamundo\./);
+	assert.match(xml, /Cap 01/);
+	assert.match(xml, /Otra línea\ttab\./);
+	const parse = spawnSync("python3", ["-c", "import sys,xml.dom.minidom as m;m.parseString(sys.stdin.buffer.read())"], {
+		input: xml,
+	});
+	assert.equal(parse.status, 0, String(parse.stderr));
+});
+
+test("sin escenas no exporta, y el aviso conserva las saltadas", async () => {
+	const io = { writeBinary: async () => assert.fail("no escribe"), pandoc: null };
+	const empty = await exportManuscript("docx", "Mi Novela", [], "Exportar", io);
+	assert.equal(empty.ok, false);
+	assert.match(empty.mensaje, /ninguna escena/i);
+	assert.match(exportMessage(empty, ["A", "B"]), /Sin nota, se saltaron: A, B\./);
+
+	const failing = { writeBinary: async () => {}, pandoc: async () => { throw new Error("boom"); } };
+	const pdf = await exportManuscript("pdf", "Mi Novela", [{ titulo: "C", texto: "x" }], "", failing);
+	assert.match(exportMessage(pdf, ["Borrada"]), /pandoc falló: boom\nSin nota, se saltaron: Borrada\./);
+	assert.equal(exportMessage({ ok: true, ruta: "Exportar/X.docx" }, []), "Exportado: Exportar/X.docx");
 });

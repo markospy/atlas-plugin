@@ -8,7 +8,7 @@ import { frontmatterBody, scalar } from "./frontmatter";
 import { GRAPH_VIEW, GraphView } from "./graph-view";
 import { checkContinuity, usageErrors } from "./continuity";
 import { ENTITY_VIEW, EntityView } from "./entity-view";
-import { type ExportIO, exportManuscript, manuscriptScenes, sceneOrder } from "./export";
+import { type ExportIO, exportManuscript, exportMessage, manuscriptScenes, sceneOrder } from "./export";
 import { ExportModal } from "./export-modal";
 import { clueFolder, clueNote, nextState } from "./foreshadow";
 import { FORESHADOW_VIEW, ForeshadowView } from "./foreshadow-view";
@@ -303,17 +303,20 @@ export default class AtlasPlugin extends Plugin {
 		const start = childPath(parentPath(file.path), "Exportar");
 		new ExportModal(this.app, pandoc !== null, start, (format, folder) => {
 			void (async () => {
-				const { escenas, faltan } = await manuscriptScenes(file.path, order, (path) => adapter.read(path));
-				if (folder.length > 0 && !(await adapter.exists(folder))) {
-					await this.app.vault.createFolder(folder);
+				try {
+					const { escenas, faltan } = await manuscriptScenes(file.path, order, (path) => adapter.read(path));
+					if (escenas.length > 0 && folder.length > 0 && !(await adapter.exists(folder))) {
+						await this.app.vault.createFolder(folder);
+					}
+					const io: ExportIO = {
+						writeBinary: (path, data) => adapter.writeBinary(path, data.slice().buffer),
+						pandoc,
+					};
+					const result = await exportManuscript(format, order.titulo || file.basename, escenas, folder, io);
+					new Notice(exportMessage(result, faltan), 0);
+				} catch (error) {
+					new Notice(`No se pudo exportar: ${error instanceof Error ? error.message : String(error)}`, 0);
 				}
-				const io: ExportIO = {
-					writeBinary: (path, data) => adapter.writeBinary(path, data.slice().buffer),
-					pandoc,
-				};
-				const result = await exportManuscript(format, order.titulo || file.basename, escenas, folder, io);
-				const missing = faltan.length > 0 ? `\nSin nota, se saltaron: ${faltan.join(", ")}.` : "";
-				new Notice(result.ok ? `Exportado: ${result.ruta}${missing}` : result.mensaje, 0);
 			})();
 		}).open();
 	}
