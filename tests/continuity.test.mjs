@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { checkContinuity } from "../src/continuity.ts";
+import { checkContinuity, usageErrors } from "../src/continuity.ts";
 import { memoryNote, parseMemory } from "../src/memory.ts";
 
 const CAP_02 = parseMemory(`---
@@ -91,7 +91,7 @@ test("an action that needs a fact the character does not know is omniscient", ()
 	assert.equal(omniscient[0].error, true);
 });
 
-test("an action on a false belief names the belief", () => {
+test("an action on a false belief is respected, not omniscient", () => {
 	const acts = parseMemory(`---
 capitulo: 6
 usos:
@@ -101,9 +101,39 @@ usos:
 ---
 `);
 	const alerts = checkContinuity([CAP_02, acts], 6).filter((alert) => alert.hecho === "carta");
-	assert.equal(alerts.length, 1);
-	assert.equal(alerts[0].tipo, "omnisciente");
-	assert.match(alerts[0].mensaje, /cree-falso/);
+	assert.deepEqual(alerts, []);
+});
+
+test("an unknown modo is reported instead of ignored", () => {
+	const typo = parseMemory(`---
+capitulo: 6
+usos:
+  - hecho: veneno
+    quien: "[[Iván]]"
+    modo: actúa
+---
+`);
+	assert.deepEqual(usageErrors(typo), [
+		"Modo «actúa» no válido para veneno: usa menciona o actua.",
+	]);
+	assert.deepEqual(usageErrors(CAP_05), []);
+});
+
+test("an aliased link and a plain name give one irony alert", () => {
+	const both = parseMemory(`---
+capitulo: 5
+conocimiento:
+  - hecho: veneno
+    quien: "[[Elena|E]]"
+    estado: ignora
+usos:
+  - hecho: padre
+    quien: Elena
+    modo: actua
+---
+`);
+	const irony = checkContinuity([CAP_02, both], 5).filter((alert) => alert.tipo === "ironia");
+	assert.equal(irony.length, 1);
 });
 
 test("reader knows and character does not is irony, not an error", () => {

@@ -145,7 +145,7 @@ function isState(value: string): value is KnowledgeState {
 	return (KNOWLEDGE_STATES as readonly string[]).includes(value);
 }
 
-function holderKey(who: string): string {
+export function holderKey(who: string): string {
 	const inner = who.trim().replace(/^\[\[/, "").replace(/\]\]$/, "");
 	return (inner.split("|")[0] ?? "").trim().toLowerCase();
 }

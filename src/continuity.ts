@@ -1,4 +1,4 @@
-import { type ChapterMemory, READER, whatKnows } from "./memory.ts";
+import { type ChapterMemory, holderKey, READER, whatKnows } from "./memory.ts";
 
 export type AlertKind = "spoiler" | "omnisciente" | "ironia";
 
@@ -30,7 +30,7 @@ export function checkContinuity(memories: ChapterMemory[], chapter: number): Con
 			}
 		} else if (use.modo === "actua") {
 			const known = states(memories, use.quien, chapter).get(fact);
-			if (known !== "sabe") {
+			if (known !== "sabe" && known !== "cree-falso") {
 				flagged.add(pair(fact, use.quien));
 				alerts.push({
 					tipo: "omnisciente",
@@ -65,10 +65,18 @@ export function checkContinuity(memories: ChapterMemory[], chapter: number): Con
 	return alerts;
 }
 
+const MODES = ["menciona", "actua"];
+
+export function usageErrors(memory: ChapterMemory): string[] {
+	return memory.usos
+		.filter((use) => !MODES.includes(use.modo))
+		.map((use) => `Modo «${use.modo}» no válido para ${use.hecho || "un hecho"}: usa menciona o actua.`);
+}
+
 function states(memories: ChapterMemory[], who: string, chapter: number): Map<string, string> {
 	return new Map(whatKnows(memories, who, chapter).map((fact) => [fact.hecho, fact.estado]));
 }
 
 function pair(fact: string, who: string): string {
-	return `${fact}|${who.replace(/^\[\[|\]\]$/g, "").trim().toLowerCase()}`;
+	return `${fact}|${holderKey(who)}`;
 }

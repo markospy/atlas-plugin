@@ -2,7 +2,7 @@ import { type Editor, Notice, Plugin, TFile, type Vault } from "obsidian";
 
 import { characterFolder, characterNote, parseCharacter, relationErrors } from "./characters";
 import { GRAPH_VIEW, GraphView } from "./graph-view";
-import { checkContinuity } from "./continuity";
+import { checkContinuity, usageErrors } from "./continuity";
 import { ENTITY_VIEW, EntityView } from "./entity-view";
 import { objectFolder, objectNote } from "./objects";
 import { placeFolder, placeNote } from "./places";
@@ -366,8 +366,9 @@ export default class AtlasPlugin extends Plugin {
 		if (!found) {
 			return;
 		}
-		const alerts = checkContinuity(found.memories, found.chapter);
-		const summary = alerts.length > 0 ? alerts.map((alert) => alert.mensaje).join("\n") : "Sin alertas.";
+		const errors = found.memories.filter((memory) => memory.capitulo === found.chapter).flatMap(usageErrors);
+		const lines = [...errors, ...checkContinuity(found.memories, found.chapter).map((alert) => alert.mensaje)];
+		const summary = lines.length > 0 ? lines.join("\n") : "Sin alertas.";
 		new Notice(`Continuidad cap. ${found.chapter}\n${summary}`);
 	}
 
