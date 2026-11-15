@@ -199,13 +199,21 @@ class GitHub:
             raise ValueError("unreadable PR head")
         return head, issues
 
-    def check(self, number, head=None, scope=None, issue=None):
+    def check(self, number, head=None, scope=None, issue=None, answered=False):
         current_head, issues = self.pr(number)
         if issue is not None and issue not in issues:
             return {"approved": False, "why": "request issue is not linked to this PR"}
-        if head is not None and current_head != head:
-            return {"approved": False, "headChanged": True, "why": "PR head changed after review"}
         comments = []
+        if head is not None and current_head != head:
+            result = {"approved": False, "headChanged": True, "why": "PR head changed after review"}
+            if answered:
+                # Planner only: did a trusted human already say `done` to the
+                # request pinned on the old head? Never approval for the new head.
+                for source in sorted(issues | {number}):
+                    comments.extend(self.comments(source))
+                past = {"repo": self.repo, "pr": number, "head": head}
+                result["answered"] = validate(comments, past, self.permission)["approved"]
+            return result
         for source in sorted(issues | {number}):
             comments.extend(self.comments(source))
         expected = {"repo": self.repo, "pr": number, "head": current_head}
@@ -234,6 +242,7 @@ def main():
         for entry in graph.values():
             entry["needsYouDone"] = False
             entry["approvalRefresh"] = False
+            entry["needsYouAnswered"] = False
             if not entry.get("needsYou") or github is None:
                 continue
             try:
@@ -243,8 +252,10 @@ def main():
                 request = parse_request(latest)
                 if request is None or request["repo"] != github.repo:
                     continue
-                result = github.check(request["pr"], head=request["head"], issue=entry["number"])
+                result = github.check(request["pr"], head=request["head"], issue=entry["number"],
+                                      answered=True)
                 entry["needsYouDone"] = result["approved"]
+                entry["needsYouAnswered"] = result["approved"] or result.get("answered", False)
                 entry["approvalRefresh"] = result.get("headChanged", False)
                 entry["approvalWhy"] = result["why"]
             except (ValueError, KeyError, TypeError, OSError, subprocess.SubprocessError):

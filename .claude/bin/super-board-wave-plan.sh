@@ -145,11 +145,14 @@ echo "$ITEMS" | jq --argjson cols "$COLUMNS" --argjson cap "$MAX_WORKERS" --argj
   # Unknown to the graph (closed, or beyond the fetch limit) is not "free".
   def free($n): (dep($n) | if . == null then false else .runnable end);
   # A Ready card whose only gate is an old 🙋 a trusted human already answered
-  # `done` (verified by super-board-approval.py). A Reviewer bounce to Ready
+  # `done` (verified by super-board-approval.py), even if the head moved since:
+  # the merge gate asks again for the new head. A Reviewer bounce to Ready
   # writes no new `blocked-by:`, so the old `-` would hold it forever. Ready only:
-  # in Blocked the resume path moves it, never the sweep.
+  # in Blocked the resume path moves it, never the sweep. approvalRefresh alone
+  # (head moved, no `done`) never frees a card.
   def approved($n): (dep($n) | if . == null then false
-                     else (.parseable and .humanGated and (.needsYouDone // false)
+                     else (.parseable and .humanGated
+                           and ((.needsYouDone // false) or (.needsYouAnswered // false))
                            and ((.openBlockers // []) | length == 0)) end);
 
   [ .items[]

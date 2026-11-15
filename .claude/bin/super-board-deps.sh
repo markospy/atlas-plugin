@@ -53,7 +53,8 @@
 # Saved --from payloads stay offline and cannot assert verified human approval.
 # A 🙋 card stays humanGated either way — only the resume path moves it.
 # (A Ready card bounced after a verified done is picked by the wave planner on
-# needsYouDone; Blocked ones still move only by the resume path.)
+# needsYouDone, or on needsYouAnswered when the head moved after that done;
+# Blocked ones still move only by the resume path.)
 #
 # `runnable` is true only when the line parses, no blocker is still open, AND the
 # card is not human-gated. `humanGated` comes from `blocked-by: -`, which means

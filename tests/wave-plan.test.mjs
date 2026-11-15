@@ -69,10 +69,15 @@ test("un 🙋 aprobado no libera una tarjeta con un bloqueante abierto", () => {
 
 // QA v1 (#55): el segundo atasco real de #6. El dueño dijo done sobre `4a33a73`;
 // el builder hizo rebase (`6295a17`) y el Reviewer la rebotó a Ready por R5 con el
-// head ya en `4e98053`. approval.py ve headChanged: needsYouDone=false y
-// approvalRefresh=true. Ningún humano tiene nada pendiente (el merge gate pedirá
-// otra aprobación para el head nuevo), pero el `-` viejo la deja fuera para siempre.
+// head ya en `4e98053`. approval.py ve headChanged: needsYouDone=false,
+// approvalRefresh=true y needsYouAnswered=true (el `done` existe sobre el head
+// viejo). El merge gate pedirá otra aprobación para el head nuevo.
 test("una tarjeta aprobada, reconstruida y rebotada otra vez a Ready entra en cards", () => {
-	const out = plan("Ready", { ...gated(false), approvalRefresh: true });
+	const out = plan("Ready", { ...gated(false), approvalRefresh: true, needsYouAnswered: true });
 	assert.deepEqual(out.cards.map((c) => c.number), [6]);
+});
+
+test("head cambiado sin ningún done (solo approvalRefresh) sigue fuera de cards", () => {
+	const out = plan("Ready", { ...gated(false), approvalRefresh: true, needsYouAnswered: false });
+	assert.deepEqual(out.cards, []);
 });
