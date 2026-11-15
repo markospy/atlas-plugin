@@ -62,7 +62,7 @@ export default class AtlasPlugin extends Plugin {
 	settings: AtlasSettings = { ...DEFAULT_PROVIDER_SETTINGS, metaDiaria: DEFAULT_DAILY_GOAL };
 	/** Writing log per project folder; kept in data.json, never sent anywhere. */
 	private writing: Record<string, WritingLog> = {};
-	private writingTimer: number | undefined;
+	private writingTimers = new Map<string, number>();
 	/** Co-write decisions for this session only. */
 	private readonly coWrite = new CoWriteSession();
 
@@ -590,7 +590,10 @@ export default class AtlasPlugin extends Plugin {
 	}
 
 	onunload(): void {
-		window.clearTimeout(this.writingTimer);
+		for (const timer of this.writingTimers.values()) {
+			window.clearTimeout(timer);
+		}
+		this.writingTimers.clear();
 	}
 
 	async saveSettings(): Promise<void> {
@@ -603,10 +606,15 @@ export default class AtlasPlugin extends Plugin {
 		if (!(file instanceof TFile) || !inManuscript(root, file.path)) {
 			return;
 		}
-		window.clearTimeout(this.writingTimer);
-		this.writingTimer = window.setTimeout(() => {
-			void this.recordWords(root);
-		}, 5000);
+		// One timer per project: a save in another project must not cancel this one's recount.
+		window.clearTimeout(this.writingTimers.get(root));
+		this.writingTimers.set(
+			root,
+			window.setTimeout(() => {
+				this.writingTimers.delete(root);
+				void this.recordWords(root);
+			}, 5000),
+		);
 	}
 
 	private async recordWords(root: string) {
@@ -623,11 +631,13 @@ export default class AtlasPlugin extends Plugin {
 
 	private async showWritingProgress(): Promise<void> {
 		const active = this.app.workspace.getActiveFile();
-		if (!active) {
+		const root = active ? projectOf(active.path) : undefined;
+		// Outside an Atlas project there is no manuscript: do not log a 0 total for that folder.
+		if (root === undefined || !this.app.vault.getMarkdownFiles().some((file) => inManuscript(root, file.path))) {
 			new Notice("Abre una nota del proyecto.");
 			return;
 		}
-		new Notice(progressNotice(await this.recordWords(projectOf(active.path))), 10_000);
+		new Notice(progressNotice(await this.recordWords(root)), 10_000);
 	}
 
 	private async openGraph(): Promise<void> {

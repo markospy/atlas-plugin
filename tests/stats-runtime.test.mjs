@@ -59,7 +59,7 @@ function stubObsidian(state) {
 	};
 }
 
-async function startPlugin(stored) {
+async function startPlugin(stored, active = 0) {
 	const state = { commands: {}, notices: [], saved: [], stored, timers: [], onModify: undefined };
 	const built = await esbuild.build({
 		entryPoints: ["src/main.ts"],
@@ -74,8 +74,12 @@ async function startPlugin(stored) {
 	new Function("module", "exports", "require", built.outputFiles[0].text)(module, module.exports, () => obsidian);
 	const files = Object.keys(NOTES).map((path) => new obsidian.TFile(path));
 	globalThis.window = {
-		setTimeout: (run, ms) => state.timers.push({ run, ms }),
-		clearTimeout: () => {},
+		setTimeout: (run, ms) => state.timers.push({ run, ms, cleared: false }),
+		clearTimeout: (id) => {
+			if (id !== undefined) {
+				state.timers[id - 1].cleared = true;
+			}
+		},
 	};
 	const app = {
 		vault: {
@@ -87,7 +91,7 @@ async function startPlugin(stored) {
 				return {};
 			},
 		},
-		workspace: { getActiveFile: () => files[0] },
+		workspace: { getActiveFile: () => (typeof active === "number" ? files[active] : new obsidian.TFile(active)) },
 	};
 	const plugin = new module.exports.default(app, {});
 	await plugin.onload();
@@ -134,4 +138,28 @@ test("runtime: guardar una escena recuenta a los 5 s; otras notas no programan n
 	state.timers[1].run();
 	await settle();
 	assert.equal(state.saved.length, saves, "sin cambio de total no reescribe data.json");
+});
+
+test("runtime: guardar en dos proyectos en menos de 5 s recuenta los dos", async () => {
+	const { state, files } = await startPlugin(null);
+	state.onModify(files[1]);
+	state.onModify(files[3]);
+	state.onModify(files[1]);
+	assert.deepEqual(state.timers.map((timer) => timer.cleared), [true, false, false], "solo se reprograma el de Novela");
+	for (const timer of state.timers.filter((timer) => !timer.cleared)) {
+		timer.run();
+	}
+	await settle();
+	assert.deepEqual(state.saved.at(-1).escritura, {
+		Novela: { [today]: { inicio: 5, total: 5 } },
+		Otra: { [today]: { inicio: 2, total: 2 } },
+	});
+});
+
+test("runtime: Progreso de escritura fuera de un proyecto no guarda un registro vacío", async () => {
+	const { state } = await startPlugin(null, "Diario/hoy.md");
+	state.commands["writing-progress"].callback();
+	await settle();
+	assert.deepEqual(state.notices, ["Abre una nota del proyecto."]);
+	assert.deepEqual(state.saved, []);
 });
