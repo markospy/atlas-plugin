@@ -5,7 +5,7 @@ Head probado: `c52750a` más el commit de tests de QA. Lógica pura en `src/stal
 | AC | Prueba | Resultado |
 |---|---|---|
 | AC1 editar hechos del cap. A marca stale a quien los usa | `tests/stale.test.mjs:28`, `:39`, `:56` · `tests/stale-qa.test.mjs:16` (solo cambia `verdad`), `:23` (introducido antes), `:32` (reintroducido entre medias), `:56` (id renombrado), `:66` (el propio capítulo no) | ✅ |
-| AC2 la lista muestra motivo por capítulo | `tests/stale.test.mjs:28` (motivo literal) · `tests/stale-qa.test.mjs:42` (un motivo por hecho roto) · render del modal: `src/stale-modal.ts:31` lista `motivos` por capítulo (sin test: API de Obsidian) | ✅ |
+| AC2 la lista muestra motivo por capítulo | `tests/stale.test.mjs:28` (motivo literal) · `tests/stale-qa.test.mjs:42` (un motivo por hecho roto) · render del modal: `src/stale-modal.ts:33` lista `motivos` por capítulo (sin test: API de Obsidian) | ✅ |
 | AC3 reanálisis en orden, limpia solo al confirmar | `tests/stale.test.mjs:64` · `tests/stale-qa.test.mjs:71` (propagar otra vez no limpia nada) | ✅ |
 | AC4 test carta eliminada → 9 y 14 stale | `tests/stale.test.mjs:28` | ✅ |
 
