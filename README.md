@@ -50,6 +50,10 @@ No pisa una trama que ya exista.
 
 En una escena de `Manuscrito/`, **Añadir campos de escena** agrega al frontmatter `objetivo`, `conflicto`, `resultado`, `pov` y `subtrama` vacíos, sin tocar los que ya tengan valor ni el texto. `pov` y `subtrama` admiten un `[[wikilink]]`.
 
+## Cronología
+
+Una escena declara en su frontmatter `dia` (número relativo, p. ej. `3` o `3.5`), `lugar` (`[[Puerto]]`) y quién está: `pov` y `personajes` (`["[[Marcos]]"]`). Una ficha de lugar (`tipo: lugar`) declara en `viajes` la duración mínima hasta otro lugar (`a` + `dias`); vale en los dos sentidos y, si hay dos rutas, manda la más corta. Los enlaces casan por nombre de archivo y sin distinguir mayúsculas, como en Obsidian: `[[Lugares/Puerto]]`, `[[puerto]]` y `[[Puerto]]` apuntan a `Puerto.md`, aunque su `nombre` sea otro. Los comentarios YAML (`# …`) dentro de `viajes` se ignoran. **Revisar cronología** lee las escenas de `Manuscrito/` y las rutas de las fichas de lugar, y lista los pares de escenas seguidas (por `dia`) en que un personaje cambia de lugar en menos días que el mínimo. Solo avisa, no bloquea. No se comprueban: escenas sin `dia` numérico o sin `lugar`, escenas fuera de `Manuscrito/`, rutas sin declarar o en notas sin `tipo: lugar`, viajes sin `a` o con `dias` no numérico, y los elementos de `viajes` cuya sangría no cuadra con la del primero (la lista se corta ahí). Dos lugares con el mismo nombre de archivo en carpetas distintas se toman por el mismo.
+
 ## Objetos
 
 Selecciona el nombre y ejecuta **Nuevo objeto**. Crea `Objetos/<nombre>.md` con descripción, origen, valor material, valor sentimental (para quién y por qué) y función en la trama. En el frontmatter, `funcion` marca su peso narrativo (p. ej. "pistola de Chéjov"), `foreshadowing` enlaza dónde se anuncia y `posesiones` anota cada cambio de poseedor (`poseedor` + `capitulo`, p. ej. `[[Cap 04]]`). `holderAt(ficha, N)` en `src/objects.ts` responde quién tiene el objeto en el capítulo N. No pisa una ficha que ya exista.
@@ -72,12 +76,20 @@ En el editor, **Insertar [TK]** e **Insertar [INVESTIGAR]** dejan el marcador en
 
 ## Memoria
 
-Con un capítulo abierto (`Cap NN`), **Nueva memoria del capítulo** crea `_Memoria/Cap NN.md` con dos listas en el frontmatter, vacías y opcionales:
+Con un capítulo abierto (`Cap NN`), **Nueva memoria del capítulo** crea `_Memoria/Cap NN.md` con tres listas en el frontmatter, vacías y opcionales:
 
 - `hechos`: cada uno con `id`, `texto` y `verdad` (`true` o `false`).
 - `conocimiento`: cada entrada con `hecho` (el `id`), `quien` (`lector` o `[[Personaje]]`) y `estado`: `ignora`, `sospecha`, `cree-falso` o `sabe`.
+- `usos`: cada entrada con `hecho` (el `id`), `quien` (`[[Personaje]]`) y `modo`: `menciona` o `actua` (otro valor se avisa).
 
 **Qué sabe en este capítulo** responde por el texto seleccionado (`[[Elena]]`) o, sin selección, por el lector. Suma las memorias hasta ese capítulo y, si un hecho cambia de estado, gana el más reciente. Avisa de estados no válidos.
+
+**Revisar continuidad** compara los `usos` del capítulo abierto con lo que se sabe hasta ese capítulo, sin IA:
+- **Posible spoiler:** alguien menciona un hecho que el lector aún ignora (o no tiene registrado).
+- **Personaje omnisciente:** un personaje actúa según un hecho que no `sabe` (actuar según un `cree-falso` propio se respeta y no avisa).
+- **Ironía dramática (intencional):** el lector sabe un hecho y un personaje del capítulo no; se marca como ironía, no como error.
+
+También avisa de un `hecho` del capítulo (en `usos` o `conocimiento`) que no está declarado en ningún `hechos` hasta ese capítulo: suele ser un `id` mal escrito.
 
 ## Índice de entidades
 
@@ -112,3 +124,13 @@ También ejecuta las skills de `Estilo/` con `alcance: global` y `verificacion: 
 | `escena` | texto de la escena, sin frontmatter |
 
 El texto de la escena es la nota sin su frontmatter; un `---` inicial seguido de una línea que no es `clave:` es un corte de escena y se conserva. Una sección vacía no aparece. `presupuesto` es el máximo de caracteres sumando todas las secciones. Si no cabe, se llenan en este orden: escena, skills, fichas, conocimiento, mundo, trama, resúmenes. La primera que no cabe se corta con `…`: la escena y los resúmenes conservan el final, las demás el principio. Las que quedan después se omiten. `recortadas` lista las secciones cortadas u omitidas, para depurar.
+
+## Co-escribir escena (IA)
+
+Comando **Co-escribir escena** en una escena abierta. Elige **Borrador**, **Alternativa** o **Continuación**. Atlas pide la propuesta al endpoint de Ollama (`/api/generate`, ajustes **Endpoint** y **Modelo**) con la nota entera y su contexto de escena (skills, fichas, conocimiento y mundo: 8000 caracteres como máximo, sin contar la escena), y la muestra como diff contra la nota actual: `-` línea quitada, `+` línea añadida.
+
+- **Rechazar** cierra el diff. La nota no cambia.
+- **Aprobar** aplica la propuesta. Si la nota cambió mientras esperabas, no se aplica y hay que pedir otra.
+- Borrador y alternativa conservan el frontmatter; continuación añade el texto al final.
+- Cada decisión queda en el historial de la sesión (en memoria; se pierde al cerrar Obsidian). Aún no hay copia de seguridad antes de aplicar: es otro ticket.
+- El contexto lleva skills, fichas, mundo y conocimiento; resúmenes y trama todavía no se cargan.

@@ -1,13 +1,19 @@
-import { type Editor, Notice, Plugin, TFile, type Vault } from "obsidian";
+import { type Editor, Notice, Plugin, requestUrl, TFile, type Vault } from "obsidian";
 
+import { chronologyNotice, impossibleTravels, readChronology } from "./chronology";
+import { CoWriteSession, coWriteContext, propose, type CoWriteMode } from "./cowrite";
+import { CoWriteModal } from "./cowrite-modal";
 import { characterFolder, characterNote, parseCharacter, relationErrors } from "./characters";
+import { frontmatterBody, scalar } from "./frontmatter";
 import { GRAPH_VIEW, GraphView } from "./graph-view";
+import { checkContinuity, usageErrors } from "./continuity";
 import { ENTITY_VIEW, EntityView } from "./entity-view";
 import { clueFolder, clueNote, nextState } from "./foreshadow";
 import { FORESHADOW_VIEW, ForeshadowView } from "./foreshadow-view";
-import { objectFolder, objectNote } from "./objects";
-import { placeFolder, placeNote } from "./places";
+import { objectFolder, objectNote, parseObject } from "./objects";
+import { parsePlace, placeFolder, placeNote } from "./places";
 import {
+	type ChapterMemory,
 	chapterNumber,
 	knowledgeErrors,
 	memoryFolder,
@@ -21,8 +27,12 @@ import { PLOT_STRUCTURES, plotFolder, plotNote, SCENE_FIELDS, type PlotStructure
 import { BASE_RULES, patternRules } from "./linter";
 import { LintModal } from "./lint-modal";
 import { MARKER_VIEW, MarkerView } from "./marker-view";
-import { DEFAULT_PROVIDER_SETTINGS, type ProviderSettings } from "./providers";
+import { DEFAULT_PROVIDER_SETTINGS, ollamaProvider, type ProviderSettings } from "./providers";
+import { NO_PROVIDER, providerReady, reviewScene } from "./review";
+import { ReviewModal } from "./review-modal";
 import { AtlasSettingTab } from "./settings";
+import { projectOf } from "./entities";
+import { inProject } from "./sheets";
 import { parseSkill, skillFolder, skillNote, skillsFor } from "./style";
 import { createAtlasProject, type AtlasFiles } from "./vault";
 
@@ -44,8 +54,13 @@ function filesFromVault(vault: Vault): AtlasFiles {
 	};
 }
 
+/** Characters of context sent with a co-write request. */
+const COWRITE_BUDGET = 8000;
+
 export default class AtlasPlugin extends Plugin {
 	settings: ProviderSettings = { ...DEFAULT_PROVIDER_SETTINGS };
+	/** Co-write decisions for this session only. */
+	private readonly coWrite = new CoWriteSession();
 
 	async onload(): Promise<void> {
 		const stored = (await this.loadData()) as Partial<ProviderSettings> | null;
@@ -133,6 +148,13 @@ export default class AtlasPlugin extends Plugin {
 			},
 		});
 		this.addCommand({
+			id: "check-chronology",
+			name: "Revisar cronología",
+			callback: () => {
+				void this.checkChronology();
+			},
+		});
+		this.addCommand({
 			id: "new-object",
 			name: "Nuevo objeto",
 			editorCallback: (editor) => {
@@ -182,10 +204,33 @@ export default class AtlasPlugin extends Plugin {
 			},
 		});
 		this.addCommand({
+			id: "check-continuity",
+			name: "Revisar continuidad",
+			callback: () => {
+				void this.checkContinuityHere();
+			},
+		});
+		this.addCommand({
 			id: "lint-note",
 			name: "Revisar estilo de la nota",
 			editorCallback: (editor) => {
 				void this.lintNote(editor);
+			},
+		});
+		this.addCommand({
+			id: "review-scene-ai",
+			name: "Revisar escena con IA",
+			editorCallback: (editor) => {
+				this.reviewWithAi(editor).catch((error: unknown) => {
+					new Notice(`La revisión con IA falló: ${error instanceof Error ? error.message : String(error)}`, 0);
+				});
+			},
+		});
+		this.addCommand({
+			id: "co-write-scene",
+			name: "Co-escribir escena",
+			editorCallback: (editor) => {
+				new CoWriteModal(this.app, editor, this.coWrite, (modo, actual) => this.coWriteProposal(modo, actual)).open();
 			},
 		});
 		this.addCommand({
@@ -295,6 +340,17 @@ export default class AtlasPlugin extends Plugin {
 			return;
 		}
 		new Notice("Campos de escena listos.");
+	}
+
+	private async checkChronology(): Promise<void> {
+		const notes = await Promise.all(
+			this.app.vault
+				.getMarkdownFiles()
+				.map(async (file) => ({ path: file.path, nombre: file.basename, note: await this.app.vault.read(file) })),
+		);
+		const { scenes, travels } = readChronology(notes);
+		const found = impossibleTravels(scenes, travels);
+		new Notice(chronologyNotice(found), found.length === 0 ? undefined : 0);
 	}
 
 	private async newObject(name: string): Promise<void> {
@@ -407,16 +463,36 @@ export default class AtlasPlugin extends Plugin {
 		new Notice("Memoria creada.");
 	}
 
-	private async whatKnowsHere(who: string): Promise<void> {
+	private async chapterMemories(): Promise<{ chapter: number; memories: ChapterMemory[] } | null> {
 		const active = this.app.workspace.getActiveFile();
 		const chapter = chapterNumber(active?.path ?? "");
 		if (!active || chapter === null) {
 			new Notice("Abre un capítulo (Cap NN).");
-			return;
+			return null;
 		}
 		const folder = `${memoryFolder(active.path)}/`;
 		const notes = this.app.vault.getMarkdownFiles().filter((file) => file.path.startsWith(folder));
 		const memories = await Promise.all(notes.map(async (file) => parseMemory(await this.app.vault.cachedRead(file))));
+		return { chapter, memories };
+	}
+
+	private async checkContinuityHere(): Promise<void> {
+		const found = await this.chapterMemories();
+		if (!found) {
+			return;
+		}
+		const errors = usageErrors(found.memories, found.chapter);
+		const lines = [...errors, ...checkContinuity(found.memories, found.chapter).map((alert) => alert.mensaje)];
+		const summary = lines.length > 0 ? lines.join("\n") : "Sin alertas.";
+		new Notice(`Continuidad cap. ${found.chapter}\n${summary}`);
+	}
+
+	private async whatKnowsHere(who: string): Promise<void> {
+		const found = await this.chapterMemories();
+		if (!found) {
+			return;
+		}
+		const { chapter, memories } = found;
 		const errors = memories.flatMap(knowledgeErrors);
 		const known = whatKnows(memories, who, chapter);
 		const lines = known.map((fact) => `${fact.estado}: ${fact.texto}`);
@@ -429,6 +505,73 @@ export default class AtlasPlugin extends Plugin {
 		const notes = this.app.vault.getMarkdownFiles().filter((file) => file.path.startsWith(`${folder}/`));
 		const skills = await Promise.all(notes.map(async (file) => parseSkill(await this.app.vault.read(file))));
 		new LintModal(this.app, editor, [...BASE_RULES, ...patternRules(skillsFor(skills, "global"))]).open();
+	}
+
+	private async reviewWithAi(editor: Editor): Promise<void> {
+		const active = this.app.workspace.getActiveFile();
+		const path = active?.path ?? "";
+		const parent = path.slice(0, Math.max(0, path.lastIndexOf("/")));
+		const chapter = chapterNumber(path) ?? chapterNumber(parent);
+		if (!active || chapter === null) {
+			new Notice("Abre una escena de un capítulo (Cap NN).");
+			return;
+		}
+		if (!providerReady(this.settings)) {
+			new Notice(NO_PROVIDER, 0);
+			return;
+		}
+		// Read-only: the project's notes are read, none is written.
+		const root = projectOf(path);
+		const files = this.app.vault.getMarkdownFiles().filter((file) => inProject(root, file.path));
+		const notes = await Promise.all(files.map(async (file) => this.app.vault.cachedRead(file)));
+		const byType = (tipo: string) => notes.filter((note) => scalar(frontmatterBody(note), "tipo") === tipo);
+		new Notice("Revisando la escena con IA…");
+		const result = await reviewScene(
+			{
+				capitulo: chapter,
+				escena: editor.getValue(),
+				skills: byType("skill").map(parseSkill),
+				personajes: byType("personaje").map(parseCharacter),
+				objetos: byType("objeto").map(parseObject),
+				lugares: byType("lugar").map(parsePlace),
+				memorias: byType("memoria").map(parseMemory),
+				resumenes: [],
+				trama: "",
+				presupuesto: 12_000,
+			},
+			this.settings,
+			ollamaProvider(this.settings, async (url, body) =>
+				(await requestUrl({ url, method: "POST", contentType: "application/json", body: JSON.stringify(body) })).json,
+			),
+		);
+		if (!result.ok) {
+			new Notice(result.mensaje, 0);
+			return;
+		}
+		new ReviewModal(this.app, editor, result.hallazgos, result.descartados, result.escenaRecortada).open();
+	}
+
+	private async coWriteProposal(modo: CoWriteMode, actual: string) {
+		const path = this.app.workspace.getActiveFile()?.path ?? "";
+		const read = async <T>(folder: string, parse: (note: string) => T): Promise<T[]> => {
+			const notes = this.app.vault.getMarkdownFiles().filter((file) => file.path.startsWith(`${folder}/`));
+			return Promise.all(notes.map(async (file) => parse(await this.app.vault.cachedRead(file))));
+		};
+		const contexto = coWriteContext({
+			capitulo: chapterNumber(path) ?? 0,
+			escena: actual,
+			skills: await read(skillFolder(path), parseSkill),
+			personajes: await read(characterFolder(path), parseCharacter),
+			objetos: await read(objectFolder(path), parseObject),
+			lugares: await read(placeFolder(path), parsePlace),
+			memorias: await read(memoryFolder(path), parseMemory),
+			resumenes: [],
+			trama: "",
+			presupuesto: COWRITE_BUDGET,
+		});
+		const post = async (url: string, body: unknown) =>
+			(await requestUrl({ url, method: "POST", contentType: "application/json", body: JSON.stringify(body) })).json;
+		return propose(ollamaProvider(this.settings, post), modo, actual, contexto);
 	}
 
 	async saveSettings(): Promise<void> {

@@ -46,13 +46,13 @@ conocimiento:
 ---
 `;
 
-test("la plantilla trae hechos y conocimiento vacíos", () => {
+test("la plantilla trae hechos, conocimiento y usos vacíos", () => {
 	assert.equal(memoryNoteName(3), "Cap 03");
 	assert.equal(memoryFolder("Novela/Manuscrito/Cap 03.md"), "Novela/_Memoria");
 	const note = memoryNote(3);
 	assert.match(note, /^hechos: \[\]$/m);
 	assert.match(note, /^conocimiento: \[\]$/m);
-	assert.deepEqual(parseMemory(note), { capitulo: 3, hechos: [], conocimiento: [] });
+	assert.deepEqual(parseMemory(note), { capitulo: 3, hechos: [], conocimiento: [], usos: [] });
 });
 
 test("el personaje sabe lo que el lector solo sospecha", () => {

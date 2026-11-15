@@ -1,0 +1,176 @@
+
+> atlas@0.1.0 test
+> node --experimental-strip-types --test tests/*.test.mjs
+
+✔ PR contra staging con Closes #N cuenta el issue como vinculado (117.069275ms)
+✔ PR contra staging que no nombra el issue no lo vincula (103.566705ms)
+✔ repo ajeno en la palabra clave se ignora (139.392748ms)
+✔ contra la rama por defecto solo cuenta el enlace de GitHub (85.68093ms)
+✔ el estándar define la clave language y los tokens que nunca se traducen (1.956338ms)
+✔ el informe de lane en español conserva la cabecera que leen las lanes (0.846195ms)
+✔ super-board-deps.sh lee blocked-by: de un bloqueo escrito en español (140.147874ms)
+✔ el 🙋 en español sigue marcando needsYou para deps.sh y approval.py (212.477173ms)
+✔ sin la clave language las plantillas siguen en inglés (1.81207ms)
+✔ npm run build produce main.js y onload no escribe en consola (5124.564412ms)
+(node:3407131) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///home/marcos/OtherProjects/atlas-plugin/.claude/worktrees/issue-23-qa/src/characters.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /home/marcos/OtherProjects/atlas-plugin/.claude/worktrees/issue-23-qa/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ parsea alias y relaciones temporales (6.704078ms)
+✔ una relación sin wikilink se rechaza y la plantilla nace vacía (1.1842ms)
+✔ parsea alias en lista YAML de bloque (0.532073ms)
+(node:3407132) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///home/marcos/OtherProjects/atlas-plugin/.claude/worktrees/issue-23-qa/src/chronology.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /home/marcos/OtherProjects/atlas-plugin/.claude/worktrees/issue-23-qa/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ qa: escena con CRLF, alias en los enlaces y personajes en lista de bloque (4.1312ms)
+✔ qa: viajes con CRLF, sin comillas y con campos en otro orden; para en la siguiente clave (1.653799ms)
+✔ qa: dos escenas el mismo día en lugares con ruta declarada se avisan una vez por personaje (2.923727ms)
+(node:3407188) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///home/marcos/OtherProjects/atlas-plugin/.claude/worktrees/issue-23-qa/src/chronology.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /home/marcos/OtherProjects/atlas-plugin/.claude/worktrees/issue-23-qa/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ una escena declara día, lugar y personajes; sin día no entra en la cronología (3.897308ms)
+✔ un lugar declara la duración mínima de sus viajes (1.074667ms)
+✔ un viaje demasiado corto sale como par de escenas imposible, en los dos sentidos (0.696949ms)
+✔ un viaje con tiempo suficiente, sin ruta declarada o de otro personaje no avisa (2.836686ms)
+✔ los pares se comparan por día, no por orden de capítulo (0.683393ms)
+✔ con dos rutas declaradas entre los mismos lugares manda la más corta (0.330452ms)
+✔ un enlace con carpeta casa con la ficha por su nombre de archivo y el viaje imposible avisa (0.726353ms)
+✔ la ruta sale del nombre de archivo de la ficha, no de su campo nombre (0.275099ms)
+✔ viajes en la columna cero se leen; una sangría que no cuadra corta la lista (0.385253ms)
+✔ la bóveda aporta escenas solo de Manuscrito/ y rutas solo de fichas tipo: lugar (1.196352ms)
+(node:3407189) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///home/marcos/OtherProjects/atlas-plugin/.claude/worktrees/issue-23-qa/src/entities.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /home/marcos/OtherProjects/atlas-plugin/.claude/worktrees/issue-23-qa/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ el índice lista personajes, lugares y objetos del proyecto (5.414774ms)
+✔ cada ficha lista las escenas que la nombran por nombre o alias (31.32043ms)
+✔ re-escanear actualiza apariciones sin duplicar entradas (1.161557ms)
+✔ dos alias del mismo personaje cuentan como el mismo personaje (3.340749ms)
+✔ las menciones son palabras completas y sin ficha usa el título de la nota (2.922173ms)
+✔ el proyecto sale de la nota activa (0.379312ms)
+✔ qa: escenas en subcarpetas en orden numérico y sin el proyecto vecino (0.599248ms)
+✔ qa: alias entre comillas con tilde y mayúsculas acentuadas (6.682587ms)
+✔ R1: alias en lista YAML de bloque (panel Propiedades de Obsidian) (1.30322ms)
+✔ R2: alias entre comillas con coma no se parte (0.602353ms)
+✔ frontmatter con saltos CRLF (0.291669ms)
+✔ qa v2: lista de bloque seguida de otra lista no mezcla sus ítems en los alias (1.500284ms)
+✔ qa v2: re-escanear tras quitar un alias de la ficha quita sus escenas (0.428052ms)
+✔ --slurp con --jq sale con 64 sin halt ni llamada a gh (142.443621ms)
+✔ --slurp con --jq=. sale con 64 sin halt ni llamada a gh (96.989803ms)
+✔ --slurp con -q sale con 64 sin halt ni llamada a gh (137.338039ms)
+✔ --slurp con --template sale con 64 sin halt ni llamada a gh (101.296367ms)
+✔ --slurp con -t sale con 64 sin halt ni llamada a gh (97.995983ms)
+✔ una lectura valida de comentarios con --slurp sigue funcionando (119.307435ms)
+✔ --jq sin --slurp sigue permitido (139.636789ms)
+(node:3407222) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///home/marcos/OtherProjects/atlas-plugin/.claude/worktrees/issue-23-qa/src/linter.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /home/marcos/OtherProjects/atlas-plugin/.claude/worktrees/issue-23-qa/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ hay al menos cinco reglas base, todas con mensaje y severidad aviso (2.745327ms)
+✔ raya: el guion o la raya con espacio no abren diálogo (12.63212ms)
+✔ gerundios: tres o más en la misma frase (0.462405ms)
+✔ dijo: dos veces en la misma línea o en líneas seguidas (0.463346ms)
+✔ adverbios en -mente solo en la acotación del diálogo (0.468998ms)
+✔ dequeísmo: verbo de pensar o decir + de que (4.301304ms)
+✔ el hallazgo trae línea, columna, mensaje y extracto; ignora el frontmatter (6.760552ms)
+✔ las skills con patrón se ejecutan y listan línea + mensaje (15.569903ms)
+✔ ignorar aquí suprime solo ese hallazgo en esa nota (1.76798ms)
+✔ qa: dos gerundios en la frase no bastan; tres en frases distintas tampoco (0.560817ms)
+✔ qa: el comentario de ignorar no mueve la columna ni calla otras reglas (0.349166ms)
+✔ qa: ignorar aquí una skill con patrón la calla solo en esa línea (0.639173ms)
+✔ qa: un patrón que casa vacío termina y no cuelga el linter (0.392496ms)
+✔ qa v2: separadores de escena con espacios o más de tres signos no son diálogo (0.291009ms)
+✔ qa v2: «ando» (4 letras) y los falsos con mayúscula no cuentan como gerundio (0.35687ms)
+✔ R5: un separador `---` en la línea 1 no es frontmatter y la primera escena se revisa (0.286038ms)
+✔ qa v3: el frontmatter con listas se salta y uno sin cerrar se revisa entero (0.34613ms)
+✔ qa v3: un «dijo» del frontmatter no cuenta para la primera línea (0.318619ms)
+✔ manifest declara id, versión y minAppVersion para plugins de la comunidad (20.017469ms)
+(node:3407236) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///home/marcos/OtherProjects/atlas-plugin/.claude/worktrees/issue-23-qa/src/markers.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /home/marcos/OtherProjects/atlas-plugin/.claude/worktrees/issue-23-qa/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ el parser encuentra TK e INVESTIGAR y los pierde al borrarlos (3.353802ms)
+✔ inserta el marcador en el cursor (0.501618ms)
+(node:3407248) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///home/marcos/OtherProjects/atlas-plugin/.claude/worktrees/issue-23-qa/src/objects.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /home/marcos/OtherProjects/atlas-plugin/.claude/worktrees/issue-23-qa/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ lee la ficha y responde quién tiene el objeto en cada capítulo (5.632736ms)
+✔ nadie tiene el objeto antes de su primera posesión (0.598548ms)
+✔ la plantilla trae descripción, origen, valores y función (1.017511ms)
+✔ qa: posesiones desordenadas y capítulo numérico siguen la línea de tiempo (0.932704ms)
+✔ qa: dos cambios en el mismo capítulo se quedan con el último anotado (0.4378ms)
+✔ qa: Objetos/ en la raíz y desde una nota suelta del proyecto (0.21661ms)
+(node:3407257) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///home/marcos/OtherProjects/atlas-plugin/.claude/worktrees/issue-23-qa/src/places.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /home/marcos/OtherProjects/atlas-plugin/.claude/worktrees/issue-23-qa/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ lee el lugar padre y un cambio de estado (5.402841ms)
+(node:3407258) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///home/marcos/OtherProjects/atlas-plugin/.claude/worktrees/issue-23-qa/src/plot.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /home/marcos/OtherProjects/atlas-plugin/.claude/worktrees/issue-23-qa/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ lee objetivo, conflicto, resultado, POV y subtrama de una escena (5.130718ms)
+✔ la plantilla de trama trae las secciones y el esqueleto elegido (2.029994ms)
+✔ la trama cae en la carpeta Trama del proyecto desde cualquier nota (0.961478ms)
+✔ una escena recién preparada se lee vacía y no confunde claves parecidas (0.49231ms)
+✔ un valor entre comillas respeta los escapes y una comilla suelta queda tal cual (0.368633ms)
+✔ una escena con CRLF se lee igual que con LF (0.329751ms)
+✔ un valor entre comillas simples se lee sin ellas (2.224184ms)
+✔ el frontmatter de cada trama se relee con el parser compartido, también con comillas en el nombre (1.495255ms)
+(node:3407272) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///home/marcos/OtherProjects/atlas-plugin/.claude/worktrees/issue-23-qa/src/providers.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /home/marcos/OtherProjects/atlas-plugin/.claude/worktrees/issue-23-qa/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ localhost pasa y un host no listado falla (2.424743ms)
+✔ la nube solo entra con opt-in y el host en la lista blanca (0.798527ms)
+✔ el README explica cómo compilar y cargar el plugin en local (12.727927ms)
+(node:3407288) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///home/marcos/OtherProjects/atlas-plugin/.claude/worktrees/issue-23-qa/src/style.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /home/marcos/OtherProjects/atlas-plugin/.claude/worktrees/issue-23-qa/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ la plantilla trae frontmatter completo y secciones (11.102122ms)
+✔ severidades válidas y patrón expuesto solo en verificación por patrón (5.505161ms)
+✔ filtra skills por alcance personaje (2.790991ms)
+✔ qa: la skill se crea en Estilo/ del proyecto desde cualquier nota (0.817252ms)
+✔ qa: las tres severidades se leen y el patrón se oculta con verificación ia (11.292995ms)
+✔ qa: filtro por personaje con varios destinos y alcances con tilde (2.008674ms)
+(node:3407299) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///home/marcos/OtherProjects/atlas-plugin/.claude/worktrees/issue-23-qa/src/vault.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /home/marcos/OtherProjects/atlas-plugin/.claude/worktrees/issue-23-qa/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ crea el árbol y el índice Longform sin pisar lo que ya existe (3.311183ms)
+✔ el truth-check lo hacen dos agentes del workflow antes del Reviewer (7.562244ms)
+✔ el Reviewer nunca hace el truth-check inline (1.024544ms)
+✔ truth-check que no puede ejecutarse obliga a 🛡 Blocked (7.822376ms)
+✔ un Reviewer que avanza con truth-check inconcluso queda como failed (2.150246ms)
+✔ truth_gate sin disparar pasa SKIPPED al Reviewer (0.755878ms)
+✔ halted en el truth-check detiene la wave sin Reviewer (3.25516ms)
+✔ qa: una tarjeta que pasa QA → Review en la misma wave hace truth-check antes del Reviewer (1.551189ms)
+✔ qa: un agente salta el gate y el otro puntúa → INCONCLUSIVE (0.818434ms)
+✔ qa: resultado done sin headSha → INCONCLUSIVE (no se puede fijar el head) (1.283754ms)
+✔ qa: resultado sin confidence entera → INCONCLUSIVE (1.815406ms)
+✔ resultado done con headSha vacío → INCONCLUSIVE (1.502549ms)
+✔ qa v2: una tarjeta que falla QA no lanza truth-check ni Reviewer (0.932746ms)
+✔ qa v2: los agentes de truth-check son independientes (sin escrituras) (0.576767ms)
+✔ qa v2: INCONCLUSIVE + Reviewer que bloquea queda blocked, no failed (0.382768ms)
+✔ qa v2: SKIPPED pide al Reviewer bloquear si ve el gate disparado (0.419145ms)
+✔ qa v2: SCORED usa el mínimo de las dos confianzas (0.930712ms)
+(node:3407314) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///home/marcos/OtherProjects/atlas-plugin/.claude/worktrees/issue-23-qa/src/characters.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /home/marcos/OtherProjects/atlas-plugin/.claude/worktrees/issue-23-qa/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ devuelve las relaciones vigentes en el capítulo N (4.139946ms)
+✔ incluye el poseedor de cada objeto rastreado en N (0.79479ms)
+✔ incluye el estado de cada lugar con un cambio en o antes de N (8.827314ms)
+✔ bordes: empate en el mismo capítulo, orden libre, capítulo ilegible y poseedor vacío (0.750327ms)
+ℹ tests 112
+ℹ suites 0
+ℹ pass 112
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 5315.131878

@@ -1,4 +1,5 @@
-import { frontmatterBody, scalar, unquote } from "./frontmatter.ts";
+import { frontmatterBody, mapList, scalar } from "./frontmatter.ts";
+import { sheetFolder } from "./sheets.ts";
 
 export const KNOWLEDGE_STATES = ["ignora", "sospecha", "cree-falso", "sabe"] as const;
 
@@ -16,10 +17,17 @@ export interface Knowledge {
 	estado: string;
 }
 
+export interface FactUse {
+	hecho: string;
+	quien: string;
+	modo: string;
+}
+
 export interface ChapterMemory {
 	capitulo: number;
 	hechos: Fact[];
 	conocimiento: Knowledge[];
+	usos: FactUse[];
 }
 
 export interface KnownFact {
@@ -42,20 +50,7 @@ export function chapterNumber(path: string): number | null {
 }
 
 export function memoryFolder(activePath: string): string {
-	const marker = "/_Memoria/";
-	const at = activePath.indexOf(marker);
-	if (at !== -1) {
-		return activePath.slice(0, at + marker.length - 1);
-	}
-	if (activePath === "_Memoria" || activePath.startsWith("_Memoria/")) {
-		return "_Memoria";
-	}
-	const parent = parentOf(activePath);
-	if (parent === "Manuscrito" || parent.endsWith("/Manuscrito")) {
-		const project = parentOf(parent);
-		return project.length > 0 ? `${project}/_Memoria` : "_Memoria";
-	}
-	return parent.length > 0 ? `${parent}/_Memoria` : "_Memoria";
+	return sheetFolder(activePath, "_Memoria");
 }
 
 export function memoryNote(chapter: number): string {
@@ -65,10 +60,12 @@ export function memoryNote(chapter: number): string {
 		`capitulo: ${chapter}`,
 		"hechos: []",
 		"conocimiento: []",
+		"usos: []",
 		"---",
 		"",
 		"<!-- hechos: id, texto, verdad (true/false) -->",
 		"<!-- conocimiento: hecho (id), quien (lector o [[Personaje]]), estado (ignora | sospecha | cree-falso | sabe) -->",
+		"<!-- usos: hecho (id), quien ([[Personaje]]), modo (menciona | actua) -->",
 		"",
 	].join("\n");
 }
@@ -78,15 +75,20 @@ export function parseMemory(note: string): ChapterMemory {
 	const chapter = Number(scalar(frontmatter, "capitulo"));
 	return {
 		capitulo: Number.isFinite(chapter) ? chapter : 0,
-		hechos: listItems(frontmatter, "hechos").map((item) => ({
+		hechos: mapList(frontmatter, "hechos").map((item) => ({
 			id: item.id ?? "",
 			texto: item.texto ?? "",
 			verdad: truth(item.verdad ?? ""),
 		})),
-		conocimiento: listItems(frontmatter, "conocimiento").map((item) => ({
+		conocimiento: mapList(frontmatter, "conocimiento").map((item) => ({
 			hecho: item.hecho ?? "",
 			quien: item.quien ?? "",
 			estado: item.estado ?? "",
+		})),
+		usos: mapList(frontmatter, "usos").map((item) => ({
+			hecho: item.hecho ?? "",
+			quien: item.quien ?? "",
+			modo: item.modo ?? "",
 		})),
 	};
 }
@@ -131,7 +133,7 @@ function isState(value: string): value is KnowledgeState {
 	return (KNOWLEDGE_STATES as readonly string[]).includes(value);
 }
 
-function holderKey(who: string): string {
+export function holderKey(who: string): string {
 	const inner = who.trim().replace(/^\[\[/, "").replace(/\]\]$/, "");
 	return (inner.split("|")[0] ?? "").trim().toLowerCase();
 }
@@ -145,37 +147,4 @@ function truth(value: string): boolean | null {
 		return false;
 	}
 	return null;
-}
-
-function parentOf(path: string): string {
-	const slash = path.lastIndexOf("/");
-	return slash === -1 ? "" : path.slice(0, slash);
-}
-
-function listItems(frontmatter: string, key: string): Record<string, string>[] {
-	const lines = frontmatter.split("\n");
-	const start = lines.findIndex((line) => line.trimEnd() === `${key}:`);
-	if (start === -1) {
-		return [];
-	}
-	const items: Record<string, string>[] = [];
-	let current: Record<string, string> | null = null;
-	let itemIndent = -1;
-	for (const line of lines.slice(start + 1)) {
-		if (line.length > 0 && !/^[\s-]/.test(line)) {
-			break;
-		}
-		const item = /^(\s*)- (\w+):\s*(.*)$/.exec(line);
-		if (item) {
-			itemIndent = (item[1] ?? "").length;
-			current = { [item[2] ?? ""]: unquote(item[3] ?? "") };
-			items.push(current);
-			continue;
-		}
-		const field = /^(\s*)(\w+):\s*(.*)$/.exec(line);
-		if (field && current && (field[1] ?? "").length > itemIndent) {
-			current[field[2] ?? ""] = unquote(field[3] ?? "");
-		}
-	}
-	return items;
 }
