@@ -1,5 +1,5 @@
 import { KNOWLEDGE_STATES, memoryNote, memoryNoteName, parseMemory, type ChapterMemory, type Fact, type Knowledge } from "./memory.ts";
-import { isMap, isScalar, isSeq } from "yaml";
+import { Document, isMap, isScalar, isSeq } from "yaml";
 
 import { frontmatterYaml } from "./frontmatter.ts";
 import { parsePlace } from "./places.ts";
@@ -191,11 +191,13 @@ function knowledgeKey(entry: Knowledge): string {
 }
 
 /**
- * Appends `entries` to the frontmatter list `key`, read and written with the `yaml` library:
- * other fields, comments and quoting stay; a flow list (one line or several) becomes a block with
- * its items first. A value that is not a list, or frontmatter that is not valid YAML, throws rather
- * than lose what the author wrote. A note without frontmatter (a `---` scene break is not one)
- * gets a new one in front. The body after the closing `---` stays byte for byte.
+ * Appends `entries` to the frontmatter list `key`. The frontmatter is read with the `yaml`
+ * library, but only that list changes: a block list gets the new items after its last line, at
+ * its own indent; a flow list (one line or several) gets them before its closing `]`; an empty
+ * value or a missing key becomes a block list. Every other line, and the body after the closing
+ * `---`, stays byte for byte. A value that is not a list, or frontmatter that is not valid YAML,
+ * throws rather than lose what the author wrote. A note without frontmatter (a `---` scene break
+ * is not one) gets a new one in front.
  */
 function appendToList(note: string, key: string, entries: Record<string, unknown>[]): string {
 	if (entries.length === 0) {
@@ -210,25 +212,64 @@ function appendToList(note: string, key: string, entries: Record<string, unknown
 	if (end === -1 || doc === null) {
 		return appendToList(`---${eol}---${eol}${note}`, key, entries);
 	}
-	const current = doc.get(key, true);
-	if (current === undefined || (isScalar(current) && current.value === null)) {
-		doc.set(key, doc.createNode([]));
-	}
-	const list = doc.get(key, true);
-	if (!isSeq(list)) {
+	const source = lines.slice(1, end).join("\n");
+	const pair = isMap(doc.contents) ? doc.contents.items.find((item) => isScalar(item.key) && item.key.value === key) : undefined;
+	const value = pair?.value;
+	const empty =
+		value === null ||
+		value === undefined ||
+		(isSeq(value) && value.items.length === 0) ||
+		(isScalar(value) && (value.value === null || (value.type === "PLAIN" && /^(|~|null|Null|NULL)$/.test(String(value.value)))));
+	if (!empty && !isSeq(value)) {
 		throw new Error(`«${key}» no es una lista en la nota: corrígelo a mano antes de aprobar.`);
 	}
-	list.flow = false;
-	for (const item of list.items) {
-		if (isMap(item)) {
-			item.flow = false;
+	const frontmatter = source.length === 0 ? [] : source.split("\n");
+	if (isSeq(value) && value.flow && value.range && value.items.length > 0) {
+		// Flow list: the new items go in flow form before its closing `]`.
+		let at = value.range[1] - 1;
+		while (at > 0 && /\s/.test(source[at - 1] ?? "")) {
+			at--;
 		}
+		const lead = source[at - 1] === "," ? " " : ", ";
+		const flow = entries.map((entry) => {
+			const item = new Document(entry);
+			if (isMap(item.contents)) {
+				item.contents.flow = true;
+			}
+			return item.toString({ lineWidth: 0 }).trim();
+		});
+		const updated = `${source.slice(0, at)}${lead}${flow.join(", ")}${source.slice(at)}`;
+		return ["---", ...updated.split("\n"), ...lines.slice(end)].join(eol);
 	}
-	for (const entry of entries) {
-		list.add(doc.createNode(entry));
+	const added = blockLines(new Document(entries).toString({ lineWidth: 0 }));
+	if (isSeq(value) && !value.flow && value.range) {
+		// Block list: the new items go after its last line, at its own indent.
+		const last = lineOf(source, value.range[1]);
+		const indent = " ".repeat(value.range[0] - source.lastIndexOf("\n", value.range[0] - 1) - 1);
+		frontmatter.splice(last + 1, 0, ...added.map((line) => indent + line));
+	} else if (pair && isScalar(pair.key) && pair.key.range) {
+		// Empty value (`key:`, `key: []`, `key: ~`): its lines become a block list.
+		const from = lineOf(source, pair.key.range[0] + 1);
+		const to = lineOf(source, Math.max(pair.key.range[1], value && "range" in value && value.range ? value.range[1] : 0)) + 1;
+		frontmatter.splice(from, to - from, `${key}:`, ...added.map((line) => `  ${line}`));
+	} else {
+		frontmatter.push(`${key}:`, ...added.map((line) => `  ${line}`));
 	}
-	const yaml = doc.toString({ lineWidth: 0 }).replace(/\n$/, "");
-	return ["---", ...(yaml.length > 0 ? yaml.split("\n") : []), ...lines.slice(end)].join(eol);
+	return ["---", ...frontmatter, ...lines.slice(end)].join(eol);
+}
+
+/** Lines of a YAML block as `yaml` prints it, without the trailing newline. */
+function blockLines(yaml: string): string[] {
+	return yaml.replace(/\n$/, "").split("\n");
+}
+
+/** Index of the line holding the last non-blank character before `offset` in `source`. */
+function lineOf(source: string, offset: number): number {
+	let at = offset;
+	while (at > 0 && /\s/.test(source[at - 1] ?? "")) {
+		at--;
+	}
+	return source.slice(0, Math.max(at - 1, 0)).split("\n").length - 1;
 }
 
 function items(data: unknown, key: string): Record<string, unknown>[] {

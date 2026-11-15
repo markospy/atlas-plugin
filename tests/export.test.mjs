@@ -85,6 +85,13 @@ test("quita el frontmatter con claves de Properties con espacios (R6)", async ()
 	assert.equal(escenas[1].texto, "---\nUna línea suelta\n---\nTras una pausa.");
 });
 
+// #70 R1: un frontmatter que no es YAML válido no entra en el manuscrito.
+test("quita un frontmatter que no es YAML válido", async () => {
+	const notes = { "Novela/Manuscrito/Cap 01.md": "---\ntitulo: Capítulo 1: El inicio\n---\nTexto" };
+	const { escenas } = await manuscriptScenes("Novela/Mi Novela.md", { ...sceneOrder(INDEX), escenas: ["Cap 01"] }, async (path) => notes[path]);
+	assert.equal(escenas[0].texto, "Texto");
+});
+
 test("las incrustaciones ![[...]] no salen como texto (R7)", () => {
 	const markdown = assembleMarkdown([{ titulo: "Cap 01", texto: "Antes ![[img.png]] y ![[Nota|alias]] después, con [[Ana]]." }]);
 	assert.doesNotMatch(markdown, /img\.png|alias|!/);

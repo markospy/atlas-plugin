@@ -1,5 +1,8 @@
 import { isMap, parseDocument, type Document } from "yaml";
 
+/** Every scalar reads as the text the author wrote: no numbers, booleans or dates. */
+const FAILSAFE = { schema: "failsafe" } as const;
+
 /** YAML frontmatter between the opening `---` and its closing `---` line, with CRLF read as LF. */
 export function frontmatterBody(note: string): string {
 	const lines = note.replace(/\r\n/g, "\n").split("\n");
@@ -32,7 +35,7 @@ export function noteBody(note: string): string {
 /**
  * Index of the line that closes a note's frontmatter, or -1 when there is none. `lines` is the
  * note split on LF. A `---` scene break also opens notes, so the block counts as frontmatter only
- * when it parses as a YAML map (or is empty).
+ * when it parses as a YAML map, is empty, or is not valid YAML at all.
  */
 export function frontmatterEnd(lines: readonly string[]): number {
 	return frontmatterYaml(lines).end;
@@ -40,17 +43,19 @@ export function frontmatterEnd(lines: readonly string[]): number {
 
 /**
  * Closing line and parsed YAML of a note's frontmatter (`lines` split on LF). `end` is -1 when
- * there is none: no closing line, or a block that is not a YAML map (a `---` scene break).
- * `invalid` marks a block that is not valid YAML at all, so a writer can refuse instead of guessing.
+ * there is none: no closing line, or valid YAML that is not a map (a `---` scene break).
+ * `invalid` marks a block that is not valid YAML at all: it keeps its `end` so readers still strip
+ * it, and `doc` is null so a writer refuses instead of guessing. Scalars read as text (failsafe
+ * schema), so `id: 007` stays `007`.
  */
 export function frontmatterYaml(lines: readonly string[]): { end: number; doc: Document.Parsed | null; invalid: boolean } {
 	const end = closingLine(lines);
 	if (end === -1) {
 		return { end: -1, doc: null, invalid: false };
 	}
-	const doc = parseDocument(lines.slice(1, end).join("\n"));
+	const doc = parseDocument(lines.slice(1, end).join("\n"), FAILSAFE);
 	if (doc.errors.length > 0) {
-		return { end: -1, doc: null, invalid: true };
+		return { end, doc: null, invalid: true };
 	}
 	return doc.contents === null || isMap(doc.contents) ? { end, doc, invalid: false } : { end: -1, doc: null, invalid: false };
 }
@@ -94,11 +99,11 @@ export function list(frontmatter: string, key: string): string[] {
 
 /**
  * Items of a top-level list of maps, read as YAML (block or flow, one line or several), values
- * as strings. Frontmatter that is not valid YAML falls back to `key:` then `- field: value` lines
- * with any indent, each item's other fields indented deeper than its dash.
+ * as written (failsafe schema). Frontmatter that is not valid YAML falls back to `key:` then
+ * `- field: value` lines with any indent, each item's other fields indented deeper than its dash.
  */
 export function mapList(frontmatter: string, key: string): Record<string, string>[] {
-	const doc = parseDocument(frontmatter);
+	const doc = parseDocument(frontmatter, FAILSAFE);
 	if (doc.errors.length === 0) {
 		const value: unknown = isMap(doc.contents) ? doc.toJS()[key] : undefined;
 		return Array.isArray(value) ? value.filter(isRecord).map((item) => Object.fromEntries(Object.entries(item).map(([field, v]) => [field, text(v)]))) : [];

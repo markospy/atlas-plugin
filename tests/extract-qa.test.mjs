@@ -144,7 +144,7 @@ test("aceptar un hecho no borra una lista hechos: en línea escrita a mano", asy
 });
 
 // #70: lector y escritor comparten el frontmatter de src/frontmatter.ts.
-test("aceptar convierte una lista hechos: en línea en bloque y el lector ve todas las entradas", async () => {
+test("aceptar añade a una lista hechos: en línea sin reescribirla y el lector ve todas las entradas", async () => {
 	const nota = ["---", "tipo: memoria", "capitulo: 3", 'hechos: [{id: anillo, texto: El anillo}, {id: "llave", texto: "Una llave, rota", verdad: true}]', "---", "Cuerpo", ""].join("\n");
 	assert.deepEqual(parseMemory(nota).hechos.map((h) => h.id), ["anillo", "llave"], "el lector lee la lista en línea");
 	const files = mockFiles({ [MEMORIA]: nota });
@@ -156,6 +156,7 @@ test("aceptar convierte una lista hechos: en línea en bloque y el lector ve tod
 		{ id: "carta", texto: "La carta es falsa", verdad: false },
 	]);
 	assert.equal(parseMemory(escrita).capitulo, 3);
+	assert.ok(escrita.includes('hechos: [{id: anillo, texto: El anillo}, {id: "llave", texto: "Una llave, rota", verdad: true}, {'), "las entradas a mano quedan tal cual");
 });
 
 test("aceptar un hecho ya escrito en una lista en línea no lo duplica", async () => {
@@ -199,4 +200,28 @@ test("aceptar en una memoria cuyo frontmatter no es YAML válido falla sin tocar
 	const files = mockFiles({ [MEMORIA]: nota });
 	await assert.rejects(writeApproved(files, destino, parseProposal(RESPUESTA), new Set(["h1"])), /YAML/);
 	assert.equal(files.store.get(MEMORIA), nota);
+});
+
+// #70 R2: aprobar solo añade líneas a la lista; el resto del frontmatter queda byte a byte.
+test("aceptar un hecho deja intactos byte a byte los campos que no toca", async () => {
+	const antes = ["---", "tipo: memoria", "capitulo: 03", "alias:", "- x", "conocimiento:", "  - hecho: anillo", "    quien: [[Ana]]", "    estado: sabe", "hechos:", "  - id: anillo", "    texto: El anillo # a mano", "otro: 'sí'"];
+	const nota = [...antes, "---", "Cuerpo", ""].join("\n");
+	const files = mockFiles({ [MEMORIA]: nota });
+	await writeApproved(files, destino, parseProposal(RESPUESTA), new Set(["h1"]));
+	const escrita = files.store.get(MEMORIA);
+	const nuevas = ["  - id: carta", "    texto: La carta es falsa", "    verdad: false"];
+	assert.equal(escrita, [...antes.slice(0, 12), ...nuevas, ...antes.slice(12), "---", "Cuerpo", ""].join("\n"));
+	assert.deepEqual(parseMemory(escrita).hechos.map((h) => h.id), ["anillo", "carta"]);
+});
+
+test("aceptar un estado en una ficha con CRLF añade solo sus líneas", async () => {
+	const LUGAR = "Proyecto/Lugares/Torre.md";
+	const ficha = ["---", "nombre: Torre", "estados:", "- capitulo: '[[Cap 01]]'", "  descripcion: intacta", "---", ""].join("\r\n");
+	const files = mockFiles({ [LUGAR]: ficha });
+	const respuesta = JSON.stringify({ estados: [{ lugar: "Torre", descripcion: "en ruinas" }] });
+	await writeApproved(files, destino, parseProposal(respuesta), new Set(["e1"]));
+	assert.equal(
+		files.store.get(LUGAR),
+		["---", "nombre: Torre", "estados:", "- capitulo: '[[Cap 01]]'", "  descripcion: intacta", '- capitulo: "[[Cap 03]]"', "  descripcion: en ruinas", "---", ""].join("\r\n"),
+	);
 });
