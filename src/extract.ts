@@ -1,7 +1,7 @@
 import { KNOWLEDGE_STATES, memoryNote, memoryNoteName, parseMemory, type ChapterMemory, type Fact, type Knowledge } from "./memory.ts";
 import { Document, isMap, isScalar, isSeq } from "yaml";
 
-import { frontmatterYaml } from "./frontmatter.ts";
+import { memoryFrontmatter } from "./memory-frontmatter.ts";
 import { parsePlace } from "./places.ts";
 
 /** One AI-proposed memory update. Nothing is written until the writer approves its `id`. */
@@ -205,7 +205,7 @@ function appendToList(note: string, key: string, entries: Record<string, unknown
 	}
 	const eol = note.includes("\r\n") ? "\r\n" : "\n";
 	const lines = note.replace(/\r\n/g, "\n").split("\n");
-	const { end, doc, invalid } = frontmatterYaml(lines);
+	const { end, doc, invalid } = memoryFrontmatter(lines);
 	if (invalid) {
 		throw new Error("El frontmatter de la nota no es YAML válido: corrígelo a mano antes de aprobar.");
 	}
