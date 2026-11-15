@@ -233,12 +233,12 @@ export default class AtlasPlugin extends Plugin {
 		const existing = this.app.workspace.getLeavesOfType(GRAPH_VIEW);
 		const leaf = existing[0] ?? this.app.workspace.getLeaf(true);
 		if (existing.length === 0) {
+			// `setViewState` opens the view, and `onOpen` already refreshes it.
 			await leaf.setViewState({ type: GRAPH_VIEW, active: true });
-		}
-		await this.app.workspace.revealLeaf(leaf);
-		if (leaf.view instanceof GraphView) {
+		} else if (leaf.view instanceof GraphView) {
 			await leaf.view.refresh();
 		}
+		await this.app.workspace.revealLeaf(leaf);
 	}
 
 	private async openMarkers(): Promise<void> {

@@ -73,9 +73,9 @@ export function relationTypes(graph: RelationGraph): string[] {
 	return [...new Set(graph.edges.map((edge) => edge.tipo))].sort();
 }
 
-// `desde` and `hasta` are inclusive; a missing bound is open.
+// Same reading as Mundo (`worldAt`): a relation starts at `desde` and ends when `hasta` begins; a missing bound is open.
 export function activeInChapter(edge: GraphEdge, chapter: number): boolean {
-	return (edge.desde === null || edge.desde <= chapter) && (edge.hasta === null || chapter <= edge.hasta);
+	return (edge.desde === null || edge.desde <= chapter) && (edge.hasta === null || chapter < edge.hasta);
 }
 
 export function filterGraph(graph: RelationGraph, filter: GraphFilter): RelationGraph {

@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { characterFolder } from "../src/characters.ts";
+import { worldAt } from "../src/world.ts";
 import { buildGraph, chapterNumber, circleLayout, filterGraph, linkTarget, projectCharacterPaths, relationTypes } from "../src/graph.ts";
 
 const GRAPH = buildGraph([
@@ -34,9 +35,11 @@ test("el filtro por capítulo solo deja relaciones vigentes en N", () => {
 	assert.equal(chapterNumber("[[Prólogo]]"), null);
 	assert.equal(chapterNumber("[[Cap 07 - parte 2]]"), 7);
 	assert.deepEqual(pairs(filterGraph(GRAPH, { capitulo: 1 })), ["Elena-hermano-Marcos", "Marcos-rival-Iván"]);
-	assert.deepEqual(pairs(filterGraph(GRAPH, { capitulo: 5 })), ["Elena-hermano-Marcos", "Elena-amiga-Lucía"]);
+	assert.deepEqual(pairs(filterGraph(GRAPH, { capitulo: 4 })), ["Elena-hermano-Marcos", "Elena-amiga-Lucía"]);
+	assert.deepEqual(pairs(filterGraph(GRAPH, { capitulo: 5 })), ["Elena-hermano-Marcos"]);
 	assert.deepEqual(pairs(filterGraph(GRAPH, { capitulo: 7 })), ["Elena-hermano-Marcos", "Elena-rival-Iván"]);
-	assert.deepEqual(pairs(filterGraph(GRAPH, { tipo: "rival", capitulo: 3 })), ["Marcos-rival-Iván"]);
+	assert.deepEqual(pairs(filterGraph(GRAPH, { tipo: "rival", capitulo: 2 })), ["Marcos-rival-Iván"]);
+	assert.deepEqual(pairs(filterGraph(GRAPH, { tipo: "rival", capitulo: 3 })), []);
 });
 
 test("el círculo coloca cada nodo dentro del lienzo", () => {
@@ -55,11 +58,21 @@ test("los enlaces con alias, encabezado o sin corchetes apuntan a la ficha", () 
 	assert.deepEqual(pairs(graph), ["Elena-hermano-Marcos"]);
 });
 
-test("una relación de un solo capítulo solo vale en ese capítulo", () => {
-	const graph = buildGraph([{ name: "Elena", relaciones: [{ con: "[[Iván]]", tipo: "aliada", desde: "[[Cap 04]]", hasta: "[[Cap 04]]" }] }]);
-	assert.deepEqual(pairs(filterGraph(graph, { capitulo: 3 })), []);
-	assert.deepEqual(pairs(filterGraph(graph, { capitulo: 4 })), ["Elena-aliada-Iván"]);
-	assert.deepEqual(pairs(filterGraph(graph, { capitulo: 5 })), []);
+test("el grafo y Mundo leen igual las mismas fichas: `hasta` cierra antes de ese capítulo", () => {
+	const relaciones = [
+		{ con: "[[Iván]]", tipo: "aliado", hasta: "[[Cap 10]]" },
+		{ con: "[[Iván]]", tipo: "enemigo", desde: "[[Cap 10]]" },
+		{ con: "[[Lucía]]", tipo: "amiga", desde: "[[Libro 2/Cap 07]]" },
+	];
+	const graph = buildGraph([{ name: "Elena", relaciones }]);
+	const sheets = { personajes: [{ nombre: "Elena", relaciones }], objetos: [], lugares: [] };
+	for (const capitulo of [6, 7, 9, 10, 11]) {
+		const inGraph = filterGraph(graph, { capitulo }).edges.map((edge) => edge.tipo);
+		const inWorld = worldAt(sheets, capitulo).relaciones.map((relation) => relation.tipo);
+		assert.deepEqual(inGraph, inWorld, `capítulo ${capitulo}`);
+	}
+	assert.deepEqual(pairs(filterGraph(graph, { capitulo: 9 })), ["Elena-aliado-Iván", "Elena-amiga-Lucía"]);
+	assert.deepEqual(pairs(filterGraph(graph, { capitulo: 10 })), ["Elena-enemigo-Iván", "Elena-amiga-Lucía"]);
 });
 
 test("un límite sin número de capítulo queda abierto", () => {
