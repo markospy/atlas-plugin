@@ -94,3 +94,27 @@ test("R6: una lista en flujo de varias líneas con `]` en la columna 0 pasa a bl
 		{ capitulo: "[[Cap 03]]", descripcion: "en ruinas" },
 	]);
 });
+
+test("R6: flujo de varias líneas con CRLF pasa a bloque, conserva CRLF y no duplica al aprobar dos veces", async () => {
+	const ficha = ["---", "nombre: Torre", "estados: [", '  {capitulo: "[[Cap 01]]", descripcion: intacta}', "]", "---", "Cuerpo"].join("\r\n");
+	const files = mockFiles({ [LUGAR]: ficha });
+	const candidatos = parseProposal(RESPUESTA);
+	await writeApproved(files, destino, candidatos, new Set(["e1"]));
+	const primera = files.store.get(LUGAR);
+	await writeApproved(files, destino, candidatos, new Set(["e1"]));
+	assert.equal(files.store.get(LUGAR), primera, "la segunda aprobación no cambia nada");
+	assert.ok(!/[^\r]\n/.test(primera), `solo CRLF: ${JSON.stringify(primera)}`);
+	assert.deepEqual(parsePlace(primera).estados, [
+		{ capitulo: "[[Cap 01]]", descripcion: "intacta" },
+		{ capitulo: "[[Cap 03]]", descripcion: "en ruinas" },
+	]);
+});
+
+test("R6: lista en bloque sin sangría recibe el estado a su sangría, antes de la clave siguiente", async () => {
+	const ficha = ["---", "nombre: Torre", "estados:", '- capitulo: "[[Cap 01]]"', "  descripcion: intacta", "viajes: []", "---", ""].join("\n");
+	const files = mockFiles({ [LUGAR]: ficha });
+	await writeApproved(files, destino, parseProposal(RESPUESTA), new Set(["e1"]));
+	const escrita = files.store.get(LUGAR);
+	assert.match(escrita, /\n- capitulo: "\[\[Cap 03\]\]"\n {2}descripcion: en ruinas\nviajes: \[\]\n---\n$/, escrita);
+	assert.equal(parsePlace(escrita).estados.length, 2);
+});
