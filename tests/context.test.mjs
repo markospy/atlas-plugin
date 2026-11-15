@@ -300,3 +300,23 @@ test("el corte no parte un emoji", () => {
 		}
 	}
 });
+
+// QA (v2): presupuesto no finito y cuerpo de la escena tras un frontmatter real.
+test("presupuesto NaN: nada entra y sin fallar; Infinity: entra todo", () => {
+	const nan = buildSceneContext(project({ presupuesto: Number.NaN }));
+	assert.deepEqual(nan.secciones, []);
+	assert.equal(nan.total, 0);
+	assert.deepEqual(nan.recortadas, CONTEXT_SECTIONS);
+	const all = buildSceneContext(project({ presupuesto: Number.POSITIVE_INFINITY }));
+	assert.equal(all.total, FULL);
+	assert.deepEqual(all.recortadas, []);
+});
+
+test("frontmatter real seguido de cortes `---`: sale el frontmatter, quedan los cortes", () => {
+	const escena = "---\npov: \"[[Elena]]\"\n---\nPrimera parte.\n---\nSegunda parte.";
+	const context = buildSceneContext(project({ escena }));
+	assert.equal(section(context, "escena"), "Primera parte.\n---\nSegunda parte.");
+	assert.match(section(context, "fichas"), /Personaje: Elena/); // el pov sigue leyéndose
+	const abierto = "---\npov: Elena\nSin cierre.";
+	assert.equal(section(buildSceneContext(project({ escena: abierto })), "escena"), abierto);
+});
