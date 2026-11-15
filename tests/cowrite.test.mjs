@@ -113,3 +113,23 @@ test("aprobar en una nota CRLF conserva los finales de línea", async () => {
 	const continuacion = await propose(mockProvider("Sonó un teléfono."), "continuacion", crlf, CONTEXT);
 	assert.equal(continuacion.propuesta, `${crlf}\r\n\r\nSonó un teléfono.`);
 });
+
+test("si el modelo devuelve su propio frontmatter, el diff lo muestra como líneas añadidas antes de aprobar", async () => {
+	const session = new CoWriteSession();
+	const proposal = await propose(mockProvider('---\npov: "[[Marta]]"\n---\nOtra escena.'), "borrador", NOTE, CONTEXT);
+	// Hoy no se quita: la nota quedaría con dos bloques. Lo que se fija aquí es que no es silencioso.
+	assert.ok(proposal.propuesta.startsWith('---\npov: "[[Elena]]"\n---\n---\npov: "[[Marta]]"\n---\n'));
+	assert.deepEqual(
+		proposal.diff.filter((line) => line.tipo === "añadir").map((line) => line.texto),
+		["---", 'pov: "[[Marta]]"', "---", "Otra escena."],
+	);
+	assert.equal(session.rechazar(proposal), NOTE);
+});
+
+test("aprobar dos veces la misma propuesta falla la segunda y registra una sola entrada", async () => {
+	const session = new CoWriteSession();
+	const proposal = await propose(mockProvider("Otra escena."), "alternativa", NOTE, CONTEXT);
+	const applied = session.aprobar(proposal, NOTE);
+	assert.throws(() => session.aprobar(proposal, applied), /cambió/);
+	assert.equal(session.historial.length, 1);
+});
