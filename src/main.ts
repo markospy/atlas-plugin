@@ -36,6 +36,8 @@ import { DEFAULT_PROVIDER_SETTINGS, ollamaProvider, type ProviderSettings } from
 import { NO_PROVIDER, providerReady, reviewScene } from "./review";
 import { RestoreModal } from "./restore-modal";
 import { ReviewModal } from "./review-modal";
+import { confirmReanalysis, factChanges, mergeStale, parseStore, staleFrom, type PropagationStore, type StaleChapter } from "./stale";
+import { StaleModal } from "./stale-modal";
 import { AtlasSettingTab } from "./settings";
 import { projectOf } from "./entities";
 import { inProject } from "./sheets";
@@ -71,6 +73,9 @@ function backupsFromVault(vault: Vault): BackupFiles {
 		remove: (path) => adapter.remove(path),
 	};
 }
+
+/** Last seen facts per memory note and stale chapters per project; hidden, so Obsidian does not index it. */
+const PROPAGATION_PATH = ".atlas/propagacion.json";
 
 /** Characters of context sent with a co-write request. */
 const COWRITE_BUDGET = 8000;
@@ -248,6 +253,20 @@ export default class AtlasPlugin extends Plugin {
 			name: "Copiar grafo de dependencias (JSON)",
 			callback: () => {
 				void this.dumpFactGraph();
+			},
+		});
+		this.addCommand({
+			id: "propagate-changes",
+			name: "Propagar cambios",
+			callback: () => {
+				void this.propagateChanges();
+			},
+		});
+		this.addCommand({
+			id: "stale-chapters",
+			name: "Capítulos desactualizados",
+			callback: () => {
+				void this.showStale();
 			},
 		});
 		this.addCommand({
@@ -597,6 +616,96 @@ export default class AtlasPlugin extends Plugin {
 		await navigator.clipboard.writeText(graphDump(graph));
 		const warnings = graph.avisos.length > 0 ? ` · ${graph.avisos.length} avisos de grafo incompleto` : "";
 		new Notice(`Grafo copiado: ${graph.edges.length} aristas${warnings}.`);
+	}
+
+	/** Diffs the active chapter's facts against the last run and flags the later chapters that relied on them. */
+	private async propagateChanges(): Promise<void> {
+		const active = this.app.workspace.getActiveFile();
+		const chapter = chapterNumber(active?.path ?? "");
+		if (!active || chapter === null) {
+			new Notice("Abre un capítulo (Cap NN) o su memoria.");
+			return;
+		}
+		const folder = projectMemoryFolder(active.path);
+		const notes = this.app.vault.getMarkdownFiles().filter((file) => file.path.startsWith(`${folder}/`));
+		const read = await Promise.all(
+			notes.map(async (file) => ({ path: file.path, memory: parseMemory(await this.app.vault.cachedRead(file)) })),
+		);
+		const edited = read.find((note) => note.memory.capitulo === chapter);
+		if (!edited) {
+			new Notice(`No hay memoria del cap. ${chapter} en ${folder}/.`);
+			return;
+		}
+		const store = await this.readPropagation();
+		const before = store.base[edited.path];
+		const changes = before ? factChanges(before, edited.memory.hechos) : [];
+		const stale = staleFrom(buildFactGraph(read.map((note) => note.memory)), chapter, changes);
+		store.stale[folder] = mergeStale(store.stale[folder] ?? [], stale);
+		for (const note of read) {
+			if (note === edited || !store.base[note.path]) {
+				store.base[note.path] = note.memory.hechos;
+			}
+		}
+		await this.writePropagation(store);
+		if (!before) {
+			new Notice(`Base guardada para el cap. ${chapter}: el próximo «Propagar cambios» comparará sus hechos con esta.`);
+			return;
+		}
+		const count = (kind: string) => changes.filter((change) => change.cambio === kind).length;
+		new Notice(
+			`Cap. ${chapter}: ${count("añadido")} añadidos, ${count("eliminado")} eliminados, ${count("cambiado")} cambiados · ${stale.length} capítulos desactualizados.`,
+		);
+		if (stale.length > 0) {
+			this.openStale(folder, store.stale[folder] ?? []);
+		}
+	}
+
+	private async showStale(): Promise<void> {
+		const active = this.app.workspace.getActiveFile();
+		if (!active) {
+			new Notice("Abre una nota del proyecto.");
+			return;
+		}
+		const folder = projectMemoryFolder(active.path);
+		this.openStale(folder, (await this.readPropagation()).stale[folder] ?? []);
+	}
+
+	private openStale(folder: string, list: StaleChapter[]): void {
+		const root = folder.slice(0, folder.length - "_Memoria".length);
+		new StaleModal(
+			this.app,
+			list,
+			async (chapter) => {
+				const store = await this.readPropagation();
+				store.stale[folder] = confirmReanalysis(store.stale[folder] ?? [], chapter);
+				await this.writePropagation(store);
+				return store.stale[folder];
+			},
+			(chapter) => {
+				const files = this.app.vault.getMarkdownFiles().filter((file) => chapterNumber(file.path) === chapter);
+				const file =
+					files.find((candidate) => candidate.path.startsWith(`${root}Manuscrito/`)) ??
+					files.find((candidate) => candidate.path.startsWith(`${folder}/`));
+				if (file) {
+					void this.app.workspace.getLeaf(false).openFile(file);
+				} else {
+					new Notice(`No encuentro el cap. ${chapter} en el proyecto.`);
+				}
+			},
+		).open();
+	}
+
+	private async readPropagation(): Promise<PropagationStore> {
+		const adapter = this.app.vault.adapter;
+		return parseStore((await adapter.exists(PROPAGATION_PATH)) ? await adapter.read(PROPAGATION_PATH) : null);
+	}
+
+	private async writePropagation(store: PropagationStore): Promise<void> {
+		const adapter = this.app.vault.adapter;
+		if (!(await adapter.exists(".atlas"))) {
+			await adapter.mkdir(".atlas");
+		}
+		await adapter.write(PROPAGATION_PATH, JSON.stringify(store, null, 2));
 	}
 
 	private async whatKnowsHere(who: string): Promise<void> {
