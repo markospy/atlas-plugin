@@ -147,3 +147,29 @@ test("R6: `estados: # comentario` con lista en bloque recibe el estado", async (
 		{ capitulo: "[[Cap 03]]", descripcion: "en ruinas" },
 	]);
 });
+
+test("QA v3: una descripción con comillas, barra invertida, `#` y `:` no se duplica al aprobar dos veces", async () => {
+	const ficha = "---\nnombre: Torre\nestados: []\n---\n";
+	const descripcion = 'dijo "hola" \\ fin # nota: sí';
+	const respuesta = JSON.stringify({ hechos: [], estados: [{ lugar: "Torre", descripcion }] });
+	const files = mockFiles({ [LUGAR]: ficha });
+	const candidatos = parseProposal(respuesta);
+	await writeApproved(files, destino, candidatos, new Set(["e1"]));
+	const primera = files.store.get(LUGAR);
+	assert.deepEqual(parsePlace(primera).estados, [{ capitulo: "[[Cap 03]]", descripcion }], primera);
+	await writeApproved(files, destino, candidatos, new Set(["e1"]));
+	assert.equal(files.store.get(LUGAR), primera, "la segunda aprobación no cambia nada");
+});
+
+test("QA v3: flujo con `]` dentro de un valor entre comillas y comentario final conserva el estado previo", async () => {
+	const ficha = ["---", "nombre: Torre", 'estados: [{capitulo: "[[Cap 01]]", descripcion: "a ] b"}] # nota', "viajes: []", "---", "Cuerpo"].join("\n");
+	const files = mockFiles({ [LUGAR]: ficha });
+	await writeApproved(files, destino, parseProposal(RESPUESTA), new Set(["e1"]));
+	const escrita = files.store.get(LUGAR);
+	assert.equal(escrita.match(/^---$/gm).length, 2, escrita);
+	assert.deepEqual(parsePlace(escrita).estados, [
+		{ capitulo: "[[Cap 01]]", descripcion: "a ] b" },
+		{ capitulo: "[[Cap 03]]", descripcion: "en ruinas" },
+	]);
+	assert.match(escrita, /\nviajes: \[\]\n---\nCuerpo$/);
+});
