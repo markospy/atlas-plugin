@@ -81,3 +81,25 @@ test("aceptar en una memoria que abre con un --- de escena no mete el cuerpo en 
 	assert.ok(escrita.endsWith(nota), "el cuerpo original queda intacto tras el frontmatter");
 	assert.deepEqual(parseMemory(escrita).hechos, [{ id: "carta", texto: "La carta es falsa", verdad: false }]);
 });
+
+// Huecos de test de QA v1/v2: repetir datos no duplica entradas.
+test("un id de hecho repetido en la propuesta se escribe una sola vez", async () => {
+	const files = mockFiles({});
+	const respuesta = JSON.stringify({ hechos: [{ id: "carta", texto: "A" }, { id: "carta", texto: "B" }] });
+	await writeApproved(files, destino, parseProposal(respuesta), new Set(["h1", "h2"]));
+	assert.deepEqual(parseMemory(files.store.get(MEMORIA)).hechos.map((h) => h.id), ["carta"]);
+});
+
+test("repetir una aprobación no duplica conocimiento ni estados", async () => {
+	const LUGAR = "Proyecto/Lugares/Torre.md";
+	const files = mockFiles({ [LUGAR]: "---\nnombre: Torre\nestados: []\n---\n" });
+	const respuesta = JSON.stringify({
+		conocimiento: [{ hecho: "carta", quien: "lector", estado: "sabe" }],
+		estados: [{ lugar: "Torre", descripcion: "en ruinas" }],
+	});
+	const candidatos = parseProposal(respuesta);
+	await writeApproved(files, destino, candidatos, new Set(["c1", "e1"]));
+	const primera = [files.store.get(MEMORIA), files.store.get(LUGAR)];
+	await writeApproved(files, destino, candidatos, new Set(["c1", "e1"]));
+	assert.deepEqual([files.store.get(MEMORIA), files.store.get(LUGAR)], primera);
+});

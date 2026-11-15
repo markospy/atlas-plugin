@@ -1,4 +1,3 @@
-import { frontmatterBody } from "./frontmatter.ts";
 import { KNOWLEDGE_STATES, memoryNote, memoryNoteName, parseMemory, type ChapterMemory, type Fact, type Knowledge } from "./memory.ts";
 import { parsePlace } from "./places.ts";
 
@@ -120,18 +119,29 @@ export async function writeApproved(
 	const chosen = candidates.filter((candidate) => approved.has(candidate.id));
 	const written: string[] = [];
 
-	const hechos = chosen.flatMap((c) => (c.tipo === "hecho" ? [c.hecho] : []));
-	const conocimiento = chosen.flatMap((c) => (c.tipo === "conocimiento" ? [c.conocimiento] : []));
+	const memoryNow = (await files.exists(target.memoria)) ? await files.read(target.memoria) : null;
+	const memory = parseMemory(memoryNow ?? "");
+	const ids = new Set(memory.hechos.map((fact) => fact.id));
+	const hechos = chosen.flatMap((c) => {
+		if (c.tipo !== "hecho" || ids.has(c.hecho.id)) {
+			return [];
+		}
+		ids.add(c.hecho.id);
+		return [c.hecho];
+	});
+	const known = new Set(memory.conocimiento.map(knowledgeKey));
+	const conocimiento = chosen.flatMap((c) => {
+		if (c.tipo !== "conocimiento" || known.has(knowledgeKey(c.conocimiento))) {
+			return [];
+		}
+		known.add(knowledgeKey(c.conocimiento));
+		return [c.conocimiento];
+	});
 	if (hechos.length > 0 || conocimiento.length > 0) {
-		const exists = await files.exists(target.memoria);
-		const note = exists ? await files.read(target.memoria) : memoryNote(target.capitulo);
-		const memory = parseMemory(note);
-		const ids = new Set(memory.hechos.map((fact) => fact.id));
-		const nextFacts = [...memory.hechos, ...hechos.filter((fact) => !ids.has(fact.id))];
-		const nextKnowledge = [...memory.conocimiento, ...conocimiento];
-		let updated = setList(note, "hechos", nextFacts.map(factLines));
-		updated = setList(updated, "conocimiento", nextKnowledge.map(knowledgeLines));
-		if (!exists) {
+		const note = memoryNow ?? memoryNote(target.capitulo);
+		let updated = appendToList(note, "hechos", hechos.map(factLines));
+		updated = appendToList(updated, "conocimiento", conocimiento.map(knowledgeLines));
+		if (memoryNow === null) {
 			const folder = target.memoria.slice(0, Math.max(0, target.memoria.lastIndexOf("/")));
 			if (folder.length > 0 && !(await files.exists(folder))) {
 				await files.createFolder(folder);
@@ -151,11 +161,14 @@ export async function writeApproved(
 			continue;
 		}
 		const note = await files.read(path);
-		const states = [...parsePlace(note).estados, { capitulo: chapter, descripcion: candidate.descripcion }];
-		await files.write(
-			path,
-			setList(note, "estados", states.map((state) => [`capitulo: ${JSON.stringify(state.capitulo)}`, `descripcion: ${JSON.stringify(state.descripcion)}`])),
+		const recorded = parsePlace(note).estados.some(
+			(state) => state.capitulo === chapter && state.descripcion === candidate.descripcion,
 		);
+		if (recorded) {
+			continue;
+		}
+		const entry = [`capitulo: ${JSON.stringify(chapter)}`, `descripcion: ${JSON.stringify(candidate.descripcion)}`];
+		await files.write(path, appendToList(note, "estados", [entry]));
 		if (!written.includes(path)) {
 			written.push(path);
 		}
@@ -175,30 +188,51 @@ function knowledgeLines(entry: Knowledge): string[] {
 	return [`hecho: ${entry.hecho}`, `quien: ${JSON.stringify(entry.quien)}`, `estado: ${entry.estado}`];
 }
 
-/** Replaces the frontmatter list `key` (inline `[]` or block) with `entries`; the rest of the note is kept. */
-function setList(note: string, key: string, entries: string[][]): string {
-	const text = note.replace(/\r\n/g, "\n");
-	// `close` is the `\n` before the closing `---`; for an empty frontmatter it is the opener's own `\n`.
-	const close = text.startsWith("---\n") ? text.indexOf("\n---", 3) : -1;
+function knowledgeKey(entry: Knowledge): string {
+	return `${entry.hecho}|${entry.quien}|${entry.estado}`;
+}
+
+/**
+ * Appends `entries` to the end of the frontmatter list `key`. Every existing line stays byte for
+ * byte (hand-written fields and comments included); an inline `key: []` becomes a block. A note
+ * without real frontmatter (a `---` scene break is not one) gets a new frontmatter in front.
+ */
+function appendToList(note: string, key: string, entries: string[][]): string {
+	if (entries.length === 0) {
+		return note;
+	}
+	const eol = note.includes("\r\n") ? "\r\n" : "\n";
+	const lines = note.replace(/\r\n/g, "\n").split("\n");
+	const opens = lines[0] === "---" && (lines[1] === "---" || /^[\p{L}\w-]+:(\s|$)/u.test(lines[1] ?? ""));
+	const close = opens ? lines.indexOf("---", 1) : -1;
 	if (close === -1) {
-		return setList(`---\n---\n${text}`, key, entries);
+		return appendToList(`---${eol}---${eol}${note}`, key, entries);
 	}
-	const frontmatter = frontmatterBody(text);
-	const lines = frontmatter === "" ? [] : frontmatter.split("\n");
-	const block = entries.length === 0
-		? [`${key}: []`]
-		: [`${key}:`, ...entries.flatMap(([first, ...rest]) => [`  - ${first}`, ...rest.map((line) => `    ${line}`)])];
-	const at = lines.findIndex((line) => line === `${key}:` || line.startsWith(`${key}: `));
-	if (at === -1) {
-		lines.push(...block);
-	} else {
-		let end = at + 1;
-		while (end < lines.length && /^[\s-]/.test(lines[end] ?? "") && (lines[end] ?? "").length > 0) {
-			end++;
+	const at = lines.slice(1, close).findIndex((line) => line === `${key}:` || line.startsWith(`${key}: `)) + 1;
+	let insertAt = close;
+	let indent: string | null = null;
+	if (at > 0) {
+		insertAt = at + 1;
+		for (let i = at + 1; i < close; i++) {
+			const line = lines[i] ?? "";
+			if (line.trim().length > 0 && !/^[\s-]/.test(line)) {
+				break;
+			}
+			const item = /^(\s*)- /.exec(line);
+			if (item && indent === null) {
+				indent = item[1] ?? "";
+			}
+			if (line.trim().length > 0) {
+				insertAt = i + 1;
+			}
 		}
-		lines.splice(at, end - at, ...block);
+		// An inline value (`key: []`) cannot take block items after it.
+		lines[at] = `${key}:`;
 	}
-	return `---\n${lines.join("\n")}${text.slice(close)}`;
+	const pad = indent ?? "  ";
+	const block = entries.flatMap(([first, ...rest]) => [`${pad}- ${first}`, ...rest.map((line) => `${pad}  ${line}`)]);
+	lines.splice(insertAt, 0, ...(at > 0 ? [] : [`${key}:`]), ...block);
+	return lines.join(eol);
 }
 
 function items(data: unknown, key: string): Record<string, unknown>[] {
