@@ -9,6 +9,7 @@ import {
 	memoryNote,
 	memoryNoteName,
 	parseMemory,
+	projectMemoryFolder,
 	whatKnows,
 } from "../src/memory.ts";
 
@@ -53,6 +54,16 @@ test("la plantilla trae hechos, conocimiento y usos vacíos", () => {
 	assert.match(note, /^hechos: \[\]$/m);
 	assert.match(note, /^conocimiento: \[\]$/m);
 	assert.deepEqual(parseMemory(note), { capitulo: 3, hechos: [], conocimiento: [], usos: [] });
+});
+
+test("el _Memoria/ del proyecto se resuelve desde cualquier carpeta del proyecto", () => {
+	assert.equal(projectMemoryFolder("Novela/Personajes/Elena.md"), "Novela/_Memoria");
+	assert.equal(projectMemoryFolder("Novela/Trama/Arcos/Venganza.md"), "Novela/_Memoria");
+	assert.equal(projectMemoryFolder("Novela/Manuscrito/Cap 03.md"), "Novela/_Memoria");
+	assert.equal(projectMemoryFolder("Novela/_Memoria/Cap 03.md"), "Novela/_Memoria");
+	assert.equal(projectMemoryFolder("Novela/Notas.md"), "Novela/_Memoria");
+	assert.equal(projectMemoryFolder("Personajes/Elena.md"), "_Memoria");
+	assert.equal(projectMemoryFolder("_Memoria/Cap 03.md"), "_Memoria");
 });
 
 test("el personaje sabe lo que el lector solo sospecha", () => {

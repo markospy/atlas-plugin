@@ -8,6 +8,7 @@ import { characterFolder, characterNote, parseCharacter, relationErrors } from "
 import { frontmatterBody, scalar } from "./frontmatter";
 import { GRAPH_VIEW, GraphView } from "./graph-view";
 import { checkContinuity, usageErrors } from "./continuity";
+import { buildFactGraph, dependents, graphDump } from "./dependencies";
 import { ENTITY_VIEW, EntityView } from "./entity-view";
 import { clueFolder, clueNote, nextState } from "./foreshadow";
 import { FORESHADOW_VIEW, ForeshadowView } from "./foreshadow-view";
@@ -21,6 +22,7 @@ import {
 	memoryNote,
 	memoryNoteName,
 	parseMemory,
+	projectMemoryFolder,
 	READER,
 	whatKnows,
 } from "./memory";
@@ -232,6 +234,20 @@ export default class AtlasPlugin extends Plugin {
 			name: "Revisar continuidad",
 			callback: () => {
 				void this.checkContinuityHere();
+			},
+		});
+		this.addCommand({
+			id: "fact-dependents",
+			name: "Quién depende de este hecho",
+			editorCallback: (editor) => {
+				void this.factDependentsHere(editor.getSelection().trim());
+			},
+		});
+		this.addCommand({
+			id: "dump-fact-graph",
+			name: "Copiar grafo de dependencias (JSON)",
+			callback: () => {
+				void this.dumpFactGraph();
 			},
 		});
 		this.addCommand({
@@ -516,10 +532,33 @@ export default class AtlasPlugin extends Plugin {
 			new Notice("Abre un capítulo (Cap NN).");
 			return null;
 		}
-		const folder = `${memoryFolder(active.path)}/`;
+		return { chapter, memories: await this.memoriesBeside(active.path) };
+	}
+
+	/** Every `_Memoria/` note of the project holding `activePath`; no chapter needed. */
+	private async projectMemories(): Promise<ChapterMemory[] | null> {
+		const active = this.app.workspace.getActiveFile();
+		if (!active) {
+			new Notice("Abre una nota del proyecto.");
+			return null;
+		}
+		const folder = projectMemoryFolder(active.path);
+		const memories = await this.memoriesIn(folder);
+		if (memories.length === 0) {
+			new Notice(`No hay memorias en ${folder}/: el grafo estaría vacío.`);
+			return null;
+		}
+		return memories;
+	}
+
+	private async memoriesBeside(activePath: string): Promise<ChapterMemory[]> {
+		return this.memoriesIn(memoryFolder(activePath));
+	}
+
+	private async memoriesIn(memoryDir: string): Promise<ChapterMemory[]> {
+		const folder = `${memoryDir}/`;
 		const notes = this.app.vault.getMarkdownFiles().filter((file) => file.path.startsWith(folder));
-		const memories = await Promise.all(notes.map(async (file) => parseMemory(await this.app.vault.cachedRead(file))));
-		return { chapter, memories };
+		return Promise.all(notes.map(async (file) => parseMemory(await this.app.vault.cachedRead(file))));
 	}
 
 	private async checkContinuityHere(): Promise<void> {
@@ -531,6 +570,33 @@ export default class AtlasPlugin extends Plugin {
 		const lines = [...errors, ...checkContinuity(found.memories, found.chapter).map((alert) => alert.mensaje)];
 		const summary = lines.length > 0 ? lines.join("\n") : "Sin alertas.";
 		new Notice(`Continuidad cap. ${found.chapter}\n${summary}`);
+	}
+
+	private async factDependentsHere(fact: string): Promise<void> {
+		if (fact.length === 0) {
+			new Notice("Selecciona el id de un hecho.");
+			return;
+		}
+		const memories = await this.projectMemories();
+		if (!memories) {
+			return;
+		}
+		const graph = buildFactGraph(memories);
+		const chapters = dependents(graph, fact);
+		const summary = chapters.length > 0 ? chapters.map((chapter) => `Cap. ${chapter}`).join(", ") : "Ningún capítulo lo usa.";
+		const warnings = graph.avisos.length > 0 ? `\nGrafo incompleto:\n${graph.avisos.join("\n")}` : "";
+		new Notice(`Dependen de «${fact}»: ${summary}${warnings}`);
+	}
+
+	private async dumpFactGraph(): Promise<void> {
+		const memories = await this.projectMemories();
+		if (!memories) {
+			return;
+		}
+		const graph = buildFactGraph(memories);
+		await navigator.clipboard.writeText(graphDump(graph));
+		const warnings = graph.avisos.length > 0 ? ` · ${graph.avisos.length} avisos de grafo incompleto` : "";
+		new Notice(`Grafo copiado: ${graph.edges.length} aristas${warnings}.`);
 	}
 
 	private async whatKnowsHere(who: string): Promise<void> {
