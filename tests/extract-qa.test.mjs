@@ -225,3 +225,22 @@ test("aceptar un estado en una ficha con CRLF añade solo sus líneas", async ()
 		["---", "nombre: Torre", "estados:", "- capitulo: '[[Cap 01]]'", "  descripcion: intacta", '- capitulo: "[[Cap 03]]"', "  descripcion: en ruinas", "---", ""].join("\r\n"),
 	);
 });
+
+// QA #70 v4: CRLF y cierre `---` con espacios; hechos y conocimiento se añaden al mismo frontmatter.
+test("aceptar un hecho y su conocimiento en una memoria CRLF cuyo cierre --- lleva espacios", async () => {
+	const nota = ["---", "capitulo: 3", "hechos:", "  - id: anillo", "    texto: El anillo", "---  ", "Cuerpo", ""].join("\r\n");
+	const respuesta = JSON.stringify({ hechos: [{ id: "007", texto: "Dice: \"no\" # y [[Ana]]", verdad: true }], conocimiento: [{ hecho: "007", quien: "[[Ana]]", estado: "sabe" }] });
+	const files = mockFiles({ [MEMORIA]: nota });
+	await writeApproved(files, destino, parseProposal(respuesta), new Set(["h1", "c1"]));
+	const escrita = files.store.get(MEMORIA);
+	assert.ok(escrita.startsWith("---\r\ncapitulo: 3\r\nhechos:\r\n  - id: anillo\r\n    texto: El anillo\r\n"), "lo escrito a mano queda delante, sin otro frontmatter");
+	assert.ok(escrita.endsWith("---  \r\nCuerpo\r\n"), "el cierre y el cuerpo quedan byte a byte");
+	assert.ok(!/(^|[^\r])\n/.test(escrita), "solo CRLF");
+	const memoria = parseMemory(escrita);
+	assert.deepEqual(memoria.hechos, [
+		{ id: "anillo", texto: "El anillo", verdad: null },
+		{ id: "007", texto: "Dice: \"no\" # y [[Ana]]", verdad: true },
+	]);
+	assert.deepEqual(memoria.conocimiento, [{ hecho: "007", quien: "[[Ana]]", estado: "sabe" }]);
+	assert.equal(memoria.capitulo, 3);
+});
