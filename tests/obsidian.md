@@ -88,3 +88,9 @@ Prepara el plugin una vez:
 - [ ] Con el nombre seleccionado en un capítulo, **Nueva pista (foreshadowing)** crea `Trama/<nombre>.md` del proyecto con `tipo: pista` y `estado: sembrado`. Otra vez con el mismo nombre avisa "Esa pista ya existe.".
 - [ ] Con la pista abierta, **Avanzar pista** pasa `estado` a `reforzado` y luego a `resuelto`; una vez resuelta no cambia.
 - [ ] **Tablero de foreshadowing** lista las pistas sembradas y reforzadas, no las resueltas. Un objeto con `funcion` nombrado en un solo capítulo sale en **Objetos que no vuelven**; al nombrarlo en un segundo capítulo y ejecutar el comando otra vez, desaparece.
+
+## #17 revisar con IA
+
+- [ ] Con endpoint o modelo vacíos, **Revisar escena con IA** muestra el aviso de configurar proveedor y no falla.
+- [ ] Con Ollama local (`http://127.0.0.1:11434`, modelo instalado) sobre una escena en `Manuscrito/Cap 01/`, abre la lista de hallazgos con tipo y línea; un clic lleva el cursor a la cita.
+- [ ] Tras la revisión, la escena y el resto de notas siguen sin cambios (no hay deshacer pendiente ni archivo modificado).

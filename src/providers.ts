@@ -1,11 +1,14 @@
 export interface ProviderSettings {
 	endpoint: string;
+	/** Model name the endpoint serves, e.g. `llama3.1`; "" means none. */
+	model: string;
 	cloudOptIn: boolean;
 	allowedHosts: string[];
 }
 
 export const DEFAULT_PROVIDER_SETTINGS: ProviderSettings = {
 	endpoint: "",
+	model: "",
 	cloudOptIn: false,
 	allowedHosts: [],
 };

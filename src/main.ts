@@ -1,14 +1,15 @@
-import { type Editor, Notice, Plugin, TFile, type Vault } from "obsidian";
+import { type Editor, Notice, Plugin, requestUrl, TFile, type Vault } from "obsidian";
 
 import { chronologyNotice, impossibleTravels, readChronology } from "./chronology";
 import { characterFolder, characterNote, parseCharacter, relationErrors } from "./characters";
+import { frontmatterBody, scalar } from "./frontmatter";
 import { GRAPH_VIEW, GraphView } from "./graph-view";
 import { checkContinuity, usageErrors } from "./continuity";
 import { ENTITY_VIEW, EntityView } from "./entity-view";
 import { clueFolder, clueNote, nextState } from "./foreshadow";
 import { FORESHADOW_VIEW, ForeshadowView } from "./foreshadow-view";
-import { objectFolder, objectNote } from "./objects";
-import { placeFolder, placeNote } from "./places";
+import { objectFolder, objectNote, parseObject } from "./objects";
+import { parsePlace, placeFolder, placeNote } from "./places";
 import {
 	type ChapterMemory,
 	chapterNumber,
@@ -25,6 +26,8 @@ import { BASE_RULES, patternRules } from "./linter";
 import { LintModal } from "./lint-modal";
 import { MARKER_VIEW, MarkerView } from "./marker-view";
 import { DEFAULT_PROVIDER_SETTINGS, type ProviderSettings } from "./providers";
+import { reviewScene } from "./review";
+import { ReviewModal } from "./review-modal";
 import { AtlasSettingTab } from "./settings";
 import { parseSkill, skillFolder, skillNote, skillsFor } from "./style";
 import { createAtlasProject, type AtlasFiles } from "./vault";
@@ -203,6 +206,13 @@ export default class AtlasPlugin extends Plugin {
 			name: "Revisar estilo de la nota",
 			editorCallback: (editor) => {
 				void this.lintNote(editor);
+			},
+		});
+		this.addCommand({
+			id: "review-scene-ai",
+			name: "Revisar escena con IA",
+			editorCallback: (editor) => {
+				void this.reviewWithAi(editor);
 			},
 		});
 		this.addCommand({
@@ -477,6 +487,45 @@ export default class AtlasPlugin extends Plugin {
 		const notes = this.app.vault.getMarkdownFiles().filter((file) => file.path.startsWith(`${folder}/`));
 		const skills = await Promise.all(notes.map(async (file) => parseSkill(await this.app.vault.read(file))));
 		new LintModal(this.app, editor, [...BASE_RULES, ...patternRules(skillsFor(skills, "global"))]).open();
+	}
+
+	private async reviewWithAi(editor: Editor): Promise<void> {
+		const active = this.app.workspace.getActiveFile();
+		const path = active?.path ?? "";
+		const parent = path.slice(0, Math.max(0, path.lastIndexOf("/")));
+		const chapter = chapterNumber(path) ?? chapterNumber(parent);
+		if (!active || chapter === null) {
+			new Notice("Abre una escena de un capítulo (Cap NN).");
+			return;
+		}
+		// Read-only: every note is read, none is written.
+		const notes = await Promise.all(
+			this.app.vault.getMarkdownFiles().map(async (file) => this.app.vault.cachedRead(file)),
+		);
+		const byType = (tipo: string) => notes.filter((note) => scalar(frontmatterBody(note), "tipo") === tipo);
+		new Notice("Revisando la escena con IA…");
+		const result = await reviewScene(
+			{
+				capitulo: chapter,
+				escena: editor.getValue(),
+				skills: byType("skill").map(parseSkill),
+				personajes: byType("personaje").map(parseCharacter),
+				objetos: byType("objeto").map(parseObject),
+				lugares: byType("lugar").map(parsePlace),
+				memorias: byType("memoria").map(parseMemory),
+				resumenes: [],
+				trama: "",
+				presupuesto: 12_000,
+			},
+			this.settings,
+			async (url, body) =>
+				(await requestUrl({ url, method: "POST", contentType: "application/json", body: JSON.stringify(body) })).json,
+		);
+		if (!result.ok) {
+			new Notice(result.mensaje, 0);
+			return;
+		}
+		new ReviewModal(this.app, editor, result.hallazgos, result.descartados).open();
 	}
 
 	async saveSettings(): Promise<void> {
