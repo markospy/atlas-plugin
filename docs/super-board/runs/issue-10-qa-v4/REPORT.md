@@ -4,10 +4,10 @@ Comando: `npm test` (107/107) y `npm run build` (`tsc -noEmit -skipLibCheck` + e
 
 | AC | Test | Resultado |
 |---|---|---|
-| AC1 plantilla `_Memoria/Cap NN.md` con `hechos` y `conocimiento` | `tests/memory.test.mjs:48` | ✅ nombre `Cap 03`, carpeta `Novela/_Memoria`, listas vacías que se vuelven a leer |
-| AC2 consulta "qué sabe [[Elena]] / el lector en cap. N" | `tests/memory.test.mjs:57`, `:68`, `:89` | ✅ `[[Elena]]`, `elena`, `[[Elena\|la Doctora]]`, `lector`, `[[lector]]`; solo cuentan capítulos ≤ N; gana el estado más reciente |
-| AC3 estados ignora, sospecha, cree-falso, sabe | `tests/memory.test.mjs:78` | ✅ los cuatro aceptados; `intuye` avisado y fuera de la consulta |
-| AC4 hecho que sabe un personaje y el lector solo sospecha | `tests/memory.test.mjs:57` | ✅ Elena `sabe`, lector `sospecha`, Iván nada |
+| AC1 plantilla `_Memoria/Cap NN.md` con `hechos` y `conocimiento` | `tests/memory.test.mjs:49` | ✅ nombre `Cap 03`, carpeta `Novela/_Memoria`, listas vacías que se vuelven a leer |
+| AC2 consulta "qué sabe [[Elena]] / el lector en cap. N" | `tests/memory.test.mjs:58`, `:69`, `:90` | ✅ `[[Elena]]`, `elena`, `[[Elena\|la Doctora]]`, `lector`, `[[lector]]`; solo cuentan capítulos ≤ N; gana el estado más reciente |
+| AC3 estados ignora, sospecha, cree-falso, sabe | `tests/memory.test.mjs:79` | ✅ los cuatro aceptados; `intuye` avisado y fuera de la consulta |
+| AC4 hecho que sabe un personaje y el lector solo sospecha | `tests/memory.test.mjs:58` | ✅ Elena `sabe`, lector `sospecha`, Iván nada |
 
 ## Cambios desde v3
 - R4: CRLF y comillas simples se leen (`tests/memory.test.mjs:106`). Comprobado también con un script aparte.
