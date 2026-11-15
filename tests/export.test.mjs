@@ -92,6 +92,18 @@ test("quita un frontmatter que no es YAML válido", async () => {
 	assert.equal(escenas[0].texto, "Texto");
 });
 
+// QA #70 v3: un `---` de escena seguido de prosa que no es YAML válido (un diálogo entre comillas,
+// una nota entre llaves) no es frontmatter: en `staging` el texto sale en el manuscrito y no debe perderse.
+test("un --- de escena con prosa que no es YAML válido sigue en el manuscrito", async () => {
+	const notes = {
+		"Novela/Manuscrito/Cap 01.md": '---\n"Hola", dijo ella.\n---\nTras una pausa.',
+		"Novela/Manuscrito/Cap 02.md": "---\n{Nota del autor}\n---\nTras una pausa.",
+	};
+	const { escenas } = await manuscriptScenes("Novela/Mi Novela.md", { ...sceneOrder(INDEX), escenas: ["Cap 01", "Cap 02"] }, async (path) => notes[path]);
+	assert.equal(escenas[0].texto, '---\n"Hola", dijo ella.\n---\nTras una pausa.');
+	assert.equal(escenas[1].texto, "---\n{Nota del autor}\n---\nTras una pausa.");
+});
+
 test("las incrustaciones ![[...]] no salen como texto (R7)", () => {
 	const markdown = assembleMarkdown([{ titulo: "Cap 01", texto: "Antes ![[img.png]] y ![[Nota|alias]] después, con [[Ana]]." }]);
 	assert.doesNotMatch(markdown, /img\.png|alias|!/);
