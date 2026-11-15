@@ -8,6 +8,8 @@ export interface SceneTime {
 	dia: number;
 	lugar: string;
 	personajes: string[];
+	/** Folder holding `Manuscrito/` ("" at the vault root); scenes only share a timeline within one project. */
+	proyecto?: string;
 }
 
 /** Minimum days to travel between two places; it holds in both directions, the shortest declared route wins. */
@@ -63,10 +65,15 @@ export function readChronology(notes: ChronologyNote[]): { scenes: SceneTime[]; 
 		}
 		const scene = isManuscript(path) ? parseSceneTime(nombre, note) : null;
 		if (scene) {
-			scenes.push(scene);
+			scenes.push({ ...scene, proyecto: projectOf(path) });
 		}
 	}
 	return { scenes, travels };
+}
+
+/** Folder that holds the `Manuscrito/` of a scene path: `Libro1/Manuscrito/Cap.md` → `Libro1`. */
+function projectOf(path: string): string {
+	return path.startsWith("Manuscrito/") ? "" : path.slice(0, path.indexOf("/Manuscrito/"));
 }
 
 /**
@@ -114,15 +121,19 @@ export function parseTravels(desde: string, note: string): Travel[] {
 /** Consecutive scenes (by day) of one character in two places closer in time than the route allows. */
 export function impossibleTravels(scenes: SceneTime[], travels: Travel[]): ImpossibleTravel[] {
 	const found: ImpossibleTravel[] = [];
-	const characters = new Map<string, string>();
-	for (const name of scenes.flatMap((scene) => scene.personajes)) {
-		if (!characters.has(name.toLowerCase())) {
-			characters.set(name.toLowerCase(), name);
+	const projectKey = (scene: SceneTime) => scene.proyecto ?? "";
+	const characters = new Map<string, { project: string; key: string; name: string }>();
+	for (const scene of scenes) {
+		for (const name of scene.personajes) {
+			const id = `${projectKey(scene)}\0${name.toLowerCase()}`;
+			if (!characters.has(id)) {
+				characters.set(id, { project: projectKey(scene), key: name.toLowerCase(), name });
+			}
 		}
 	}
-	for (const [key, personaje] of characters) {
+	for (const { project, key, name: personaje } of characters.values()) {
 		const own = scenes
-			.filter((scene) => scene.personajes.some((name) => name.toLowerCase() === key))
+			.filter((scene) => projectKey(scene) === project && scene.personajes.some((name) => name.toLowerCase() === key))
 			.sort((a, b) => a.dia - b.dia);
 		for (let i = 1; i < own.length; i++) {
 			const before = own[i - 1] as SceneTime;
