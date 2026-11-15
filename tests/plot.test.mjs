@@ -96,3 +96,15 @@ test("un valor entre comillas simples se lee sin ellas", () => {
 	assert.equal(parseScene(scene).pov, "[[Elena]]");
 	assert.equal(parseScene(scene).objetivo, "It's now");
 });
+
+test("el frontmatter de cada trama se relee con el parser compartido, también con comillas en el nombre", async () => {
+	const { frontmatterBody, scalar } = await import("../src/frontmatter.ts");
+	for (const structure of Object.keys(PLOT_STRUCTURES)) {
+		for (const name of ["Novela", 'El "Rey" pálido']) {
+			const frontmatter = frontmatterBody(plotNote(name, structure));
+			assert.equal(scalar(frontmatter, "tipo"), "trama");
+			assert.equal(scalar(frontmatter, "nombre"), name);
+			assert.equal(scalar(frontmatter, "estructura"), structure);
+		}
+	}
+});
