@@ -1,4 +1,4 @@
-import { type Editor, Notice, Plugin, requestUrl, TFile, type Vault } from "obsidian";
+import { type DataAdapter, type Editor, FileSystemAdapter, Notice, Platform, Plugin, requestUrl, TFile, type Vault } from "obsidian";
 
 import { chronologyNotice, impossibleTravels, readChronology } from "./chronology";
 import { CoWriteSession, coWriteContext, propose, type CoWriteMode } from "./cowrite";
@@ -8,6 +8,8 @@ import { frontmatterBody, scalar } from "./frontmatter";
 import { GRAPH_VIEW, GraphView } from "./graph-view";
 import { checkContinuity, usageErrors } from "./continuity";
 import { ENTITY_VIEW, EntityView } from "./entity-view";
+import { type ExportIO, exportManuscript, manuscriptScenes, sceneOrder } from "./export";
+import { ExportModal } from "./export-modal";
 import { clueFolder, clueNote, nextState } from "./foreshadow";
 import { FORESHADOW_VIEW, ForeshadowView } from "./foreshadow-view";
 import { objectFolder, objectNote, parseObject } from "./objects";
@@ -34,7 +36,7 @@ import { AtlasSettingTab } from "./settings";
 import { projectOf } from "./entities";
 import { inProject } from "./sheets";
 import { parseSkill, skillFolder, skillNote, skillsFor } from "./style";
-import { createAtlasProject, type AtlasFiles } from "./vault";
+import { childPath, createAtlasProject, parentPath, type AtlasFiles } from "./vault";
 
 function filesFromVault(vault: Vault): AtlasFiles {
 	return {
@@ -52,6 +54,32 @@ function filesFromVault(vault: Vault): AtlasFiles {
 			await vault.create(path, data);
 		},
 	};
+}
+
+/** pandoc run from the vault root, or null on mobile or when `pandoc --version` fails. */
+async function findPandoc(adapter: DataAdapter): Promise<ExportIO["pandoc"]> {
+	if (!Platform.isDesktopApp || !(adapter instanceof FileSystemAdapter)) {
+		return null;
+	}
+	// Loaded here, not at the top: mobile has no child_process.
+	const { execFile } = require("child_process") as typeof import("child_process");
+	const run = (args: string[], input = "") =>
+		new Promise<void>((resolve, reject) => {
+			const child = execFile("pandoc", args, { cwd: adapter.getBasePath() }, (error, _stdout, stderr) => {
+				if (error) {
+					reject(new Error(String(stderr).trim() || error.message));
+					return;
+				}
+				resolve();
+			});
+			child.stdin?.end(input);
+		});
+	try {
+		await run(["--version"]);
+	} catch {
+		return null;
+	}
+	return run;
 }
 
 /** Characters of context sent with a co-write request. */
@@ -234,6 +262,13 @@ export default class AtlasPlugin extends Plugin {
 			},
 		});
 		this.addCommand({
+			id: "export-manuscript",
+			name: "Exportar manuscrito",
+			callback: () => {
+				void this.exportFromIndex();
+			},
+		});
+		this.addCommand({
 			id: "new-project",
 			name: "Nuevo proyecto Atlas",
 			callback: () => {
@@ -250,6 +285,37 @@ export default class AtlasPlugin extends Plugin {
 		}
 		await createAtlasProject(filesFromVault(this.app.vault), file.path);
 		new Notice("Proyecto Atlas listo.");
+	}
+
+	private async exportFromIndex(): Promise<void> {
+		const file = this.app.workspace.getActiveFile();
+		const order = file ? sceneOrder(await this.app.vault.read(file)) : null;
+		if (!file || !order) {
+			new Notice("Abre la nota índice del proyecto (frontmatter longform).");
+			return;
+		}
+		if (order.escenas.length === 0) {
+			new Notice("El índice no tiene escenas en longform.scenes.");
+			return;
+		}
+		const { adapter } = this.app.vault;
+		const pandoc = await findPandoc(adapter);
+		const start = childPath(parentPath(file.path), "Exportar");
+		new ExportModal(this.app, pandoc !== null, start, (format, folder) => {
+			void (async () => {
+				const { escenas, faltan } = await manuscriptScenes(file.path, order, (path) => adapter.read(path));
+				if (folder.length > 0 && !(await adapter.exists(folder))) {
+					await this.app.vault.createFolder(folder);
+				}
+				const io: ExportIO = {
+					writeBinary: (path, data) => adapter.writeBinary(path, data.slice().buffer),
+					pandoc,
+				};
+				const result = await exportManuscript(format, order.titulo || file.basename, escenas, folder, io);
+				const missing = faltan.length > 0 ? `\nSin nota, se saltaron: ${faltan.join(", ")}.` : "";
+				new Notice(result.ok ? `Exportado: ${result.ruta}${missing}` : result.mensaje, 0);
+			})();
+		}).open();
 	}
 
 	private async newCharacter(name: string): Promise<void> {

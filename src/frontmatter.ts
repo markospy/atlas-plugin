@@ -91,7 +91,8 @@ export function mapList(frontmatter: string, key: string): Record<string, string
 	return items;
 }
 
-function splitOutsideQuotes(inner: string): string[] {
+/** Splits on commas that sit outside quotes. */
+export function splitOutsideQuotes(inner: string): string[] {
 	const parts: string[] = [];
 	let current = "";
 	let quote = "";

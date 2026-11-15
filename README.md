@@ -134,3 +134,10 @@ Comando **Co-escribir escena** en una escena abierta. Elige **Borrador**, **Alte
 - Borrador y alternativa conservan el frontmatter; continuación añade el texto al final.
 - Cada decisión queda en el historial de la sesión (en memoria; se pierde al cerrar Obsidian). Aún no hay copia de seguridad antes de aplicar: es otro ticket.
 - El contexto lleva skills, fichas, mundo y conocimiento; resúmenes y trama todavía no se cargan.
+
+## Exportar manuscrito
+
+Abre la nota índice del proyecto (la que tiene `longform`) y ejecuta **Exportar manuscrito**. Elige el formato y la carpeta de la bóveda (por defecto `Exportar/` junto al índice; se crea si no existe). Las escenas salen en el orden de `longform.scenes`, las anidadas aplanadas, cada una con su título como encabezado y sin frontmatter. Los `[[wikilinks]]` quedan como texto. Una escena del índice sin nota se salta y el aviso la nombra.
+
+- **DOCX** no necesita nada instalado: un encabezado por escena, un párrafo por bloque y salto de página entre escenas.
+- **EPUB** y **PDF** usan [pandoc](https://pandoc.org) y solo aparecen si `pandoc --version` funciona (solo escritorio). PDF necesita además un motor PDF de pandoc (p. ej. LaTeX); si falta, el aviso muestra el error de pandoc. Sin pandoc, el diálogo lo dice y DOCX sigue disponible.
