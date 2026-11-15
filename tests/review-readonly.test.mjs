@@ -40,3 +40,12 @@ test("Revisar escena con IA solo lee notas del proyecto de la escena", () => {
 	const command = method(main, "reviewWithAi");
 	assert.match(command, /inProject\(/);
 });
+
+test("ancla citas en una escena con finales de línea CRLF", () => {
+	const parsed = parseFindings(
+		JSON.stringify([{ tipo: "estilo", cita: "tristemente", mensaje: "x" }]),
+		"---\r\npov: x\r\n---\r\nElena entra.\r\n—No —dijo tristemente.\r\n",
+	);
+	assert.deepEqual(parsed.hallazgos.map((h) => [h.linea, h.columna]), [[5, 11]]);
+	assert.equal(parsed.descartados, 0);
+});
