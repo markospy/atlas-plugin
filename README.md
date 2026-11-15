@@ -107,6 +107,14 @@ Si un capítulo usa un hecho que ningún capítulo anterior (o el mismo) introdu
 
 La base y la lista se guardan en `.atlas/propagacion.json`, dentro de la bóveda.
 
+## Registro de decisiones
+
+Para cambiar el canon hacia delante sin corregir aún el pasado («la posada se llama El Reyezuelo desde el cap. 7»). Con una nota del proyecto abierta, ejecuta **Registro de decisiones**:
+- **Registrar decisión:** valor antiguo, valor nuevo y capítulo de corte.
+- Bajo cada decisión salen los capítulos anteriores al corte cuyas escenas de `Manuscrito/` aún nombran el valor antiguo (palabra completa, sin distinguir mayúsculas). **Abrir** abre la primera escena; **Marcar alineado** quita el capítulo de la lista.
+
+Nada se reescribe solo. Las decisiones se guardan en `.atlas/decisiones.json`, dentro de la bóveda.
+
 ## Índice de entidades
 
 Con una nota del proyecto abierta, ejecuta **Índice de entidades (escanear manuscrito)**. El panel lista los personajes, lugares y objetos del proyecto y, bajo cada ficha, las escenas de `Manuscrito/` que la nombran por `nombre` o por cualquiera de sus `alias` (palabra completa, sin distinguir mayúsculas). El escaneo es local, sin IA, y solo corre cuando ejecutas el comando: vuelve a ejecutarlo tras editar y el índice se rehace sin duplicar escenas.

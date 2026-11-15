@@ -1,0 +1,25 @@
+✔ runtime: Registrar decisión guarda d1 en .atlas/decisiones.json y lista cap. 2 y cap. 4 (89.57408ms)
+✔ runtime: Marcar alineado guarda alineados [2] y quita el cap. 2; Abrir abre la escena (25.131923ms)
+✔ runtime: reabrir el comando lee el almacén y muestra lo mismo (6.049801ms)
+✔ runtime: corte 0 avisa con Notice y no escribe nada (3.671142ms)
+✔ runtime: corte vacío avisa con Notice y no escribe nada (10.039803ms)
+✔ runtime: valor antiguo vacío avisa con Notice y no escribe nada (4.606973ms)
+✔ runtime: valor nuevo vacío avisa con Notice y no escribe nada (2.885979ms)
+(node:3959641) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///home/marcos/OtherProjects/atlas-plugin/.claude/worktrees/issue-22-qa/src/decisions.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /home/marcos/OtherProjects/atlas-plugin/.claude/worktrees/issue-22-qa/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ rename de lugar: lista solo capítulos anteriores al corte que aún nombran el valor antiguo (5.460592ms)
+✔ marcar un capítulo como alineado lo quita de la lista, sin tocar los demás (0.751ms)
+✔ un capítulo alineado que vuelve a nombrar el valor antiguo sigue fuera: la marca es del escritor (0.444102ms)
+✔ varias decisiones llevan id propio y se validan (0.984391ms)
+✔ el almacén vacío o ausente arranca sin decisiones (0.490057ms)
+✔ el capítulo justo antes del corte entra, con todas sus escenas en orden numérico (15.81118ms)
+ℹ tests 13
+ℹ suites 0
+ℹ pass 13
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 354.586789

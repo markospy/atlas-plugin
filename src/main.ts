@@ -8,6 +8,8 @@ import { characterFolder, characterNote, parseCharacter, relationErrors } from "
 import { frontmatterBody, scalar } from "./frontmatter";
 import { GRAPH_VIEW, GraphView } from "./graph-view";
 import { checkContinuity, usageErrors } from "./continuity";
+import { addDecision, type Decision, markAligned, parseDecisions, pendingChapters, type DecisionStore } from "./decisions";
+import { DecisionsModal, type DecisionRow } from "./decisions-modal";
 import { buildFactGraph, dependents, graphDump } from "./dependencies";
 import { ENTITY_VIEW, EntityView } from "./entity-view";
 import { clueFolder, clueNote, nextState } from "./foreshadow";
@@ -77,6 +79,9 @@ function backupsFromVault(vault: Vault): BackupFiles {
 
 /** Last seen facts per memory note and stale chapters per project; hidden, so Obsidian does not index it. */
 const PROPAGATION_PATH = ".atlas/propagacion.json";
+
+/** Canon decisions going forward, per project folder. */
+const DECISIONS_PATH = ".atlas/decisiones.json";
 
 /** Characters of context sent with a co-write request. */
 const COWRITE_BUDGET = 8000;
@@ -275,6 +280,13 @@ export default class AtlasPlugin extends Plugin {
 			name: "Propagar cambios",
 			callback: () => {
 				void this.propagateChanges();
+			},
+		});
+		this.addCommand({
+			id: "decision-log",
+			name: "Registro de decisiones",
+			callback: () => {
+				void this.showDecisions();
 			},
 		});
 		this.addCommand({
@@ -717,17 +729,63 @@ export default class AtlasPlugin extends Plugin {
 		).open();
 	}
 
+	/** Decision log of the active note's project; adding a decision or aligning a chapter saves at once. */
+	private async showDecisions(): Promise<void> {
+		const active = this.app.workspace.getActiveFile();
+		if (!active) {
+			new Notice("Abre una nota del proyecto.");
+			return;
+		}
+		const root = projectOf(active.path);
+		const rows = async (store: DecisionStore): Promise<DecisionRow[]> => {
+			const files = this.app.vault.getMarkdownFiles().filter((file) => inProject(root, file.path));
+			const notes = await Promise.all(
+				files.map(async (file) => ({ path: file.path, text: await this.app.vault.cachedRead(file) })),
+			);
+			return (store.decisiones[root] ?? []).map((decision) => ({
+				decision,
+				pendientes: pendingChapters(root, decision, notes),
+			}));
+		};
+		const change = async (edit: (current: Decision[]) => Decision[]) => {
+			const store = await this.readDecisions();
+			store.decisiones[root] = edit(store.decisiones[root] ?? []);
+			await this.writeJson(DECISIONS_PATH, store);
+			return rows(store);
+		};
+		new DecisionsModal(this.app, await rows(await this.readDecisions()), {
+			add: (input) => change((current) => addDecision(current, input)),
+			align: (id, chapter) =>
+				change((current) => current.map((decision) => (decision.id === id ? markAligned(decision, chapter) : decision))),
+			open: (path) => {
+				const file = this.app.vault.getAbstractFileByPath(path);
+				if (file instanceof TFile) {
+					void this.app.workspace.getLeaf(false).openFile(file);
+				}
+			},
+		}).open();
+	}
+
+	private async readDecisions(): Promise<DecisionStore> {
+		const adapter = this.app.vault.adapter;
+		return parseDecisions((await adapter.exists(DECISIONS_PATH)) ? await adapter.read(DECISIONS_PATH) : null);
+	}
+
 	private async readPropagation(): Promise<PropagationStore> {
 		const adapter = this.app.vault.adapter;
 		return parseStore((await adapter.exists(PROPAGATION_PATH)) ? await adapter.read(PROPAGATION_PATH) : null);
 	}
 
 	private async writePropagation(store: PropagationStore): Promise<void> {
+		await this.writeJson(PROPAGATION_PATH, store);
+	}
+
+	private async writeJson(path: string, data: unknown): Promise<void> {
 		const adapter = this.app.vault.adapter;
 		if (!(await adapter.exists(".atlas"))) {
 			await adapter.mkdir(".atlas");
 		}
-		await adapter.write(PROPAGATION_PATH, JSON.stringify(store, null, 2));
+		await adapter.write(path, JSON.stringify(data, null, 2));
 	}
 
 	private async whatKnowsHere(who: string): Promise<void> {
