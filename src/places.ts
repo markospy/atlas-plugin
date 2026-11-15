@@ -20,6 +20,7 @@ export function placeNote(name: string): string {
 		`nombre: ${JSON.stringify(name)}`,
 		"padre:",
 		"estados: []",
+		"viajes: []",
 		"---",
 		"",
 		"## Vista",

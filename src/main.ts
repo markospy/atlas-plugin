@@ -1,5 +1,6 @@
 import { type Editor, Notice, Plugin, TFile, type Vault } from "obsidian";
 
+import { impossibleTravels, parseSceneTime, parseTravels, type SceneTime, type Travel } from "./chronology";
 import { characterFolder, characterNote, parseCharacter, relationErrors } from "./characters";
 import { ENTITY_VIEW, EntityView } from "./entity-view";
 import { objectFolder, objectNote } from "./objects";
@@ -108,6 +109,13 @@ export default class AtlasPlugin extends Plugin {
 			name: "Añadir campos de escena",
 			callback: () => {
 				void this.addSceneFields();
+			},
+		});
+		this.addCommand({
+			id: "check-chronology",
+			name: "Revisar cronología",
+			callback: () => {
+				void this.checkChronology();
 			},
 		});
 		this.addCommand({
@@ -238,6 +246,31 @@ export default class AtlasPlugin extends Plugin {
 			return;
 		}
 		new Notice("Campos de escena listos.");
+	}
+
+	private async checkChronology(): Promise<void> {
+		const scenes: SceneTime[] = [];
+		const travels: Travel[] = [];
+		for (const file of this.app.vault.getMarkdownFiles()) {
+			const note = await this.app.vault.read(file);
+			travels.push(...parseTravels(note));
+			const scene = parseSceneTime(file.basename, note);
+			if (scene) {
+				scenes.push(scene);
+			}
+		}
+		const found = impossibleTravels(scenes, travels);
+		new Notice(
+			found.length === 0
+				? "Cronología sin viajes imposibles."
+				: found
+						.map(
+							(item) =>
+								`${item.personaje}: ${item.desde} → ${item.hasta} (${item.origen} → ${item.destino}) en ${item.dias} días; mínimo ${item.minimo}.`,
+						)
+						.join("\n"),
+			found.length === 0 ? undefined : 0,
+		);
 	}
 
 	private async newObject(name: string): Promise<void> {

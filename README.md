@@ -50,6 +50,10 @@ No pisa una trama que ya exista.
 
 En una escena de `Manuscrito/`, **Añadir campos de escena** agrega al frontmatter `objetivo`, `conflicto`, `resultado`, `pov` y `subtrama` vacíos, sin tocar los que ya tengan valor ni el texto. `pov` y `subtrama` admiten un `[[wikilink]]`.
 
+## Cronología
+
+Una escena declara en su frontmatter `dia` (número relativo, p. ej. `3` o `3.5`), `lugar` (`[[Puerto]]`) y quién está: `pov` y `personajes` (`["[[Marcos]]"]`). Una ficha de lugar declara en `viajes` la duración mínima hasta otro lugar (`a` + `dias`); vale en los dos sentidos y, si hay dos rutas, manda la más corta. **Revisar cronología** lee la bóveda y lista los pares de escenas seguidas (por `dia`) en que un personaje cambia de lugar en menos días que el mínimo. Solo avisa, no bloquea: escenas sin `dia` o rutas sin declarar no se comprueban.
+
 ## Objetos
 
 Selecciona el nombre y ejecuta **Nuevo objeto**. Crea `Objetos/<nombre>.md` con descripción, origen, valor material, valor sentimental (para quién y por qué) y función en la trama. En el frontmatter, `funcion` marca su peso narrativo (p. ej. "pistola de Chéjov"), `foreshadowing` enlaza dónde se anuncia y `posesiones` anota cada cambio de poseedor (`poseedor` + `capitulo`, p. ej. `[[Cap 04]]`). `holderAt(ficha, N)` en `src/objects.ts` responde quién tiene el objeto en el capítulo N. No pisa una ficha que ya exista.
