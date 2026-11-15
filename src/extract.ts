@@ -1,4 +1,5 @@
 import { KNOWLEDGE_STATES, memoryNote, memoryNoteName, parseMemory, type ChapterMemory, type Fact, type Knowledge } from "./memory.ts";
+import { frontmatterEnd } from "./frontmatter.ts";
 import { parsePlace } from "./places.ts";
 
 /** One AI-proposed memory update. Nothing is written until the writer approves its `id`. */
@@ -195,7 +196,7 @@ function knowledgeKey(entry: Knowledge): string {
 /**
  * Appends `entries` to the end of the frontmatter list `key`. Every existing line stays byte for
  * byte (hand-written fields and comments included); an inline `key: []` becomes a block. A note
- * without real frontmatter (a `---` scene break is not one) gets a new frontmatter in front.
+ * without real frontmatter (`frontmatterEnd`: a `---` scene break is not one) gets a new one in front.
  */
 function appendToList(note: string, key: string, entries: string[][]): string {
 	if (entries.length === 0) {
@@ -203,8 +204,7 @@ function appendToList(note: string, key: string, entries: string[][]): string {
 	}
 	const eol = note.includes("\r\n") ? "\r\n" : "\n";
 	const lines = note.replace(/\r\n/g, "\n").split("\n");
-	const opens = lines[0] === "---" && (lines[1] === "---" || /^[\p{L}\w-]+:(\s|$)/u.test(lines[1] ?? ""));
-	const close = opens ? lines.indexOf("---", 1) : -1;
+	const close = frontmatterEnd(lines);
 	if (close === -1) {
 		return appendToList(`---${eol}---${eol}${note}`, key, entries);
 	}
