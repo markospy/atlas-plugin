@@ -73,6 +73,25 @@ test("ensambla el manuscrito en el orden del índice sin pandoc", async () => {
 	assert.equal(missing.escenas.length, 1);
 });
 
+test("quita el frontmatter con claves de Properties con espacios (R6)", async () => {
+	const notes = {
+		"Novela/Manuscrito/Cap 01.md": "---\nFecha escena: 2020-01-01\npov: Ana\n---\nTexto",
+		"Novela/Manuscrito/Cap 02.md": "---\nUna línea suelta\n---\nTras una pausa.",
+	};
+	const { escenas } = await manuscriptScenes("Novela/Mi Novela.md", { ...sceneOrder(INDEX), escenas: ["Cap 01", "Cap 02"] }, async (path) => notes[path]);
+	assert.equal(escenas[0].texto, "Texto");
+	// A `---` scene break that is not YAML stays as text.
+	assert.equal(escenas[1].texto, "---\nUna línea suelta\n---\nTras una pausa.");
+});
+
+test("las incrustaciones ![[...]] no salen como texto (R7)", () => {
+	const markdown = assembleMarkdown([{ titulo: "Cap 01", texto: "Antes ![[img.png]] y ![[Nota|alias]] después, con [[Ana]]." }]);
+	assert.doesNotMatch(markdown, /img\.png|alias|!/);
+	assert.match(markdown, /Antes {2}y {2}después, con Ana\./);
+	const xml = new TextDecoder().decode(docxFile([{ titulo: "Cap 01", texto: "Ver ![[mapa.jpg]] aquí." }]));
+	assert.doesNotMatch(xml, /mapa\.jpg/);
+});
+
 test("el DOCX es un zip válido que Word abre, con el texto en orden", () => {
 	const escenas = [
 		{ titulo: "Cap 02", texto: "Primero va esta." },

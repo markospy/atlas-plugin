@@ -1,4 +1,4 @@
-import { frontmatterBody, noteBody, splitOutsideQuotes, unquote } from "./frontmatter.ts";
+import { frontmatterBody, frontmatterEnd, splitOutsideQuotes, unquote } from "./frontmatter.ts";
 import { childPath, parentPath } from "./vault.ts";
 
 export type ExportFormat = "docx" | "epub" | "pdf";
@@ -72,6 +72,12 @@ export function sceneOrder(indexNote: string): SceneOrder | null {
 	};
 }
 
+/** Scene text without its frontmatter (keys with spaces too, as Properties writes them), trimmed. */
+function sceneText(note: string): string {
+	const lines = note.replace(/\r\n/g, "\n").split("\n");
+	return lines.slice(frontmatterEnd(lines) + 1).join("\n").trim();
+}
+
 /** Scene notes next to the index, in index order, frontmatter stripped; `faltan` names the missing ones. */
 export async function manuscriptScenes(
 	indexPath: string,
@@ -84,7 +90,7 @@ export async function manuscriptScenes(
 	const faltan: string[] = [];
 	for (const titulo of order.escenas) {
 		try {
-			escenas.push({ titulo, texto: noteBody(await read(childPath(folder, `${titulo}.md`))) });
+			escenas.push({ titulo, texto: sceneText(await read(childPath(folder, `${titulo}.md`))) });
 		} catch {
 			faltan.push(titulo);
 		}
@@ -92,9 +98,12 @@ export async function manuscriptScenes(
 	return { escenas, faltan };
 }
 
-/** `[[nota|alias]]` and `[[nota]]` read as plain text. */
+/** `[[nota|alias]]` and `[[nota]]` read as plain text; `![[...]]` embeds are dropped. */
 function plainLinks(text: string): string {
-	return text.replace(/\[\[([^\]|]+)\|([^\]]+)\]\]/g, "$2").replace(/\[\[([^\]]+)\]\]/g, "$1");
+	return text
+		.replace(/!\[\[[^\]]*\]\]/g, "")
+		.replace(/\[\[([^\]|]+)\|([^\]]+)\]\]/g, "$2")
+		.replace(/\[\[([^\]]+)\]\]/g, "$1");
 }
 
 /** One Markdown manuscript: a `#` heading per scene, wikilinks as plain text. */
