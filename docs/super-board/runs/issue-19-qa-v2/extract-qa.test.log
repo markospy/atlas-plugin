@@ -1,0 +1,14 @@
+✔ aceptar en una memoria sin frontmatter deja frontmatter válido y conserva la nota (6.40363ms)
+✔ aceptar en una memoria con frontmatter vacío deja frontmatter válido y conserva la nota (0.465283ms)
+✖ aceptar un hecho conserva campos y comentarios escritos a mano en _Memoria/ (1.386093ms)
+✖ aceptar un estado conserva campos escritos a mano en la ficha del lugar (1.414546ms)
+✖ aceptar en una memoria que abre con un --- de escena no mete el cuerpo en el frontmatter (0.66501ms)
+ℹ pass 2
+ℹ fail 3
+✖ failing tests:
+✖ aceptar un hecho conserva campos y comentarios escritos a mano en _Memoria/ (1.386093ms)
+  AssertionError [ERR_ASSERTION]: el comentario a mano sigue
+✖ aceptar un estado conserva campos escritos a mano en la ficha del lugar (1.414546ms)
+  AssertionError [ERR_ASSERTION]: el campo a mano sigue
+✖ aceptar en una memoria que abre con un --- de escena no mete el cuerpo en el frontmatter (0.66501ms)
+  AssertionError [ERR_ASSERTION]: el cuerpo original queda intacto tras el frontmatter

@@ -22,6 +22,24 @@ export function noteBody(note: string): string {
 	return end === -1 ? text.trim() : lines.slice(end + 1).join("\n").trim();
 }
 
+/**
+ * Index of the line that closes a note's frontmatter, or -1 when there is none. `lines` is the
+ * note split on LF. A `---` scene break also opens notes, so the block counts as frontmatter only
+ * when every line in it reads as YAML: blank, `# comment`, `key:` (spaces in the key allowed, as
+ * Obsidian Properties writes them) or an indented / `- ` continuation.
+ */
+export function frontmatterEnd(lines: readonly string[]): number {
+	if (lines[0] !== "---") {
+		return -1;
+	}
+	const end = lines.indexOf("---", 1);
+	if (end === -1) {
+		return -1;
+	}
+	const yaml = lines.slice(1, end).every((line) => /^(\s*$|\s*#|[\s-]|[^\s:#][^:]*:(\s|$))/u.test(line));
+	return yaml ? end : -1;
+}
+
 /** Value of a top-level `key: value` line, unquoted; "" when missing. */
 export function scalar(frontmatter: string, key: string): string {
 	const match = new RegExp(`^${key}:[ \\t]*(.*)$`, "m").exec(frontmatter);
