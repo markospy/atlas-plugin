@@ -122,3 +122,23 @@ for (const [caso, primera] of [
 		assert.equal(parseMemory(escrita).capitulo, 3);
 	});
 }
+
+// QA #19 v4: el escritor y el lector deben coincidir en dónde acaba el frontmatter, y aprobar
+// nunca borra un valor en línea escrito a mano.
+test("aceptar en una memoria cuyo cierre --- lleva espacios al final no antepone otro frontmatter", async () => {
+	const nota = ["---", "tipo: memoria", "capitulo: 3", "hechos:", "  - id: anillo", '    texto: "El anillo"', "--- ", "Cuerpo", ""].join("\n");
+	assert.deepEqual(parseMemory(nota).hechos.map((h) => h.id), ["anillo"], "antes de aprobar se lee el hecho");
+	const files = mockFiles({ [MEMORIA]: nota });
+	await writeApproved(files, destino, parseProposal(RESPUESTA), new Set(["h1"]));
+	const escrita = files.store.get(MEMORIA);
+	assert.deepEqual(parseMemory(escrita).hechos.map((h) => h.id), ["anillo", "carta"]);
+	assert.equal(parseMemory(escrita).capitulo, 3);
+});
+
+test("aceptar un hecho no borra una lista hechos: en línea escrita a mano", async () => {
+	const nota = ["---", "tipo: memoria", "capitulo: 3", "hechos: [{id: anillo, texto: El anillo}]", "---", "Cuerpo", ""].join("\n");
+	const files = mockFiles({ [MEMORIA]: nota });
+	await writeApproved(files, destino, parseProposal(RESPUESTA), new Set(["h1"]));
+	const escrita = files.store.get(MEMORIA);
+	assert.match(escrita, /anillo/, "el hecho escrito a mano sigue en la nota");
+});
