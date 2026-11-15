@@ -59,8 +59,8 @@ function stubObsidian(state) {
 	};
 }
 
-async function startPlugin(stored, active = 0) {
-	const state = { commands: {}, notices: [], saved: [], stored, timers: [], onModify: undefined };
+async function startPlugin(stored, active = 0, folders = []) {
+	const state = { commands: {}, notices: [], saved: [], stored, timers: [], on: {}, onModify: undefined };
 	const built = await esbuild.build({
 		entryPoints: ["src/main.ts"],
 		bundle: true,
@@ -85,9 +85,13 @@ async function startPlugin(stored, active = 0) {
 		vault: {
 			getMarkdownFiles: () => files,
 			cachedRead: async (file) => NOTES[file.path],
+			getAbstractFileByPath: (path) =>
+				folders.includes(path) || files.some((file) => file.path.startsWith(`${path}/`)) ? { path } : null,
 			on: (event, handler) => {
-				assert.equal(event, "modify");
-				state.onModify = handler;
+				state.on[event] = handler;
+				if (event === "modify") {
+					state.onModify = handler;
+				}
 				return {};
 			},
 		},
@@ -100,7 +104,9 @@ async function startPlugin(stored, active = 0) {
 
 const settle = () => new Promise((resolve) => setTimeout(resolve, 0));
 const today = dayKey(new Date());
-const yesterday = dayKey(new Date(Date.now() - 864e5));
+const now = new Date();
+// Calendar day before, not 24 h before: on a DST change day `Date.now() - 864e5` can be today.
+const yesterday = dayKey(new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1));
 
 test("runtime: Progreso de escritura avisa total, meta por defecto y racha la primera vez", async () => {
 	const { state } = await startPlugin(null);
@@ -164,12 +170,45 @@ test("runtime: Progreso de escritura fuera de un proyecto no guarda un registro 
 	assert.deepEqual(state.saved, []);
 });
 
-test("runtime: descargar el plugin cancela los recuentos pendientes de todos los proyectos", async () => {
+test("runtime: descargar el plugin ejecuta los recuentos pendientes de todos los proyectos", async () => {
 	const { state, files, plugin } = await startPlugin(null);
 	state.onModify(files[1]);
 	state.onModify(files[3]);
 	plugin.onunload();
+	await settle();
 	assert.deepEqual(state.timers.map((timer) => timer.cleared), [true, true]);
+	assert.deepEqual(state.saved.at(-1).escritura, {
+		Novela: { [today]: { inicio: 5, total: 5 } },
+		Otra: { [today]: { inicio: 2, total: 2 } },
+	});
 	state.onModify(files[1]);
 	assert.deepEqual(state.timers.map((timer) => timer.cleared), [true, true, false], "tras onunload el Map queda vacío");
+});
+
+test("runtime: borrar una escena recuenta su proyecto a los 5 s", async () => {
+	const { state, files } = await startPlugin({ escritura: { Novela: { [today]: { inicio: 5, total: 5 } } } });
+	const [deleted] = files.splice(1, 1);
+	state.on.delete(deleted);
+	assert.deepEqual(state.timers.map((timer) => timer.ms), [5000]);
+	state.timers[0].run();
+	await settle();
+	assert.deepEqual(state.saved.at(-1).escritura.Novela[today], { inicio: 5, total: 3 });
+});
+
+test("runtime: mover una escena recuenta el proyecto de origen y el de destino", async () => {
+	const { state, files } = await startPlugin(null);
+	state.on.rename(files[1], "Otra/Manuscrito/Cap 02.md");
+	assert.equal(state.timers.length, 2, "un recuento para Otra y otro para Novela");
+	for (const timer of state.timers) {
+		timer.run();
+	}
+	await settle();
+	assert.deepEqual(Object.keys(state.saved.at(-1).escritura).sort(), ["Novela", "Otra"]);
+});
+
+test("runtime: Progreso de escritura con Manuscrito/ vacío avisa 0 palabras", async () => {
+	const { state } = await startPlugin(null, "Vacia/Personajes/Ana.md", ["Vacia/Manuscrito"]);
+	state.commands["writing-progress"].callback();
+	await settle();
+	assert.deepEqual(state.notices, ["Manuscrito: 0 palabras\nHoy: 0 / 500 (0 %)\nRacha: 0 días"]);
 });

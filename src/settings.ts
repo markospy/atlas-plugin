@@ -1,6 +1,7 @@
 import { App, Notice, Plugin, PluginSettingTab, Setting } from "obsidian";
 
 import { assertAllowedEndpoint, type ProviderSettings } from "./providers";
+import { parseDailyGoal } from "./stats";
 
 /** Daily word goal when none is set; 0 turns the goal off. */
 export const DEFAULT_DAILY_GOAL = 500;
@@ -85,8 +86,15 @@ export class AtlasSettingTab extends PluginSettingTab {
 			.setDesc("Palabras por día del manuscrito. 0: sin meta. La racha y el progreso se guardan solo en esta bóveda.")
 			.addText((text) => {
 				text.setValue(String(this.host.settings.metaDiaria)).onChange(async (value) => {
-					const goal = Number.parseInt(value.trim(), 10);
-					this.host.settings.metaDiaria = Number.isFinite(goal) && goal > 0 ? goal : 0;
+					const goal = parseDailyGoal(value);
+					if (goal === undefined) {
+						// An empty field is the writer retyping: keep the old goal without a warning.
+						if (value.length > 0) {
+							new Notice("Meta diaria: escribe solo un número entero (0: sin meta).");
+						}
+						return;
+					}
+					this.host.settings.metaDiaria = goal;
 					await this.host.saveSettings();
 				});
 			});

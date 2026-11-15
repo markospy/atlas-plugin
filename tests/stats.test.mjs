@@ -5,6 +5,7 @@ import {
 	countWords,
 	dayKey,
 	manuscriptWords,
+	parseDailyGoal,
 	progress,
 	progressNotice,
 	recordTotal,
@@ -63,4 +64,13 @@ test("la fecha es local y el aviso resume total, meta y racha", () => {
 		"Manuscrito: 1450 palabras\nHoy: 150 / 500 (30 %)\nRacha: 1 día",
 	);
 	assert.match(progressNotice({ total: 0, hoy: 0, meta: 0, porcentaje: 0, racha: 0 }), /sin meta diaria/);
+});
+
+test("Meta diaria acepta solo un entero sin signos ni letras", () => {
+	assert.equal(parseDailyGoal("500"), 500);
+	assert.equal(parseDailyGoal("0"), 0);
+	assert.equal(parseDailyGoal("0750"), 750);
+	for (const bad of ["", "abc", "500abc", "-5", "1.5", " 500", "1e3", "99999999999999999999"]) {
+		assert.equal(parseDailyGoal(bad), undefined, bad);
+	}
 });

@@ -108,3 +108,5 @@ Prepara el plugin una vez:
 - [ ] Con una escena de `Manuscrito/` abierta, **Progreso de escritura** avisa con las palabras totales del manuscrito, "Hoy: 0 / 500 (0 %)" y "Racha: 0 días" la primera vez.
 - [ ] Escribir unas palabras, esperar 5 s y repetir el comando: "Hoy" sube en esas palabras y la racha pasa a 1 día.
 - [ ] Poner **Meta diaria** a 0 en **Settings → Atlas**: el aviso dice "sin meta diaria". Tras reiniciar Obsidian, la meta y el registro siguen en `data.json`.
+- [ ] Escribir `500abc` en **Meta diaria**: avisa "escribe solo un número entero" y la meta guardada no cambia.
+- [ ] Borrar una escena, o moverla fuera de `Manuscrito/`, esperar 5 s y repetir el comando: el total baja sin editar ninguna otra escena.

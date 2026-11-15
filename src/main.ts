@@ -33,7 +33,7 @@ import { ReviewModal } from "./review-modal";
 import { type AtlasSettings, AtlasSettingTab, DEFAULT_DAILY_GOAL } from "./settings";
 import { projectOf } from "./entities";
 import { inProject } from "./sheets";
-import { dayKey, inManuscript, manuscriptWords, progress, progressNotice, recordTotal, type WritingLog } from "./stats";
+import { dayKey, inManuscript, manuscriptFolder, manuscriptWords, progress, progressNotice, recordTotal, type WritingLog } from "./stats";
 import { parseSkill, skillFolder, skillNote, skillsFor } from "./style";
 import { createAtlasProject, type AtlasFiles } from "./vault";
 
@@ -76,7 +76,14 @@ export default class AtlasPlugin extends Plugin {
 			...stored,
 			allowedHosts: stored.allowedHosts ?? [],
 		};
-		this.registerEvent(this.app.vault.on("modify", (file) => this.scheduleWordCount(file)));
+		this.registerEvent(this.app.vault.on("modify", (file) => this.scheduleWordCount(file, file.path)));
+		this.registerEvent(this.app.vault.on("delete", (file) => this.scheduleWordCount(file, file.path)));
+		this.registerEvent(
+			this.app.vault.on("rename", (file, oldPath) => {
+				this.scheduleWordCount(file, oldPath);
+				this.scheduleWordCount(file, file.path);
+			}),
+		);
 		this.addSettingTab(new AtlasSettingTab(this.app, this));
 		this.registerView(MARKER_VIEW, (leaf) => new MarkerView(leaf));
 		this.registerView(GRAPH_VIEW, (leaf) => new GraphView(leaf));
@@ -590,8 +597,10 @@ export default class AtlasPlugin extends Plugin {
 	}
 
 	onunload(): void {
-		for (const timer of this.writingTimers.values()) {
+		// Run pending recounts now: words saved just before closing Obsidian belong to today.
+		for (const [root, timer] of this.writingTimers) {
 			window.clearTimeout(timer);
+			void this.recordWords(root);
 		}
 		this.writingTimers.clear();
 	}
@@ -600,10 +609,10 @@ export default class AtlasPlugin extends Plugin {
 		await this.saveData({ ...this.settings, escritura: this.writing });
 	}
 
-	/** Recount a project's manuscript a few seconds after one of its scenes is saved. */
-	private scheduleWordCount(file: TAbstractFile): void {
-		const root = projectOf(file.path);
-		if (!(file instanceof TFile) || !inManuscript(root, file.path)) {
+	/** Recount a project's manuscript a few seconds after one of its scenes is saved, deleted or moved. */
+	private scheduleWordCount(file: TAbstractFile, path: string): void {
+		const root = projectOf(path);
+		if (!(file instanceof TFile) || !inManuscript(root, path)) {
 			return;
 		}
 		// One timer per project: a save in another project must not cancel this one's recount.
@@ -633,7 +642,7 @@ export default class AtlasPlugin extends Plugin {
 		const active = this.app.workspace.getActiveFile();
 		const root = active ? projectOf(active.path) : undefined;
 		// Outside an Atlas project there is no manuscript: do not log a 0 total for that folder.
-		if (root === undefined || !this.app.vault.getMarkdownFiles().some((file) => inManuscript(root, file.path))) {
+		if (root === undefined || !this.app.vault.getAbstractFileByPath(manuscriptFolder(root))) {
 			new Notice("Abre una nota del proyecto.");
 			return;
 		}

@@ -27,10 +27,20 @@ export function countWords(note: string): number {
 	return noteBody(note).match(WORD)?.length ?? 0;
 }
 
+/** The project's manuscript folder. */
+export function manuscriptFolder(root: string): string {
+	return root.length > 0 ? `${root}/Manuscrito` : "Manuscrito";
+}
+
 /** True when `path` is a scene under the project's `Manuscrito/` folder. */
 export function inManuscript(root: string, path: string): boolean {
-	const folder = root.length > 0 ? `${root}/Manuscrito/` : "Manuscrito/";
-	return path.startsWith(folder) && path.toLowerCase().endsWith(".md");
+	return path.startsWith(`${manuscriptFolder(root)}/`) && path.toLowerCase().endsWith(".md");
+}
+
+/** Daily goal typed in settings: digits only, so `abc` or `500abc` is rejected, not read as 0 or 500. */
+export function parseDailyGoal(value: string): number | undefined {
+	const goal = Number(value);
+	return /^\d+$/.test(value) && Number.isSafeInteger(goal) ? goal : undefined;
 }
 
 /** Total words of the project's manuscript. */
