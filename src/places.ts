@@ -46,7 +46,7 @@ export function parsePlace(note: string): PlaceSheet {
 	};
 }
 
-function sheetFolder(activePath: string, folderName: string): string {
+export function sheetFolder(activePath: string, folderName: string): string {
 	const marker = `/${folderName}/`;
 	const at = activePath.indexOf(marker);
 	if (at !== -1) {
