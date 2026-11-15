@@ -1,0 +1,24 @@
+[
+ {
+  "tipo": "omnisciente",
+  "hecho": "inexistente",
+  "quien": "[[Iván]]",
+  "error": true,
+  "mensaje": "Personaje omnisciente: [[Iván]] actúa según «inexistente» (estado: sin registrar)."
+ },
+ {
+  "tipo": "ironia",
+  "hecho": "veneno",
+  "quien": "[[Elena|E]]",
+  "error": false,
+  "mensaje": "Ironía dramática (intencional): el lector sabe «veneno» y [[Elena|E]] no (ignora)."
+ },
+ {
+  "tipo": "ironia",
+  "hecho": "veneno",
+  "quien": "Elena",
+  "error": false,
+  "mensaje": "Ironía dramática (intencional): el lector sabe «veneno» y Elena no (ignora)."
+ }
+]
+[ 'omnisciente:[[Iván]]', 'ironia:[[Elena|E]]', 'ironia:Elena' ]
