@@ -1,6 +1,6 @@
 import { Document, isSeq, parseDocument } from "yaml";
 
-import { frontmatterBody, frontmatterEnd, mapList, scalar } from "./frontmatter.ts";
+import { frontmatterBody, mapList, scalar } from "./frontmatter.ts";
 import { FAILSAFE, yamlMaps } from "./memory-frontmatter.ts";
 import { sheetFolder } from "./sheets.ts";
 
@@ -76,8 +76,7 @@ export function addPlaceStates(note: string, states: PlaceState[]): string {
 	}
 	const eol = note.includes("\r\n") ? "\r\n" : "\n";
 	const lines = note.replace(/\r\n/g, "\n").split("\n");
-	// A closing `---` with trailing spaces still closes, as Obsidian reads it.
-	const close = frontmatterEnd(lines.map((line, at) => (at > 0 && line.trimEnd() === "---" ? "---" : line)));
+	const close = placeFrontmatterEnd(lines);
 	if (close === -1) {
 		return addPlaceStates(`---${eol}---${eol}${note}`, states);
 	}
@@ -98,6 +97,18 @@ export function addPlaceStates(note: string, states: PlaceState[]): string {
 		throw new Error("«estados» no es una lista en la ficha: corrígelo a mano antes de aprobar.");
 	}
 	return lines.join(eol);
+}
+
+/**
+ * Line that closes the frontmatter, found the way `frontmatterBody` (and so `parsePlace`) finds it:
+ * the note opens with `---` and the first later line that starts with `---` closes it. A line such
+ * as `]` that ends a multi-line flow list is just part of the block. -1 when there is none.
+ */
+function placeFrontmatterEnd(lines: readonly string[]): number {
+	if (lines[0] !== "---" || lines.length < 2) {
+		return -1;
+	}
+	return lines.findIndex((line, at) => at > 0 && line.startsWith("---"));
 }
 
 interface StatesSpan {
