@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { characterFolder } from "../src/characters.ts";
+import { holderAt } from "../src/objects.ts";
 import { worldAt } from "../src/world.ts";
 import { buildGraph, chapterNumber, circleLayout, filterGraph, linkTarget, projectCharacterPaths, relationTypes } from "../src/graph.ts";
 
@@ -128,4 +129,10 @@ test("el capítulo sale de la nota del enlace, no de la carpeta ni de la escena"
 	assert.deepEqual(pairs(filterGraph(graph, { capitulo: 3 })), []);
 	assert.deepEqual(pairs(filterGraph(graph, { capitulo: 6 })), []);
 	assert.deepEqual(pairs(filterGraph(graph, { capitulo: 7 })), ["Elena-rival-Iván"]);
+});
+
+test("objetos leen el capítulo con el mismo helper: `[[Libro 2/Cap 07]]` es el 7", () => {
+	const sheet = { nombre: "Llave", posesiones: [{ poseedor: "[[Elena]]", capitulo: "[[Libro 2/Cap 07]]" }] };
+	assert.equal(holderAt(sheet, 6), "");
+	assert.equal(holderAt(sheet, 7), "[[Elena]]");
 });

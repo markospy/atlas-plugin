@@ -1,3 +1,5 @@
+import { chapterNumber } from "./graph.ts";
+
 export interface ObjectPossession {
 	poseedor: string;
 	capitulo: string;
@@ -80,11 +82,6 @@ export function holderAt(sheet: ObjectSheet, chapter: number): string {
 		}
 	}
 	return holder;
-}
-
-function chapterNumber(chapter: string): number | null {
-	const match = /\d+/.exec(chapter);
-	return match ? Number(match[0]) : null;
 }
 
 function parentOf(path: string): string {
