@@ -172,3 +172,16 @@ test("aceptar en una lista hechos: con un valor que no es lista falla sin tocar 
 	await assert.rejects(writeApproved(files, destino, parseProposal(RESPUESTA), new Set(["h1"])), /hechos/);
 	assert.equal(files.store.get(MEMORIA), nota);
 });
+
+// QA #70 v1: una lista de flujo en varias líneas es YAML válido (Obsidian la lee). Su `]` en la
+// columna 0 no debe hacer que aprobar tome el bloque por un `---` de escena y anteponga otro
+// frontmatter: `tipo`/`capitulo` y los hechos a mano pasarían al cuerpo.
+test("aceptar en una memoria con hechos: en flujo de varias líneas no antepone otro frontmatter", async () => {
+	const nota = ["---", "tipo: memoria", "capitulo: 3", "hechos: [", "  {id: anillo, texto: El anillo}", "]", "---", "Cuerpo", ""].join("\n");
+	const files = mockFiles({ [MEMORIA]: nota });
+	await writeApproved(files, destino, parseProposal(RESPUESTA), new Set(["h1"]));
+	const escrita = files.store.get(MEMORIA);
+	assert.equal(escrita.split("\n").filter((line) => line === "---").length, 2, "un solo frontmatter");
+	assert.equal(parseMemory(escrita).capitulo, 3);
+	assert.deepEqual(parseMemory(escrita).hechos.map((h) => h.id), ["anillo", "carta"]);
+});
