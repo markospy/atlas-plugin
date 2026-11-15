@@ -394,6 +394,11 @@ Activated per `config.truth_gate`:
 - `non-trivial` (default) — diff ≥10 lines OR labels in `{security, migration, payments, auth}` trigger adversarial.
 - `always` — every card.
 
+**Inside a super-board workflow wave** the wave runs both roles itself (`Truth-check` phase,
+`workflows/super-board-wave.js`) and puts the result in your lane prompt: use it, never run the
+check yourself or inline. `INCONCLUSIVE` → never merge, Block 🛡 truth-check inconclusive.
+Elsewhere, no sub-agent tool → same 🛡 Block; never a truth-check of your own.
+
 When activated, spawn 2 sub-agents in parallel:
 - **Code-grounder.** Verify cited file:line still exists and matches claims.
 - **Historian.** `git blame` the changed lines; check for ADRs / prior incidents.
