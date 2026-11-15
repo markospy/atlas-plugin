@@ -17,7 +17,7 @@ test("qa: escena con CRLF, alias en los enlaces y personajes en lista de bloque"
 
 test("qa: viajes con CRLF, sin comillas y con campos en otro orden; para en la siguiente clave", () => {
 	const note = '---\r\nnombre: "Puerto"\r\nviajes:\r\n  - dias: 3\r\n    a: Faro\r\n  - a: "[[Casa de Elena]]"\r\n    dias: "7"\r\n  - a: "[[Isla]]"\r\n    dias: lejos\r\nestados: []\r\n---\r\n';
-	assert.deepEqual(parseTravels(note), [
+	assert.deepEqual(parseTravels("Puerto", note), [
 		{ desde: "Puerto", a: "Faro", dias: 3 },
 		{ desde: "Puerto", a: "Casa de Elena", dias: 7 },
 	]);

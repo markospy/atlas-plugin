@@ -1,6 +1,6 @@
 import { type Editor, Notice, Plugin, TFile, type Vault } from "obsidian";
 
-import { impossibleTravels, parseSceneTime, parseTravels, type SceneTime, type Travel } from "./chronology";
+import { impossibleTravels, readChronology } from "./chronology";
 import { characterFolder, characterNote, parseCharacter, relationErrors } from "./characters";
 import { ENTITY_VIEW, EntityView } from "./entity-view";
 import { objectFolder, objectNote } from "./objects";
@@ -249,16 +249,12 @@ export default class AtlasPlugin extends Plugin {
 	}
 
 	private async checkChronology(): Promise<void> {
-		const scenes: SceneTime[] = [];
-		const travels: Travel[] = [];
-		for (const file of this.app.vault.getMarkdownFiles()) {
-			const note = await this.app.vault.read(file);
-			travels.push(...parseTravels(note));
-			const scene = parseSceneTime(file.basename, note);
-			if (scene) {
-				scenes.push(scene);
-			}
-		}
+		const notes = await Promise.all(
+			this.app.vault
+				.getMarkdownFiles()
+				.map(async (file) => ({ path: file.path, nombre: file.basename, note: await this.app.vault.read(file) })),
+		);
+		const { scenes, travels } = readChronology(notes);
 		const found = impossibleTravels(scenes, travels);
 		new Notice(
 			found.length === 0

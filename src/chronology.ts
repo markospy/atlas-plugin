@@ -40,10 +40,35 @@ export function parseSceneTime(nombre: string, note: string): SceneTime | null {
 	return { nombre, dia: Number(day), lugar, personajes };
 }
 
-/** The `viajes:` list of a place sheet: `- a: "[[Place]]"` + `dias: <n>`. */
-export function parseTravels(note: string): Travel[] {
+/** A vault note as the chronology reads it: its path, its file name (what links point to) and its text. */
+export interface ChronologyNote {
+	path: string;
+	nombre: string;
+	note: string;
+}
+
+/** Scenes from `Manuscrito/` notes and routes from `tipo: lugar` sheets; everything else is ignored. */
+export function readChronology(notes: ChronologyNote[]): { scenes: SceneTime[]; travels: Travel[] } {
+	const scenes: SceneTime[] = [];
+	const travels: Travel[] = [];
+	for (const { path, nombre, note } of notes) {
+		if (scalar(frontmatterBody(note), "tipo") === "lugar") {
+			travels.push(...parseTravels(nombre, note));
+		}
+		const scene = isManuscript(path) ? parseSceneTime(nombre, note) : null;
+		if (scene) {
+			scenes.push(scene);
+		}
+	}
+	return { scenes, travels };
+}
+
+/**
+ * The `viajes:` list of the place sheet whose file name is `desde`: `- a: "[[Place]]"` + `dias: <n>`,
+ * items at column zero or indented, as long as each item's fields line up.
+ */
+export function parseTravels(desde: string, note: string): Travel[] {
 	const frontmatter = frontmatterBody(note);
-	const desde = linkName(scalar(frontmatter, "nombre"));
 	const lines = frontmatter.split("\n");
 	const start = lines.findIndex((line) => line === "viajes:");
 	if (start === -1) {
@@ -56,18 +81,21 @@ export function parseTravels(note: string): Travel[] {
 			travels.push({ desde, a: current.a, dias: Number(current.dias) });
 		}
 	};
+	let indent = -1;
 	for (const line of lines.slice(start + 1)) {
-		const field = /^ {2}(- | {2})(\w+):\s*(.*)$/.exec(line);
-		if (!field) {
+		const field = /^( *)(- )?(\w+):\s*(.*)$/.exec(line);
+		const spaces = field?.[1]?.length ?? -1;
+		if (field?.[2] && (indent === -1 || spaces === indent)) {
+			push();
+			indent = spaces;
+			current = { a: "", dias: "" };
+		} else if (!field || field[2] || indent === -1 || spaces !== indent + 2) {
 			break;
 		}
-		if (field[1] === "- ") {
-			push();
-			current = { a: "", dias: "" };
-		}
-		if (current && (field[2] === "a" || field[2] === "dias")) {
-			const value = unquote(field[3] ?? "");
-			current[field[2]] = field[2] === "a" ? linkName(value) : value;
+		const key = field[3];
+		if (current && (key === "a" || key === "dias")) {
+			const value = unquote(field[4] ?? "");
+			current[key] = key === "a" ? linkName(value) : value;
 		}
 	}
 	push();
@@ -111,7 +139,13 @@ function minimumDays(travels: Travel[], from: string, to: string): number | null
 	return matches.length === 0 ? null : Math.min(...matches);
 }
 
+/** `[[Lugares/Puerto#Muelle|el puerto]]` → `Puerto`: the file name a link points to, without folder, heading or alias. */
 function linkName(value: string): string {
 	const link = /^\[\[([^\]|#]+)(?:[#|][^\]]*)?\]\]$/.exec(value.trim());
-	return (link ? (link[1] ?? "") : value).trim();
+	const target = (link ? (link[1] ?? "") : value).trim();
+	return (target.split("/").pop() ?? "").trim();
+}
+
+function isManuscript(path: string): boolean {
+	return path.startsWith("Manuscrito/") || path.includes("/Manuscrito/");
 }
