@@ -84,3 +84,15 @@ conflicto: "
 	assert.equal(parseScene(scene).objetivo, 'Dijo "no"');
 	assert.equal(parseScene(scene).conflicto, '"');
 });
+
+test("una escena con CRLF se lee igual que con LF", () => {
+	const scene = '---\r\npov: "[[Elena]]"\r\nsubtrama: Herencia\r\n---\r\nTexto.\r\n';
+	assert.equal(parseScene(scene).pov, "[[Elena]]");
+	assert.equal(parseScene(scene).subtrama, "Herencia");
+});
+
+test("un valor entre comillas simples se lee sin ellas", () => {
+	const scene = "---\npov: '[[Elena]]'\nobjetivo: 'It''s now'\n---\n";
+	assert.equal(parseScene(scene).pov, "[[Elena]]");
+	assert.equal(parseScene(scene).objetivo, "It's now");
+});

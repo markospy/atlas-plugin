@@ -1,3 +1,4 @@
+import { frontmatterBody, scalar } from "./frontmatter.ts";
 import { sheetFolder } from "./places.ts";
 
 export const PLOT_STRUCTURES = {
@@ -86,25 +87,4 @@ export function parseScene(note: string): SceneFields {
 		scene[field] = scalar(frontmatter, field);
 	}
 	return scene;
-}
-
-function frontmatterBody(note: string): string {
-	if (!note.startsWith("---\n")) {
-		return "";
-	}
-	const end = note.indexOf("\n---", 3);
-	return end === -1 ? "" : note.slice(4, end);
-}
-
-function scalar(frontmatter: string, key: string): string {
-	const match = new RegExp(`^${key}:[ \\t]*(.*)$`, "m").exec(frontmatter);
-	const value = (match?.[1] ?? "").trim();
-	if (value.startsWith('"') && value.endsWith('"') && value.length > 1) {
-		try {
-			return JSON.parse(value) as string;
-		} catch {
-			return value.slice(1, -1);
-		}
-	}
-	return value;
 }
