@@ -6,7 +6,7 @@ Head probado: `af03a46` (ronda 2 del builder: R1–R3) más el test de QA v2. AC
 |---|---|---|
 | AC1 aristas introduce/usa con ids de hecho | `tests/dependencies.test.mjs:31`, `tests/dependencies-qa.test.mjs:18`, `tests/dependencies-qa.test.mjs:44` (`usos` + `conocimiento` del mismo hecho dan una sola arista) | ✅ |
 | AC2 "quién depende del hecho X" devuelve capítulos | `tests/dependencies.test.mjs:43`, `:56` (solo `conocimiento`), `tests/dependencies-qa.test.mjs:9` | ✅ |
-| AC3 volcado JSON del grafo | `tests/dependencies.test.mjs:76`, `tests/dependencies-qa.test.mjs:27`, `:44` | ✅ |
+| AC3 volcado JSON del grafo | `tests/dependencies.test.mjs:77`, `tests/dependencies-qa.test.mjs:27`, `:44` | ✅ |
 | AC4 ejemplo carta (cap 3 → 9, 14) | `tests/dependencies.test.mjs:43` → `[9, 14]` | ✅ |
 
 Revisión ronda 1: R1 (`conocimiento` cuenta como uso) comprobado con el test v2, que además cubre un `conocimiento` adelantado (aviso, no fallo). R2 texto del aviso comprobado. R3 revisado a mano (ver huecos).
