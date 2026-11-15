@@ -485,10 +485,23 @@ export default class AtlasPlugin extends Plugin {
 			new Notice("Abre un capítulo (Cap NN).");
 			return null;
 		}
-		const folder = `${memoryFolder(active.path)}/`;
+		return { chapter, memories: await this.memoriesBeside(active.path) };
+	}
+
+	/** Every `_Memoria/` note of the project holding `activePath`; no chapter needed. */
+	private async projectMemories(): Promise<ChapterMemory[] | null> {
+		const active = this.app.workspace.getActiveFile();
+		if (!active) {
+			new Notice("Abre una nota del proyecto.");
+			return null;
+		}
+		return this.memoriesBeside(active.path);
+	}
+
+	private async memoriesBeside(activePath: string): Promise<ChapterMemory[]> {
+		const folder = `${memoryFolder(activePath)}/`;
 		const notes = this.app.vault.getMarkdownFiles().filter((file) => file.path.startsWith(folder));
-		const memories = await Promise.all(notes.map(async (file) => parseMemory(await this.app.vault.cachedRead(file))));
-		return { chapter, memories };
+		return Promise.all(notes.map(async (file) => parseMemory(await this.app.vault.cachedRead(file))));
 	}
 
 	private async checkContinuityHere(): Promise<void> {
@@ -507,11 +520,11 @@ export default class AtlasPlugin extends Plugin {
 			new Notice("Selecciona el id de un hecho.");
 			return;
 		}
-		const found = await this.chapterMemories();
-		if (!found) {
+		const memories = await this.projectMemories();
+		if (!memories) {
 			return;
 		}
-		const graph = buildFactGraph(found.memories);
+		const graph = buildFactGraph(memories);
 		const chapters = dependents(graph, fact);
 		const summary = chapters.length > 0 ? chapters.map((chapter) => `Cap. ${chapter}`).join(", ") : "Ningún capítulo lo usa.";
 		const warnings = graph.avisos.length > 0 ? `\nGrafo incompleto:\n${graph.avisos.join("\n")}` : "";
@@ -519,11 +532,11 @@ export default class AtlasPlugin extends Plugin {
 	}
 
 	private async dumpFactGraph(): Promise<void> {
-		const found = await this.chapterMemories();
-		if (!found) {
+		const memories = await this.projectMemories();
+		if (!memories) {
 			return;
 		}
-		const graph = buildFactGraph(found.memories);
+		const graph = buildFactGraph(memories);
 		await navigator.clipboard.writeText(graphDump(graph));
 		const warnings = graph.avisos.length > 0 ? ` · ${graph.avisos.length} avisos de grafo incompleto` : "";
 		new Notice(`Grafo copiado: ${graph.edges.length} aristas${warnings}.`);

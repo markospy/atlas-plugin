@@ -2,7 +2,7 @@ import type { ChapterMemory } from "./memory.ts";
 
 export type FactEdgeKind = "introduce" | "usa";
 
-/** A chapter introduces a fact (`hechos`) or uses it (`usos`) in its `_Memoria/Cap NN` note. */
+/** A chapter introduces a fact (`hechos`) or uses it (`usos`, `conocimiento`) in its `_Memoria/Cap NN` note. */
 export interface FactEdge {
 	capitulo: number;
 	hecho: string;
@@ -28,6 +28,7 @@ export function buildFactGraph(memories: ChapterMemory[]): FactGraph {
 	for (const memory of memories) {
 		memory.hechos.forEach((fact) => add(memory.capitulo, fact.id, "introduce"));
 		memory.usos.forEach((use) => add(memory.capitulo, use.hecho, "usa"));
+		memory.conocimiento.forEach((entry) => add(memory.capitulo, entry.hecho, "usa"));
 	}
 	edges.sort((a, b) => a.capitulo - b.capitulo || a.tipo.localeCompare(b.tipo) || a.hecho.localeCompare(b.hecho));
 	const avisos = edges
@@ -36,7 +37,7 @@ export function buildFactGraph(memories: ChapterMemory[]): FactGraph {
 				use.tipo === "usa" &&
 				!edges.some((edge) => edge.tipo === "introduce" && edge.hecho === use.hecho && edge.capitulo <= use.capitulo),
 		)
-		.map((use) => `El cap. ${use.capitulo} usa «${use.hecho}», que no se introduce en ningún capítulo anterior.`);
+		.map((use) => `El cap. ${use.capitulo} usa «${use.hecho}», que no se introduce en ese capítulo ni en uno anterior.`);
 	return { edges, avisos };
 }
 

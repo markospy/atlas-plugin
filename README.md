@@ -91,7 +91,7 @@ Con un capítulo abierto (`Cap NN`), **Nueva memoria del capítulo** crea `_Memo
 
 También avisa de un `hecho` del capítulo (en `usos` o `conocimiento`) que no está declarado en ningún `hechos` hasta ese capítulo: suele ser un `id` mal escrito.
 
-**Grafo de dependencias de hechos.** Con las memorias de `_Memoria/` (escritas a mano o desde la extracción aprobada), cada capítulo *introduce* los hechos de su `hechos` y *usa* los de su `usos`. Con un capítulo abierto:
+**Grafo de dependencias de hechos.** Con las memorias de `_Memoria/` (escritas a mano o desde la extracción aprobada), cada capítulo *introduce* los hechos de su `hechos` y *usa* los de su `usos` y su `conocimiento`. Desde cualquier nota del proyecto:
 - **Quién depende de este hecho:** selecciona el `id` (`carta`) y lista los capítulos que lo usan (si el cap. 3 introduce la carta y el 9 y el 14 la usan: cap. 9 y cap. 14).
 - **Copiar grafo de dependencias (JSON):** copia al portapapeles, para depurar, cada hecho con los capítulos que lo introducen y lo usan, las aristas y los avisos.
 

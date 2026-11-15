@@ -50,7 +50,28 @@ test("quién depende de la carta: caps 9 y 14, no los demás", () => {
 test("un hecho usado sin introducir antes da aviso, no falla", () => {
 	const graph = buildFactGraph([memory(2, [], ["daga"]), memory(5, ["daga"], []), memory(6, [], ["daga", ""])]);
 	assert.deepEqual(dependents(graph, "daga"), [2, 6]);
-	assert.deepEqual(graph.avisos, ["El cap. 2 usa «daga», que no se introduce en ningún capítulo anterior."]);
+	assert.deepEqual(graph.avisos, ["El cap. 2 usa «daga», que no se introduce en ese capítulo ni en uno anterior."]);
+});
+
+test("un hecho solo en conocimiento también es un uso", () => {
+	const knows = parseMemory(
+		[
+			"---",
+			"tipo: memoria",
+			"capitulo: 9",
+			"hechos: []",
+			"conocimiento:",
+			"  - hecho: carta",
+			"    quien: lector",
+			"    estado: sabe",
+			"usos: []",
+			"---",
+			"",
+		].join("\n"),
+	);
+	const graph = buildFactGraph([memory(3, ["carta"], []), knows, memory(14, [], ["carta"])]);
+	assert.deepEqual(dependents(graph, "carta"), [9, 14]);
+	assert.deepEqual(graph.avisos, []);
 });
 
 test("el volcado JSON lista hechos con quién los introduce y quién los usa", () => {
