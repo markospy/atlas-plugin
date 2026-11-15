@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
-import { spawnSync } from "node:child_process";
-import { mkdtempSync, writeFileSync } from "node:fs";
+import { execFile, spawnSync } from "node:child_process";
+import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
@@ -193,4 +193,55 @@ test("sin escenas no exporta, y el aviso conserva las saltadas", async () => {
 	const pdf = await exportManuscript("pdf", "Mi Novela", [{ titulo: "C", texto: "x" }], "", failing);
 	assert.match(exportMessage(pdf, ["Borrada"]), /pandoc falló: boom\nSin nota, se saltaron: Borrada\./);
 	assert.equal(exportMessage({ ok: true, ruta: "Exportar/X.docx" }, []), "Exportado: Exportar/X.docx");
+});
+
+/** The same runner main.ts builds: pandoc from the vault root, manuscript on stdin. */
+function realPandoc(cwd) {
+	return (args, input) =>
+		new Promise((resolve, reject) => {
+			const child = execFile("pandoc", args, { cwd }, (error, _stdout, stderr) => {
+				if (error) {
+					reject(new Error(String(stderr).trim() || error.message));
+					return;
+				}
+				resolve();
+			});
+			child.stdin?.end(input);
+		});
+}
+
+const HAS_PANDOC = spawnSync("pandoc", ["--version"]).status === 0;
+const HAS_PDF_ENGINE = spawnSync("pdflatex", ["--version"]).status === 0;
+
+test("con pandoc real, EPUB sale con los capítulos en el orden del índice", { skip: !HAS_PANDOC && "sin pandoc" }, async () => {
+	const vault = mkdtempSync(join(tmpdir(), "atlas-epub-"));
+	mkdirSync(join(vault, "Novela/Exportar"), { recursive: true });
+	const escenas = [
+		{ titulo: "Cap 02", texto: "Primero va esta & [[Elena|ella]]." },
+		{ titulo: "Cap 01", texto: "Luego <b> esta." },
+	];
+	const io = { writeBinary: async () => assert.fail("no escribe binario"), pandoc: realPandoc(vault) };
+	const result = await exportManuscript("epub", "Mi Novela", escenas, "Novela/Exportar", io);
+	assert.deepEqual(result, { ok: true, ruta: "Novela/Exportar/Mi Novela.epub" });
+	const file = join(vault, result.ruta);
+	const list = spawnSync("unzip", ["-Z1", file], { encoding: "utf8" });
+	assert.equal(list.status, 0, list.stderr);
+	assert.match(list.stdout, /^mimetype$/m);
+	const text = spawnSync("unzip", ["-p", file, "EPUB/text/*.xhtml", "EPUB/content.opf"], { encoding: "utf8" }).stdout;
+	assert.match(text, /<dc:title[^>]*>Mi Novela<\/dc:title>/);
+	assert.ok(text.indexOf("Cap 02") < text.indexOf("Cap 01"), "Cap 02 antes que Cap 01");
+	assert.match(text, /Primero va esta &amp; ella\./);
+});
+
+test("con pandoc real, PDF se genera o avisa claro qué motor falta", { skip: !HAS_PANDOC && "sin pandoc" }, async () => {
+	const vault = mkdtempSync(join(tmpdir(), "atlas-pdf-"));
+	const io = { writeBinary: async () => assert.fail("no escribe binario"), pandoc: realPandoc(vault) };
+	const result = await exportManuscript("pdf", "Mi Novela", [{ titulo: "Cap 01", texto: "Hola." }], "", io);
+	if (HAS_PDF_ENGINE) {
+		assert.equal(result.ok, true, result.mensaje);
+		assert.equal(readFileSync(join(vault, result.ruta)).subarray(0, 5).toString(), "%PDF-");
+	} else {
+		assert.equal(result.ok, false);
+		assert.match(result.mensaje, /^pandoc falló: .*pdflatex not found/);
+	}
 });
