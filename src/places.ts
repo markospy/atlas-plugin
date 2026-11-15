@@ -1,4 +1,7 @@
-import { frontmatterBody, mapList, scalar } from "./frontmatter.ts";
+import { Document, isSeq, parseDocument } from "yaml";
+
+import { frontmatterBody, frontmatterEnd, mapList, scalar } from "./frontmatter.ts";
+import { FAILSAFE, yamlMaps } from "./memory-frontmatter.ts";
 import { sheetFolder } from "./sheets.ts";
 
 export interface PlaceState {
@@ -51,8 +54,99 @@ export function parsePlace(note: string): PlaceSheet {
 }
 
 function parseStates(frontmatter: string): PlaceState[] {
-	return mapList(frontmatter, "estados").map((item) => ({
+	const lines = frontmatter.split("\n");
+	const span = statesSpan(lines, 0, lines.length);
+	const items = span?.flow ? (span.items ?? []) : mapList(frontmatter, "estados");
+	return items.map((item) => ({
 		capitulo: item.capitulo ?? "",
 		descripcion: item.descripcion ?? "",
 	}));
+}
+
+/**
+ * Adds `states` to the `estados` list of a place sheet, written the way `parsePlace` reads it.
+ * A block list gets the new items after its last line, at its own indent; a flow list
+ * (`estados: [{...}]`) becomes a block list with its items kept; an empty value or a missing key
+ * becomes a block list. Every other line stays byte for byte, so frontmatter that is not strict
+ * YAML (`nombre: Torre: alta`) is kept as written. A value that is not a list throws.
+ */
+export function addPlaceStates(note: string, states: PlaceState[]): string {
+	if (states.length === 0) {
+		return note;
+	}
+	const eol = note.includes("\r\n") ? "\r\n" : "\n";
+	const lines = note.replace(/\r\n/g, "\n").split("\n");
+	// A closing `---` with trailing spaces still closes, as Obsidian reads it.
+	const close = frontmatterEnd(lines.map((line, at) => (at > 0 && line.trimEnd() === "---" ? "---" : line)));
+	if (close === -1) {
+		return addPlaceStates(`---${eol}---${eol}${note}`, states);
+	}
+	const span = statesSpan(lines, 1, close);
+	const added = states.map((state) => ({ capitulo: state.capitulo, descripcion: state.descripcion }));
+	if (span === null) {
+		lines.splice(close, 0, "estados:", ...listLines(added, "  "));
+	} else if (span.flow) {
+		if (span.items === null) {
+			throw new Error("«estados» de la ficha no se puede leer: corrígelo a mano antes de aprobar.");
+		}
+		lines.splice(span.at, span.to - span.at, "estados:", ...listLines([...span.items, ...added], "  "));
+	} else if (/^(|~|null|Null|NULL)$/.test(span.inline)) {
+		const indent = lines.slice(span.at + 1, span.to).map((line) => /^(\s*)- /.exec(line)?.[1]).find((pad) => pad !== undefined);
+		lines.splice(span.to, 0, ...listLines(added, indent ?? "  "));
+		lines[span.at] = "estados:";
+	} else {
+		throw new Error("«estados» no es una lista en la ficha: corrígelo a mano antes de aprobar.");
+	}
+	return lines.join(eol);
+}
+
+interface StatesSpan {
+	/** Line of `estados:`. */
+	at: number;
+	/** Line after the value's last non-blank line. */
+	to: number;
+	/** Value written on the `estados:` line itself. */
+	inline: string;
+	/** True for a flow list (`[...]`, one line or several). */
+	flow: boolean;
+	/** Items of a flow list; null when it is not readable YAML. */
+	items: Record<string, string>[] | null;
+}
+
+/** Where the `estados` value sits in `lines` between `from` and `end`; null when there is no key. */
+function statesSpan(lines: readonly string[], from: number, end: number): StatesSpan | null {
+	const at = lines.findIndex((line, i) => i >= from && i < end && /^estados:(\s|$)/.test(line));
+	if (at === -1) {
+		return null;
+	}
+	const inline = (lines[at] ?? "").slice("estados:".length).trim();
+	if (inline.startsWith("[")) {
+		for (let to = at + 1; to <= end; to++) {
+			const doc = parseDocument([inline, ...lines.slice(at + 1, to)].join("\n"), FAILSAFE);
+			if (doc.errors.length === 0 && isSeq(doc.contents)) {
+				return { at, to, inline, flow: true, items: yamlMaps(doc.toJS()) };
+			}
+		}
+		return { at, to: at + 1, inline, flow: true, items: null };
+	}
+	let to = at + 1;
+	for (let i = at + 1; i < end; i++) {
+		const line = lines[i] ?? "";
+		if (line.trim().length > 0 && !/^[\s-]/.test(line)) {
+			break;
+		}
+		if (line.trim().length > 0) {
+			to = i + 1;
+		}
+	}
+	return { at, to, inline, flow: false, items: null };
+}
+
+/** Block list lines for `items`, as `yaml` prints them, each prefixed with `indent`. */
+function listLines(items: Record<string, string>[], indent: string): string[] {
+	return new Document(items)
+		.toString({ lineWidth: 0 })
+		.replace(/\n$/, "")
+		.split("\n")
+		.map((line) => indent + line);
 }

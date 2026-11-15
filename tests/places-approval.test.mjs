@@ -1,0 +1,82 @@
+import assert from "node:assert/strict";
+import test from "node:test";
+
+import { parseProposal, writeApproved } from "../src/extract.ts";
+import { parsePlace } from "../src/places.ts";
+
+// #76: aprobar estados de lugar. R6 lista en flujo, R7 YAML inválido, R8 escritura a medias.
+const MEMORIA = "Proyecto/_Memoria/Cap 03.md";
+const LUGAR = "Proyecto/Lugares/Torre.md";
+const destino = { capitulo: 3, memoria: MEMORIA, lugar: (nombre) => `Proyecto/Lugares/${nombre}.md` };
+const RESPUESTA = JSON.stringify({
+	hechos: [{ id: "carta", texto: "La carta es falsa", verdad: false }],
+	estados: [{ lugar: "Torre", descripcion: "en ruinas" }],
+});
+
+function mockFiles(initial, failOn = null) {
+	const store = new Map(Object.entries(initial));
+	return {
+		store,
+		exists: async (path) => store.has(path),
+		createFolder: async () => {},
+		read: async (path) => store.get(path),
+		write: async (path, data) => {
+			if (path === failOn) {
+				throw new Error(`no se pudo escribir ${path}`);
+			}
+			store.set(path, data);
+		},
+	};
+}
+
+test("R6: aprobar dos veces un estado sobre `estados: [{...}]` en flujo deja un solo estado", async () => {
+	const ficha = ["---", "nombre: Torre", 'estados: [{capitulo: "[[Cap 01]]", descripcion: intacta}]', "viajes: []", "---", "Cuerpo", ""].join("\n");
+	assert.deepEqual(parsePlace(ficha).estados, [{ capitulo: "[[Cap 01]]", descripcion: "intacta" }], "parsePlace lee el flujo");
+	const files = mockFiles({ [LUGAR]: ficha });
+	const candidatos = parseProposal(RESPUESTA);
+	await writeApproved(files, destino, candidatos, new Set(["e1"]));
+	const primera = files.store.get(LUGAR);
+	await writeApproved(files, destino, candidatos, new Set(["e1"]));
+	assert.equal(files.store.get(LUGAR), primera, "la segunda aprobación no cambia nada");
+	assert.deepEqual(parsePlace(primera).estados, [
+		{ capitulo: "[[Cap 01]]", descripcion: "intacta" },
+		{ capitulo: "[[Cap 03]]", descripcion: "en ruinas" },
+	]);
+	assert.match(primera, /\nviajes: \[\]\n---\nCuerpo\n$/, "el resto de la ficha sigue igual");
+});
+
+test("R6: un estado que ya está en la lista en flujo no se duplica", async () => {
+	const ficha = ["---", "nombre: Torre", "estados: [{capitulo: '[[Cap 03]]', descripcion: en ruinas}]", "---", ""].join("\n");
+	const files = mockFiles({ [LUGAR]: ficha });
+	const escritos = await writeApproved(files, destino, parseProposal(RESPUESTA), new Set(["e1"]));
+	assert.deepEqual(escritos, []);
+	assert.equal(files.store.get(LUGAR), ficha);
+});
+
+test("R7: una ficha con `nombre: Torre: alta` acepta el estado", async () => {
+	const ficha = ["---", "nombre: Torre: alta", "estados: []", "---", ""].join("\n");
+	const files = mockFiles({ [LUGAR]: ficha });
+	await writeApproved(files, destino, parseProposal(RESPUESTA), new Set(["e1"]));
+	const escrita = files.store.get(LUGAR);
+	assert.ok(escrita.startsWith("---\nnombre: Torre: alta\nestados:\n"), escrita);
+	assert.equal(parsePlace(escrita).nombre, "Torre: alta");
+	assert.deepEqual(parsePlace(escrita).estados, [{ capitulo: "[[Cap 03]]", descripcion: "en ruinas" }]);
+});
+
+test("R8: si la ficha de lugar no se puede escribir, _Memoria/ queda sin cambios y el error sale", async () => {
+	const memoria = "---\ntipo: memoria\ncapitulo: 3\nhechos: []\n---\n";
+	const ficha = "---\nnombre: Torre\nestados: []\n---\n";
+	const files = mockFiles({ [MEMORIA]: memoria, [LUGAR]: ficha }, LUGAR);
+	await assert.rejects(writeApproved(files, destino, parseProposal(RESPUESTA), new Set(["h1", "e1"])), /no se pudo escribir/);
+	assert.equal(files.store.get(MEMORIA), memoria);
+	assert.equal(files.store.get(LUGAR), ficha);
+});
+
+test("R8: si la ficha de lugar no admite el estado, no se escribe nada", async () => {
+	const memoria = "---\ntipo: memoria\ncapitulo: 3\nhechos: []\n---\n";
+	const ficha = "---\nnombre: Torre\nestados: en ruinas\n---\n";
+	const files = mockFiles({ [MEMORIA]: memoria, [LUGAR]: ficha });
+	await assert.rejects(writeApproved(files, destino, parseProposal(RESPUESTA), new Set(["h1", "e1"])), /estados/);
+	assert.equal(files.store.get(MEMORIA), memoria);
+	assert.equal(files.store.get(LUGAR), ficha);
+});
