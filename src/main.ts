@@ -1,4 +1,4 @@
-import { type Editor, Notice, Plugin, requestUrl, TFile, type Vault } from "obsidian";
+import { type Editor, Notice, Plugin, requestUrl, type TAbstractFile, TFile, type Vault } from "obsidian";
 
 import { backup, type BackupFiles, listBackups, restore } from "./backup";
 import { chronologyNotice, impossibleTravels, readChronology } from "./chronology";
@@ -32,15 +32,16 @@ import { LintModal } from "./lint-modal";
 import { MARKER_VIEW, MarkerView } from "./marker-view";
 import { chapterOf } from "./peek";
 import { PEEK_VIEW, PeekView } from "./peek-view";
-import { DEFAULT_PROVIDER_SETTINGS, ollamaProvider, type ProviderSettings } from "./providers";
+import { DEFAULT_PROVIDER_SETTINGS, ollamaProvider } from "./providers";
 import { NO_PROVIDER, providerReady, reviewScene } from "./review";
 import { RestoreModal } from "./restore-modal";
 import { ReviewModal } from "./review-modal";
 import { confirmReanalysis, factChanges, mergeStale, parseStore, staleFrom, type PropagationStore, type StaleChapter } from "./stale";
 import { StaleModal } from "./stale-modal";
-import { AtlasSettingTab } from "./settings";
+import { type AtlasSettings, AtlasSettingTab, DEFAULT_DAILY_GOAL } from "./settings";
 import { projectOf } from "./entities";
 import { inProject } from "./sheets";
+import { dayKey, inManuscript, manuscriptFolder, manuscriptWords, progress, progressNotice, recordTotal, type WritingLog } from "./stats";
 import { parseSkill, skillFolder, skillNote, skillsFor } from "./style";
 import { createAtlasProject, type AtlasFiles } from "./vault";
 
@@ -81,17 +82,31 @@ const PROPAGATION_PATH = ".atlas/propagacion.json";
 const COWRITE_BUDGET = 8000;
 
 export default class AtlasPlugin extends Plugin {
-	settings: ProviderSettings = { ...DEFAULT_PROVIDER_SETTINGS };
+	settings: AtlasSettings = { ...DEFAULT_PROVIDER_SETTINGS, metaDiaria: DEFAULT_DAILY_GOAL };
+	/** Writing log per project folder; kept in data.json, never sent anywhere. */
+	private writing: Record<string, WritingLog> = {};
+	private writingTimers = new Map<string, number>();
 	/** Co-write decisions for this session only. */
 	private readonly coWrite = new CoWriteSession();
 
 	async onload(): Promise<void> {
-		const stored = (await this.loadData()) as Partial<ProviderSettings> | null;
+		const data = (await this.loadData()) as (Partial<AtlasSettings> & { escritura?: Record<string, WritingLog> }) | null;
+		const { escritura, ...stored } = data ?? {};
+		this.writing = escritura ?? {};
 		this.settings = {
 			...DEFAULT_PROVIDER_SETTINGS,
+			metaDiaria: DEFAULT_DAILY_GOAL,
 			...stored,
-			allowedHosts: stored?.allowedHosts ?? [],
+			allowedHosts: stored.allowedHosts ?? [],
 		};
+		this.registerEvent(this.app.vault.on("modify", (file) => this.scheduleWordCount(file, file.path)));
+		this.registerEvent(this.app.vault.on("delete", (file) => this.scheduleWordCount(file, file.path)));
+		this.registerEvent(
+			this.app.vault.on("rename", (file, oldPath) => {
+				this.scheduleWordCount(file, oldPath);
+				this.scheduleWordCount(file, file.path);
+			}),
+		);
 		this.addSettingTab(new AtlasSettingTab(this.app, this));
 		this.registerView(MARKER_VIEW, (leaf) => new MarkerView(leaf));
 		this.registerView(GRAPH_VIEW, (leaf) => new GraphView(leaf));
@@ -312,6 +327,13 @@ export default class AtlasPlugin extends Plugin {
 				this.restoreBackup(editor).catch((error: unknown) => {
 					new Notice(`No se pudo restaurar: ${error instanceof Error ? error.message : String(error)}`, 0);
 				});
+			},
+		});
+		this.addCommand({
+			id: "writing-progress",
+			name: "Progreso de escritura",
+			callback: () => {
+				void this.showWritingProgress();
 			},
 		});
 		this.addCommand({
@@ -818,8 +840,57 @@ export default class AtlasPlugin extends Plugin {
 		return propose(ollamaProvider(this.settings, post), modo, actual, contexto);
 	}
 
+	onunload(): void {
+		// Run pending recounts now: words saved just before closing Obsidian belong to today.
+		for (const [root, timer] of this.writingTimers) {
+			window.clearTimeout(timer);
+			void this.recordWords(root);
+		}
+		this.writingTimers.clear();
+	}
+
 	async saveSettings(): Promise<void> {
-		await this.saveData(this.settings);
+		await this.saveData({ ...this.settings, escritura: this.writing });
+	}
+
+	/** Recount a project's manuscript a few seconds after one of its scenes is saved, deleted or moved. */
+	private scheduleWordCount(file: TAbstractFile, path: string): void {
+		const root = projectOf(path);
+		if (!(file instanceof TFile) || !inManuscript(root, path)) {
+			return;
+		}
+		// One timer per project: a save in another project must not cancel this one's recount.
+		window.clearTimeout(this.writingTimers.get(root));
+		this.writingTimers.set(
+			root,
+			window.setTimeout(() => {
+				this.writingTimers.delete(root);
+				void this.recordWords(root);
+			}, 5000),
+		);
+	}
+
+	private async recordWords(root: string) {
+		const files = this.app.vault.getMarkdownFiles().filter((file) => inManuscript(root, file.path));
+		const notes = await Promise.all(files.map(async (file) => ({ path: file.path, text: await this.app.vault.cachedRead(file) })));
+		const today = dayKey(new Date());
+		const log = recordTotal(this.writing[root] ?? {}, today, manuscriptWords(root, notes));
+		if (log[today]?.total !== this.writing[root]?.[today]?.total) {
+			this.writing = { ...this.writing, [root]: log };
+			await this.saveSettings();
+		}
+		return progress(log, today, this.settings.metaDiaria);
+	}
+
+	private async showWritingProgress(): Promise<void> {
+		const active = this.app.workspace.getActiveFile();
+		const root = active ? projectOf(active.path) : undefined;
+		// Outside an Atlas project there is no manuscript: do not log a 0 total for that folder.
+		if (root === undefined || !this.app.vault.getAbstractFileByPath(manuscriptFolder(root))) {
+			new Notice("Abre una nota del proyecto.");
+			return;
+		}
+		new Notice(progressNotice(await this.recordWords(root)), 10_000);
 	}
 
 	private async openGraph(): Promise<void> {

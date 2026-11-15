@@ -74,6 +74,7 @@ function stubObsidian(state) {
 			}
 			addSettingTab() {}
 			registerView() {}
+			registerEvent() {}
 			addCommand(command) {
 				state.commands[command.id] = command;
 			}
@@ -129,7 +130,7 @@ async function setup({ active = SCENE_PATH } = {}) {
 	const state = { commands: {}, modals: [], notices: [], reply: "Otra escena." };
 	const adapter = memoryAdapter();
 	const app = {
-		vault: { adapter, getMarkdownFiles: () => [], cachedRead: async () => "" },
+		vault: { adapter, getMarkdownFiles: () => [], cachedRead: async () => "", on: () => ({}) },
 		workspace: { getActiveFile: () => (active ? { path: active } : null) },
 	};
 	let value = SCENE;
