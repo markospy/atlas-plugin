@@ -20,13 +20,6 @@ export function sheetFolder(activePath: string, folderName: string): string {
 	return parent.length > 0 ? `${parent}/${folderName}` : folderName;
 }
 
-/** Project folder of `activePath`: the folder that holds its `Manuscrito/`, else the note's folder; `""` is the vault root. */
-export function projectRoot(activePath: string): string {
-	const segments = activePath.split("/");
-	const at = segments.lastIndexOf("Manuscrito", segments.length - 2);
-	return at === -1 ? parentOf(activePath) : segments.slice(0, at).join("/");
-}
-
 /** Whether `path` sits inside the project folder `root` (`""` holds every note). */
 export function inProject(root: string, path: string): boolean {
 	return root.length === 0 || path.startsWith(`${root}/`);
