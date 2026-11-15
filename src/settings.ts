@@ -40,6 +40,16 @@ export class AtlasSettingTab extends PluginSettingTab {
 			});
 
 		new Setting(containerEl)
+			.setName("Modelo")
+			.setDesc("Nombre del modelo en el endpoint, por ejemplo llama3.2. Lo usa «Co-escribir escena».")
+			.addText((text) => {
+				text.setValue(this.host.settings.model).onChange(async (value) => {
+					this.host.settings.model = value.trim();
+					await this.host.saveSettings();
+				});
+			});
+
+		new Setting(containerEl)
 			.setName("Permitir nube")
 			.setDesc("Sin este opt-in solo se aceptan localhost, 127.0.0.1 y ::1.")
 			.addToggle((toggle) => {

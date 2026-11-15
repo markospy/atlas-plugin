@@ -88,3 +88,11 @@ Prepara el plugin una vez:
 - [ ] Con el nombre seleccionado en un capítulo, **Nueva pista (foreshadowing)** crea `Trama/<nombre>.md` del proyecto con `tipo: pista` y `estado: sembrado`. Otra vez con el mismo nombre avisa "Esa pista ya existe.".
 - [ ] Con la pista abierta, **Avanzar pista** pasa `estado` a `reforzado` y luego a `resuelto`; una vez resuelta no cambia.
 - [ ] **Tablero de foreshadowing** lista las pistas sembradas y reforzadas, no las resueltas. Un objeto con `funcion` nombrado en un solo capítulo sale en **Objetos que no vuelven**; al nombrarlo en un segundo capítulo y ejecutar el comando otra vez, desaparece.
+
+## #18 co-escritura
+
+- [ ] Con Ollama en `http://127.0.0.1:11434` y **Modelo** `llama3.2` en **Settings → Atlas**, abrir una escena y ejecutar **Co-escribir escena** → **Alternativa** muestra "Pidiendo propuesta…" y luego el diff con líneas `-` y `+`.
+- [ ] **Rechazar** cierra el modal y la nota queda igual (Ctrl+Z no tiene nada que deshacer).
+- [ ] **Aprobar** escribe la propuesta en la nota y conserva el frontmatter; **Continuación** añade al final sin tocar lo anterior.
+- [ ] Editar la nota mientras se espera la propuesta y pulsar **Aprobar** avisa "La nota cambió desde la propuesta." y no escribe.
+- [ ] Con **Modelo** vacío, el comando avisa "Configura endpoint y modelo…" y no abre el diff.
