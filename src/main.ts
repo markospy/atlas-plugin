@@ -1,6 +1,8 @@
 import { type Editor, Notice, Plugin, requestUrl, TFile, type Vault } from "obsidian";
 
 import { chronologyNotice, impossibleTravels, readChronology } from "./chronology";
+import { CoWriteSession, coWriteContext, propose, type CoWriteMode } from "./cowrite";
+import { CoWriteModal } from "./cowrite-modal";
 import { characterFolder, characterNote, parseCharacter, relationErrors } from "./characters";
 import { frontmatterBody, scalar } from "./frontmatter";
 import { GRAPH_VIEW, GraphView } from "./graph-view";
@@ -25,8 +27,8 @@ import { PLOT_STRUCTURES, plotFolder, plotNote, SCENE_FIELDS, type PlotStructure
 import { BASE_RULES, patternRules } from "./linter";
 import { LintModal } from "./lint-modal";
 import { MARKER_VIEW, MarkerView } from "./marker-view";
-import { DEFAULT_PROVIDER_SETTINGS, type ProviderSettings } from "./providers";
-import { reviewScene } from "./review";
+import { DEFAULT_PROVIDER_SETTINGS, ollamaProvider, type ProviderSettings } from "./providers";
+import { NO_PROVIDER, providerReady, reviewScene } from "./review";
 import { ReviewModal } from "./review-modal";
 import { AtlasSettingTab } from "./settings";
 import { projectOf } from "./entities";
@@ -52,8 +54,13 @@ function filesFromVault(vault: Vault): AtlasFiles {
 	};
 }
 
+/** Characters of context sent with a co-write request. */
+const COWRITE_BUDGET = 8000;
+
 export default class AtlasPlugin extends Plugin {
 	settings: ProviderSettings = { ...DEFAULT_PROVIDER_SETTINGS };
+	/** Co-write decisions for this session only. */
+	private readonly coWrite = new CoWriteSession();
 
 	async onload(): Promise<void> {
 		const stored = (await this.loadData()) as Partial<ProviderSettings> | null;
@@ -214,7 +221,16 @@ export default class AtlasPlugin extends Plugin {
 			id: "review-scene-ai",
 			name: "Revisar escena con IA",
 			editorCallback: (editor) => {
-				void this.reviewWithAi(editor);
+				this.reviewWithAi(editor).catch((error: unknown) => {
+					new Notice(`La revisión con IA falló: ${error instanceof Error ? error.message : String(error)}`, 0);
+				});
+			},
+		});
+		this.addCommand({
+			id: "co-write-scene",
+			name: "Co-escribir escena",
+			editorCallback: (editor) => {
+				new CoWriteModal(this.app, editor, this.coWrite, (modo, actual) => this.coWriteProposal(modo, actual)).open();
 			},
 		});
 		this.addCommand({
@@ -500,6 +516,10 @@ export default class AtlasPlugin extends Plugin {
 			new Notice("Abre una escena de un capítulo (Cap NN).");
 			return;
 		}
+		if (!providerReady(this.settings)) {
+			new Notice(NO_PROVIDER, 0);
+			return;
+		}
 		// Read-only: the project's notes are read, none is written.
 		const root = projectOf(path);
 		const files = this.app.vault.getMarkdownFiles().filter((file) => inProject(root, file.path));
@@ -520,14 +540,38 @@ export default class AtlasPlugin extends Plugin {
 				presupuesto: 12_000,
 			},
 			this.settings,
-			async (url, body) =>
+			ollamaProvider(this.settings, async (url, body) =>
 				(await requestUrl({ url, method: "POST", contentType: "application/json", body: JSON.stringify(body) })).json,
+			),
 		);
 		if (!result.ok) {
 			new Notice(result.mensaje, 0);
 			return;
 		}
-		new ReviewModal(this.app, editor, result.hallazgos, result.descartados).open();
+		new ReviewModal(this.app, editor, result.hallazgos, result.descartados, result.escenaRecortada).open();
+	}
+
+	private async coWriteProposal(modo: CoWriteMode, actual: string) {
+		const path = this.app.workspace.getActiveFile()?.path ?? "";
+		const read = async <T>(folder: string, parse: (note: string) => T): Promise<T[]> => {
+			const notes = this.app.vault.getMarkdownFiles().filter((file) => file.path.startsWith(`${folder}/`));
+			return Promise.all(notes.map(async (file) => parse(await this.app.vault.cachedRead(file))));
+		};
+		const contexto = coWriteContext({
+			capitulo: chapterNumber(path) ?? 0,
+			escena: actual,
+			skills: await read(skillFolder(path), parseSkill),
+			personajes: await read(characterFolder(path), parseCharacter),
+			objetos: await read(objectFolder(path), parseObject),
+			lugares: await read(placeFolder(path), parsePlace),
+			memorias: await read(memoryFolder(path), parseMemory),
+			resumenes: [],
+			trama: "",
+			presupuesto: COWRITE_BUDGET,
+		});
+		const post = async (url: string, body: unknown) =>
+			(await requestUrl({ url, method: "POST", contentType: "application/json", body: JSON.stringify(body) })).json;
+		return propose(ollamaProvider(this.settings, post), modo, actual, contexto);
 	}
 
 	async saveSettings(): Promise<void> {

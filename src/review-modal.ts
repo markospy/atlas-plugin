@@ -9,6 +9,7 @@ export class ReviewModal extends Modal {
 		private readonly editor: Editor,
 		private readonly hallazgos: ReviewFinding[],
 		private readonly descartados: number,
+		private readonly escenaRecortada: boolean,
 	) {
 		super(app);
 	}
@@ -18,6 +19,9 @@ export class ReviewModal extends Modal {
 		contentEl.empty();
 		contentEl.createEl("h3", { text: "Revisión con IA" });
 		contentEl.createEl("p", { text: "Propuestas del modelo: tú decides qué cambiar." });
+		if (this.escenaRecortada) {
+			contentEl.createEl("p", { text: "La escena es larga: el modelo solo vio el final. Revisa el principio por partes." });
+		}
 		if (this.hallazgos.length === 0) {
 			contentEl.createEl("p", { text: "Sin hallazgos en esta escena." });
 		}

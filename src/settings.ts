@@ -41,7 +41,7 @@ export class AtlasSettingTab extends PluginSettingTab {
 
 		new Setting(containerEl)
 			.setName("Modelo")
-			.setDesc("Nombre del modelo en ese endpoint, p. ej. llama3.1. Lo usa «Revisar escena con IA».")
+			.setDesc("Nombre del modelo en el endpoint, por ejemplo llama3.2. Lo usan «Revisar escena con IA» y «Co-escribir escena».")
 			.addText((text) => {
 				text.setValue(this.host.settings.model).onChange(async (value) => {
 					this.host.settings.model = value.trim();

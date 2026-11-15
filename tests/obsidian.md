@@ -94,3 +94,11 @@ Prepara el plugin una vez:
 - [ ] Con endpoint o modelo vacíos, **Revisar escena con IA** muestra el aviso de configurar proveedor y no falla.
 - [ ] Con Ollama local (`http://127.0.0.1:11434`, modelo instalado) sobre una escena en `Manuscrito/Cap 01/`, abre la lista de hallazgos con tipo y línea; un clic lleva el cursor a la cita.
 - [ ] Tras la revisión, la escena y el resto de notas siguen sin cambios (no hay deshacer pendiente ni archivo modificado).
+
+## #18 co-escritura
+
+- [ ] Con Ollama en `http://127.0.0.1:11434` y **Modelo** `llama3.2` en **Settings → Atlas**, abrir una escena y ejecutar **Co-escribir escena** → **Alternativa** muestra "Pidiendo propuesta…" y luego el diff con líneas `-` y `+`.
+- [ ] **Rechazar** cierra el modal y la nota queda igual (Ctrl+Z no tiene nada que deshacer).
+- [ ] **Aprobar** escribe la propuesta en la nota y conserva el frontmatter; **Continuación** añade al final sin tocar lo anterior.
+- [ ] Editar la nota mientras se espera la propuesta y pulsar **Aprobar** avisa "La nota cambió desde la propuesta." y no escribe.
+- [ ] Con **Modelo** vacío, el comando avisa "Configura endpoint y modelo…" y no abre el diff.

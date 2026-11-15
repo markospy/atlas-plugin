@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { DEFAULT_PROVIDER_SETTINGS } from "../src/providers.ts";
-import { chatUrl, NO_PROVIDER, parseFindings, reviewPrompt, reviewScene } from "../src/review.ts";
+import { DEFAULT_PROVIDER_SETTINGS, ollamaProvider } from "../src/providers.ts";
+import { NO_PROVIDER, parseFindings, reviewPrompt, reviewScene } from "../src/review.ts";
 import { parseSkill } from "../src/style.ts";
 
 const ESCENA = `---
@@ -32,15 +32,20 @@ function input(overrides = {}) {
 
 const LOCAL = { ...DEFAULT_PROVIDER_SETTINGS, endpoint: "http://127.0.0.1:11434", model: "llama3" };
 
-/** Mock provider: records each request and answers with `content`. */
+/** Mock provider: records each prompt and answers with `content`. */
 function mock(content) {
 	const calls = [];
-	const send = async (url, body) => {
-		calls.push({ url, body });
-		return { choices: [{ message: { role: "assistant", content } }] };
+	const send = {
+		async complete(prompt) {
+			calls.push(prompt);
+			return content;
+		},
 	};
 	return { calls, send };
 }
+
+/** Throws or answers `reply` on `complete`. */
+const answering = (reply) => ({ complete: async () => reply });
 
 test("con proveedor mock: hallazgos con tipo y ancla al texto", async () => {
 	const reply = JSON.stringify([
@@ -50,17 +55,37 @@ test("con proveedor mock: hallazgos con tipo y ancla al texto", async () => {
 	const { calls, send } = mock("```json\n" + reply + "\n```");
 	const result = await reviewScene(input(), LOCAL, send);
 	assert.equal(result.ok, true);
+	assert.equal(result.escenaRecortada, false);
 	assert.deepEqual(result.hallazgos, [
 		{ tipo: "estilo", cita: "dijo tristemente", mensaje: "Adverbio en -mente en la acotación.", linea: 5, columna: 6 },
 		{ tipo: "conocimiento", cita: "Elena entra", mensaje: "Elena aún no conoce la cocina.", linea: 4, columna: 1 },
 	]);
 	assert.equal(result.descartados, 0);
 	assert.equal(calls.length, 1);
-	assert.equal(calls[0].url, "http://127.0.0.1:11434/v1/chat/completions");
-	assert.equal(calls[0].body.model, "llama3");
-	assert.equal(calls[0].body.stream, false);
-	assert.match(calls[0].body.messages[0].content, /Mostrar, no contar/);
-	assert.match(calls[0].body.messages[0].content, /dijo tristemente/);
+	assert.match(calls[0], /Mostrar, no contar/);
+	assert.match(calls[0], /dijo tristemente/);
+});
+
+test("usa la costura de proveedor de staging: ollamaProvider en /api/generate", async () => {
+	const posts = [];
+	const post = async (url, body) => {
+		posts.push({ url, body });
+		return { response: '[{"tipo":"estilo","cita":"tristemente","mensaje":"x"}]' };
+	};
+	const result = await reviewScene(input(), LOCAL, ollamaProvider(LOCAL, post));
+	assert.equal(result.ok, true);
+	assert.equal(result.hallazgos.length, 1);
+	assert.equal(posts[0].url, "http://127.0.0.1:11434/api/generate");
+	assert.equal(posts[0].body.model, "llama3");
+	assert.equal(posts[0].body.stream, false);
+	assert.match(posts[0].body.prompt, /dijo tristemente/);
+});
+
+test("avisa cuando la escena no cabe y se recorta", async () => {
+	const long = `${"palabra ".repeat(5000)}Elena entra.\n`;
+	const result = await reviewScene(input({ escena: long }), LOCAL, mock("[]").send);
+	assert.equal(result.ok, true);
+	assert.equal(result.escenaRecortada, true);
 });
 
 test("descarta tipos desconocidos y citas que no están en la escena", () => {
@@ -87,7 +112,7 @@ test("no modifica el manuscrito: la escena de entrada queda igual y solo se llam
 	await reviewScene(scene, LOCAL, send);
 	assert.equal(JSON.stringify(scene), before);
 	assert.equal(calls.length, 1);
-	assert.doesNotMatch(calls[0].body.messages[0].content, /reescribe la escena/i);
+	assert.doesNotMatch(calls[0], /reescribe la escena/i);
 });
 
 test("sin proveedor configurado: mensaje claro, sin llamar y sin fallar", async () => {
@@ -109,22 +134,18 @@ test("host no permitido, red caída o respuesta rara: mensaje, sin fallar", asyn
 	assert.match(cloud.mensaje, /Host no permitido/);
 	assert.equal(calls.length, 0);
 
-	const down = await reviewScene(input(), LOCAL, async () => {
-		throw new Error("ECONNREFUSED");
+	const down = await reviewScene(input(), LOCAL, {
+		complete: async () => {
+			throw new Error("ECONNREFUSED");
+		},
 	});
 	assert.deepEqual(down, { ok: false, mensaje: "El proveedor no respondió: ECONNREFUSED" });
 
-	for (const reply of [null, {}, { choices: [] }, { choices: [{ message: { content: "lo siento" } }] }]) {
-		const odd = await reviewScene(input(), LOCAL, async () => reply);
+	for (const reply of ["", "lo siento", "[1, 2]"]) {
+		const odd = await reviewScene(input(), LOCAL, answering(reply));
 		assert.equal(odd.ok, false);
 		assert.match(odd.mensaje, /no devolvió hallazgos/);
 	}
-});
-
-test("chatUrl: endpoint base, con /v1 o ya completo", () => {
-	assert.equal(chatUrl("http://127.0.0.1:11434"), "http://127.0.0.1:11434/v1/chat/completions");
-	assert.equal(chatUrl("http://localhost:1234/v1/"), "http://localhost:1234/v1/chat/completions");
-	assert.equal(chatUrl("http://localhost:1234/v1/chat/completions"), "http://localhost:1234/v1/chat/completions");
 });
 
 test("el prompt respeta el presupuesto de contexto", () => {
@@ -163,4 +184,17 @@ test("encuentra el array aunque las citas lleven corchetes y siga prosa después
 	const parsed = parseFindings(reply, "[[Elena]] entra.\n");
 	assert.equal(parsed?.hallazgos.length, 1);
 	assert.equal(parsed?.hallazgos[0].cita, "[[Elena]] entra");
+});
+
+test("muchos [{ sin cerrar: falla en tiempo lineal", () => {
+	const reply = "[{".repeat(30_000);
+	const started = performance.now();
+	assert.equal(parseFindings(reply, "Elena entra.\n"), null);
+	assert.ok(performance.now() - started < 200, `tardó ${Math.round(performance.now() - started)} ms`);
+});
+
+test("un null en el array se descarta y no tumba los demás hallazgos", () => {
+	const parsed = parseFindings('[null, {"tipo":"estilo","cita":"Elena","mensaje":"x"}]', "Elena entra.\n");
+	assert.equal(parsed?.hallazgos.length, 1);
+	assert.equal(parsed?.descartados, 1);
 });

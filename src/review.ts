@@ -1,4 +1,4 @@
-import { buildSceneContext, type SceneContextInput } from "./context.ts";
+import { buildSceneContext, type SceneContext, type SceneContextInput } from "./context.ts";
 import { noteBody } from "./frontmatter.ts";
 import { assertAllowedEndpoint, type ProviderSettings } from "./providers.ts";
 
@@ -18,11 +18,13 @@ export interface ReviewFinding {
 }
 
 export type ReviewResult =
-	| { ok: true; hallazgos: ReviewFinding[]; descartados: number }
+	| { ok: true; hallazgos: ReviewFinding[]; descartados: number; escenaRecortada: boolean }
 	| { ok: false; mensaje: string };
 
-/** Sends one chat request: `url` and JSON `body` in, parsed JSON reply out. */
-export type ChatSender = (url: string, body: unknown) => Promise<unknown>;
+/** Text model behind the review: one prompt in, one text out (`ollamaProvider` in the plugin). */
+export interface ReviewProvider {
+	complete(prompt: string): Promise<string>;
+}
 
 export const NO_PROVIDER =
 	"Revisar con IA necesita un proveedor: en Settings → Atlas escribe el endpoint y el modelo.";
@@ -30,18 +32,21 @@ export const NO_PROVIDER =
 /** Character budget for the scene context sent to the provider. */
 const BUDGET = 12_000;
 
-/** OpenAI-compatible chat URL: `<endpoint>/v1/chat/completions` (Ollama, LM Studio). */
-export function chatUrl(endpoint: string): string {
-	const base = endpoint.trim().replace(/\/+$/, "");
-	if (base.endsWith("/chat/completions")) {
-		return base;
-	}
-	return base.endsWith("/v1") ? `${base}/chat/completions` : `${base}/v1/chat/completions`;
+/** Whether endpoint and model are both set. */
+export function providerReady(settings: ProviderSettings): boolean {
+	return settings.endpoint.trim().length > 0 && settings.model.trim().length > 0;
+}
+
+function reviewContext(input: SceneContextInput): SceneContext {
+	return buildSceneContext({ ...input, presupuesto: Math.min(input.presupuesto, BUDGET) });
 }
 
 /** Prompt that asks for findings as JSON; the model proposes, the writer decides. */
 export function reviewPrompt(input: SceneContextInput): string {
-	const context = buildSceneContext({ ...input, presupuesto: Math.min(input.presupuesto, BUDGET) });
+	return promptFor(reviewContext(input));
+}
+
+function promptFor(context: SceneContext): string {
 	const sections = context.secciones.map((section) => `## ${section.nombre}\n${section.texto}`).join("\n\n");
 	return [
 		"Revisa la escena contra las skills de estilo, la continuidad del mundo y lo que sabe cada personaje.",
@@ -76,9 +81,9 @@ export function parseFindings(reply: string, scene: string): { hallazgos: Review
 export async function reviewScene(
 	input: SceneContextInput,
 	settings: ProviderSettings,
-	send: ChatSender,
+	provider: ReviewProvider,
 ): Promise<ReviewResult> {
-	if (settings.endpoint.trim().length === 0 || settings.model.trim().length === 0) {
+	if (!providerReady(settings)) {
 		return { ok: false, mensaje: NO_PROVIDER };
 	}
 	try {
@@ -86,28 +91,19 @@ export async function reviewScene(
 	} catch (error) {
 		return { ok: false, mensaje: error instanceof Error ? error.message : "Host no permitido." };
 	}
-	let reply: unknown;
+	const context = reviewContext(input);
+	let reply: string;
 	try {
-		reply = await send(chatUrl(settings.endpoint), {
-			model: settings.model.trim(),
-			messages: [{ role: "user", content: reviewPrompt(input) }],
-			stream: false,
-		});
+		reply = await provider.complete(promptFor(context));
 	} catch (error) {
 		const detail = error instanceof Error ? error.message : String(error);
 		return { ok: false, mensaje: `El proveedor no respondió: ${detail}` };
 	}
-	const content = replyText(reply);
-	const parsed = content === null ? null : parseFindings(content, input.escena);
+	const parsed = parseFindings(reply, input.escena);
 	if (parsed === null) {
 		return { ok: false, mensaje: "El proveedor no devolvió hallazgos en JSON. Vuelve a intentarlo." };
 	}
-	return { ok: true, ...parsed };
-}
-
-function replyText(reply: unknown): string | null {
-	const content = (reply as { choices?: { message?: { content?: unknown } }[] } | null)?.choices?.[0]?.message?.content;
-	return typeof content === "string" ? content : null;
+	return { ok: true, ...parsed, escenaRecortada: context.recortadas.includes("escena") };
 }
 
 /**
@@ -119,17 +115,28 @@ function jsonArray(reply: string): unknown[] | null {
 	return (fence?.[1] === undefined ? null : firstArray(fence[1])) ?? firstArray(reply);
 }
 
+/** Starts that run to the end of the reply unclosed before giving up: a cut reply fails fast. */
+const MAX_UNCLOSED = 16;
+
 /**
- * Only a `[` that opens `{` or `]` can start the findings array, and each is parsed once, up to
- * its matching `]` (brackets inside strings skipped). Linear per start, so `[[enlaces]]` and
- * truncated replies fail fast.
+ * Only a `[` that opens `{`, `null` or `]` can start the findings array, and each is parsed once,
+ * up to its matching `]` (brackets inside strings skipped). `[[enlaces]]` are skipped, and after
+ * `MAX_UNCLOSED` starts that never close the reply counts as cut, so the scan stays linear.
  */
 function firstArray(text: string): unknown[] | null {
+	let unclosed = 0;
 	for (let start = text.indexOf("["); start !== -1; start = text.indexOf("[", start + 1)) {
-		if (!/^\[\s*[{\]]/.test(text.slice(start, start + 64))) {
+		if (!/^\[\s*(?:[{\]]|null\b)/.test(text.slice(start, start + 64))) {
 			continue;
 		}
 		const end = closing(text, start);
+		if (end === text.length) {
+			unclosed++;
+			if (unclosed >= MAX_UNCLOSED) {
+				return null;
+			}
+			continue;
+		}
 		if (end === -1) {
 			continue;
 		}
@@ -141,7 +148,10 @@ function firstArray(text: string): unknown[] | null {
 	return null;
 }
 
-/** Index of the `]` that closes the `[` at `start`, or -1; brackets inside JSON strings do not count. */
+/**
+ * Index of the `]` that closes the `[` at `start`; -1 when a `}` closes it, `text.length` when
+ * nothing does. Brackets inside JSON strings do not count.
+ */
 function closing(text: string, start: number): number {
 	let depth = 0;
 	let inString = false;
@@ -164,7 +174,7 @@ function closing(text: string, start: number): number {
 			}
 		}
 	}
-	return -1;
+	return text.length;
 }
 
 function parsed(json: string): unknown {

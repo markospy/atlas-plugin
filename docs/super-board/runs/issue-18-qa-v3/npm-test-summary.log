@@ -1,0 +1,27 @@
+✔ head nuevo tras un done verificado: answered sin aprobar el head nuevo (95.027509ms)
+(node:3557901) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///home/marcos/OtherProjects/atlas-plugin/.claude/worktrees/issue-18-qa/src/cowrite.ts is not specified and it doesn't parse as CommonJS.
+✔ modal: la propuesta se ve como diff -/+ contra la nota y no escribe nada todavía (84.053025ms)
+✔ modal: Rechazar no escribe en la nota y queda en el historial (40.650027ms)
+✔ modal: Aprobar escribe la propuesta una vez y la registra (50.548881ms)
+✔ modal: Aprobar con la nota cambiada no escribe y avisa (20.91249ms)
+✔ modal: un proveedor que falla cierra sin escribir y avisa (22.77805ms)
+(node:3557910) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///home/marcos/OtherProjects/atlas-plugin/.claude/worktrees/issue-18-qa/src/cowrite.ts is not specified and it doesn't parse as CommonJS.
+✔ diffLines marca líneas iguales, quitadas y añadidas (10.360166ms)
+✔ la propuesta se muestra como diff contra el texto actual y conserva el frontmatter (2.264537ms)
+✔ continuación añade el texto al final sin tocar lo anterior (0.340852ms)
+✔ una respuesta vacía del proveedor falla y no deja propuesta (0.909131ms)
+✔ rechazar no modifica la nota; aprobar la aplica y queda en el historial de la sesión (0.607072ms)
+✔ aprobar falla si la nota cambió desde la propuesta y no registra nada (0.390571ms)
+✔ una escena larga no deja fuera las skills ni las fichas del prompt (2.446855ms)
+✔ aprobar en una nota CRLF conserva los finales de línea (0.614767ms)
+✔ si el modelo devuelve su propio frontmatter, el diff lo muestra como líneas añadidas antes de aprobar (0.493091ms)
+✔ aprobar dos veces la misma propuesta falla la segunda y registra una sola entrada (0.65387ms)
+✔ bordes: empate en el mismo capítulo, orden libre, capítulo ilegible y poseedor vacío (0.994098ms)
+ℹ tests 203
+ℹ suites 0
+ℹ pass 203
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 5406.878298

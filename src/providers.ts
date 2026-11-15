@@ -1,16 +1,16 @@
 export interface ProviderSettings {
 	endpoint: string;
-	/** Model name the endpoint serves, e.g. `llama3.1`; "" means none. */
-	model: string;
 	cloudOptIn: boolean;
 	allowedHosts: string[];
+	/** Model name the endpoint serves, e.g. `llama3.2`. */
+	model: string;
 }
 
 export const DEFAULT_PROVIDER_SETTINGS: ProviderSettings = {
 	endpoint: "",
-	model: "",
 	cloudOptIn: false,
 	allowedHosts: [],
+	model: "",
 };
 
 const LOCAL_HOSTS = new Set(["localhost", "127.0.0.1", "::1"]);
@@ -46,4 +46,22 @@ export function assertAllowedEndpoint(settings: ProviderSettings, endpoint: stri
 		return;
 	}
 	throw new HostNotAllowedError(host);
+}
+
+/** POST JSON, return parsed JSON. Obsidian's `requestUrl` in the plugin, a stub in tests. */
+export type PostJson = (url: string, body: unknown) => Promise<unknown>;
+
+/** Ollama `/api/generate`, non-streaming. The host check runs before every call. */
+export function ollamaProvider(settings: ProviderSettings, post: PostJson): { complete(prompt: string): Promise<string> } {
+	return {
+		async complete(prompt) {
+			if (settings.endpoint.length === 0 || settings.model.length === 0) {
+				throw new Error("Configura endpoint y modelo en los ajustes de Atlas.");
+			}
+			assertAllowedEndpoint(settings, settings.endpoint);
+			const url = `${settings.endpoint.replace(/\/+$/, "")}/api/generate`;
+			const reply = (await post(url, { model: settings.model, prompt, stream: false })) as { response?: unknown };
+			return typeof reply?.response === "string" ? reply.response : "";
+		},
+	};
 }
