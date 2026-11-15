@@ -222,7 +222,7 @@ test("aceptar un estado en una ficha con CRLF añade solo sus líneas", async ()
 	await writeApproved(files, destino, parseProposal(respuesta), new Set(["e1"]));
 	assert.equal(
 		files.store.get(LUGAR),
-		["---", "nombre: Torre", "estados:", "- capitulo: '[[Cap 01]]'", "  descripcion: intacta", '- capitulo: "[[Cap 03]]"', "  descripcion: en ruinas", "---", ""].join("\r\n"),
+		["---", "nombre: Torre", "estados:", "- capitulo: '[[Cap 01]]'", "  descripcion: intacta", '- capitulo: "[[Cap 03]]"', '  descripcion: "en ruinas"', "---", ""].join("\r\n"),
 	);
 });
 

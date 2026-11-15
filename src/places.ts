@@ -1,4 +1,4 @@
-import { Document, isSeq, parseDocument } from "yaml";
+import { isSeq, parseDocument } from "yaml";
 
 import { frontmatterBody, mapList, scalar } from "./frontmatter.ts";
 import { FAILSAFE, yamlMaps } from "./memory-frontmatter.ts";
@@ -66,9 +66,11 @@ function parseStates(frontmatter: string): PlaceState[] {
 /**
  * Adds `states` to the `estados` list of a place sheet, written the way `parsePlace` reads it.
  * A block list gets the new items after its last line, at its own indent; a flow list
- * (`estados: [{...}]`) becomes a block list with its items kept; an empty value or a missing key
- * becomes a block list. Every other line stays byte for byte, so frontmatter that is not strict
- * YAML (`nombre: Torre: alta`) is kept as written. A value that is not a list throws.
+ * (`estados: [{...}]`) of maps becomes a block list with its items kept; an empty value, a
+ * `# comment` or a missing key becomes a block list. Values are written in double quotes, as
+ * `unquote` reads them back. Every other line stays byte for byte, so frontmatter that is not strict
+ * YAML (`nombre: Torre: alta`) is kept as written. A value that is not a list, or a flow list with
+ * an item that is not a map, throws.
  */
 export function addPlaceStates(note: string, states: PlaceState[]): string {
 	if (states.length === 0) {
@@ -130,12 +132,15 @@ function statesSpan(lines: readonly string[], from: number, end: number): States
 	if (at === -1) {
 		return null;
 	}
-	const inline = (lines[at] ?? "").slice("estados:".length).trim();
+	const value = (lines[at] ?? "").slice("estados:".length).trim();
+	const inline = value.startsWith("#") ? "" : value;
 	if (inline.startsWith("[")) {
 		for (let to = at + 1; to <= end; to++) {
 			const doc = parseDocument([inline, ...lines.slice(at + 1, to)].join("\n"), FAILSAFE);
 			if (doc.errors.length === 0 && isSeq(doc.contents)) {
-				return { at, to, inline, flow: true, items: yamlMaps(doc.toJS()) };
+				const js: unknown[] = doc.toJS();
+				const maps = yamlMaps(js);
+				return { at, to, inline, flow: true, items: maps.length === js.length ? maps : null };
 			}
 		}
 		return { at, to: at + 1, inline, flow: true, items: null };
@@ -153,11 +158,10 @@ function statesSpan(lines: readonly string[], from: number, end: number): States
 	return { at, to, inline, flow: false, items: null };
 }
 
-/** Block list lines for `items`, as `yaml` prints them, each prefixed with `indent`. */
+/** Block list lines for `items`, each value in double quotes, each line prefixed with `indent`. */
 function listLines(items: Record<string, string>[], indent: string): string[] {
-	return new Document(items)
-		.toString({ lineWidth: 0 })
-		.replace(/\n$/, "")
-		.split("\n")
-		.map((line) => indent + line);
+	return items.flatMap((item) => {
+		const fields = Object.entries(item);
+		return fields.length === 0 ? [`${indent}- {}`] : fields.map(([field, value], i) => `${indent}${i === 0 ? "- " : "  "}${field}: ${JSON.stringify(value)}`);
+	});
 }
