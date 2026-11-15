@@ -1,0 +1,154 @@
+
+> atlas@0.1.0 test
+> node --experimental-strip-types --test tests/*.test.mjs
+
+✔ npm run build produce main.js y onload no escribe en consola (4572.750131ms)
+(node:3296444) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file://src/characters.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ parsea alias y relaciones temporales (4.19111ms)
+✔ una relación sin wikilink se rechaza y la plantilla nace vacía (2.718079ms)
+✔ parsea alias en lista YAML de bloque (0.861126ms)
+(node:3296449) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file://src/entities.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ el índice lista personajes, lugares y objetos del proyecto (4.383736ms)
+✔ cada ficha lista las escenas que la nombran por nombre o alias (40.744542ms)
+✔ re-escanear actualiza apariciones sin duplicar entradas (1.308626ms)
+✔ dos alias del mismo personaje cuentan como el mismo personaje (5.358293ms)
+✔ las menciones son palabras completas y sin ficha usa el título de la nota (3.152745ms)
+✔ el proyecto sale de la nota activa (0.523691ms)
+✔ qa: escenas en subcarpetas en orden numérico y sin el proyecto vecino (0.566971ms)
+✔ qa: alias entre comillas con tilde y mayúsculas acentuadas (6.414451ms)
+✔ R1: alias en lista YAML de bloque (panel Propiedades de Obsidian) (1.112602ms)
+✔ R2: alias entre comillas con coma no se parte (0.909816ms)
+✔ frontmatter con saltos CRLF (0.360118ms)
+✔ qa v2: lista de bloque seguida de otra lista no mezcla sus ítems en los alias (0.433282ms)
+✔ qa v2: re-escanear tras quitar un alias de la ficha quita sus escenas (0.403478ms)
+✔ manifest declara id, versión y minAppVersion para plugins de la comunidad (14.137387ms)
+(node:3296463) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file://src/markers.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ el parser encuentra TK e INVESTIGAR y los pierde al borrarlos (2.980795ms)
+✔ inserta el marcador en el cursor (0.428054ms)
+(node:3296493) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file://src/objects.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ lee la ficha y responde quién tiene el objeto en cada capítulo (4.458225ms)
+✔ nadie tiene el objeto antes de su primera posesión (0.934192ms)
+✔ la plantilla trae descripción, origen, valores y función (0.908505ms)
+✔ qa: posesiones desordenadas y capítulo numérico siguen la línea de tiempo (0.402667ms)
+✔ qa: dos cambios en el mismo capítulo se quedan con el último anotado (0.374455ms)
+✔ qa: Objetos/ en la raíz y desde una nota suelta del proyecto (0.241829ms)
+(node:3296504) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file://src/places.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ lee el lugar padre y un cambio de estado (4.167366ms)
+(node:3296510) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file://src/providers.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ localhost pasa y un host no listado falla (1.582183ms)
+✔ la nube solo entra con opt-in y el host en la lista blanca (0.810954ms)
+✔ el README explica cómo compilar y cargar el plugin en local (12.505342ms)
+(node:3296525) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file://src/style.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ la plantilla trae frontmatter completo y secciones (4.796082ms)
+✔ severidades válidas y patrón expuesto solo en verificación por patrón (1.377735ms)
+✔ filtra skills por alcance personaje (0.750071ms)
+✔ qa: la skill se crea en Estilo/ del proyecto desde cualquier nota (0.457709ms)
+✔ qa: las tres severidades se leen y el patrón se oculta con verificación ia (1.52133ms)
+✔ qa: filtro por personaje con varios destinos y alcances con tilde (1.043926ms)
+(node:3296542) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file://src/vault.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ crea el árbol y el índice Longform sin pisar lo que ya existe (4.723156ms)
+✔ el truth-check lo hacen dos agentes del workflow antes del Reviewer (7.729658ms)
+✔ el Reviewer nunca hace el truth-check inline (1.287376ms)
+✔ truth-check que no puede ejecutarse obliga a 🛡 Blocked (3.172671ms)
+✔ un Reviewer que avanza con truth-check inconcluso queda como failed (0.894117ms)
+✔ truth_gate sin disparar pasa SKIPPED al Reviewer (0.978905ms)
+✔ halted en el truth-check detiene la wave sin Reviewer (0.540563ms)
+✔ qa: una tarjeta que pasa QA → Review en la misma wave hace truth-check antes del Reviewer (2.235493ms)
+✔ qa: un agente salta el gate y el otro puntúa → INCONCLUSIVE (0.551001ms)
+✖ qa: resultado done sin headSha → INCONCLUSIVE (no se puede fijar el head) (3.962335ms)
+✔ qa: resultado sin confidence entera → INCONCLUSIVE (0.745232ms)
+(node:3296552) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file://src/characters.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ devuelve las relaciones vigentes en el capítulo N (3.589985ms)
+✔ incluye el poseedor de cada objeto rastreado en N (0.775888ms)
+✔ incluye el estado de cada lugar con un cambio en o antes de N (5.654211ms)
+✔ bordes: empate en el mismo capítulo, orden libre, capítulo ilegible y poseedor vacío (0.956113ms)
+ℹ tests 51
+ℹ suites 0
+ℹ pass 50
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 4837.428628
+
+✖ failing tests:
+
+test at tests/wave-truth.test.mjs:118:1
+✖ qa: resultado done sin headSha → INCONCLUSIVE (no se puede fijar el head) (3.962335ms)
+  AssertionError [ERR_ASSERTION]: The input was expected to not match the regular expression /at head undefined/. Input:
+  
+  'Read shapes (helper: .claude/bin/super-board-github-read.py --kind <kind> -- <gh args>):\n' +
+    '- issue title+body: --kind issue -- issue view <N> --json number,title,body\n' +
+    '- issue comments: --kind comments -- api repos/{owner}/{repo}/issues/<N>/comments --paginate --slurp (zero comments = [[]])\n' +
+    '- other JSON, incl. maybe-empty lists: --kind json -- <gh args> (no --jq that prints a plain string)\n' +
+    `- PR branch+head: --kind head -- pr view <N> --json headRefName,headRefOid --jq '"\\(.headRefName) \\(.headRefOid)"'\n` +
+    '- PR body+head: --kind body -- pr view <N> --json body,headRefOid\n' +
+    '- PR metadata: --kind metadata -- pr view <N> --json files,labels,body,additions,deletions,changedFiles\n' +
+    '- issue state: --kind state -- issue view <N> --json state --jq .state\n' +
+    'A read whose output misses its shape exits 64 for that call only and prints the valid form: fix the read, do not halt.\n' +
+    'Required GitHub reads use .claude/bin/super-board-github-read.py: three total attempts, exit 79 means run halted. Check --check before any GitHub write, migration, or merge. On exit 79 preserve worktree/card/approval/claims, make no more GitHub calls, and report status=halted (preflight verdict=halted). Never retry a mutation. Config: .claude/super-board/configs/atlas-plugin.json.\n' +
+    'Run super-review on issue #7 ("t") for a super-board workflow wave.\n' +
+    'Read .claude/skills/super-board/references/run.md → "Reviewer" lifecycle and follow it EXACTLY:\n' +
+    'create your own worktree under .claude/worktrees/, work on the issue branch, post the required PR/issue comments,\n' +
+    'move the project card yourself, clean up the worktree on exit. Config: .claude/super-board/configs/atlas-plugin.json.\n' +
+    'Board moves and reads: .claude/bin/super-board-card.sh --config .claude/super-board/configs/atlas-plugin.json move <issue> <Status> (1 GraphQL point) · status <issue> · items. Comments, labels, PR reads: REST per .claude/skills/super-board/references/rate-limit-etiquette.md → "Price list". Read GitHub once per decision, never in a sleep loop.\n' +
+    'Commits, PR title, PR body blocks, comments: .claude/skills/super-board/references/writing-standard.md. Rewrite only your own PR body blocks, with .claude/bin/super-board-pr-body.sh.\n' +
+    'Before reviewing, load prior_report: the newest PR comment containing "<!-- super-review:report -->" (run.md → Reviewer step 3b).\n' +
+    'None → first review, behave as usual. Found → round 1 marks each prior finding fixed / not fixed / no longer applies;\n' +
+    'any not fixed → bounce again listing them. Edit that report comment in place (keep R-ids), never post a second one. Report the counts as priorFindings.\n' +
+    "Read the issue ACs and the diff before the builder's PR summary; form your own hypotheses, then check their claims.\n" +
+    'Class every finding Gap / Bug / Verification miss / Scope drift / Over-engineering, and list what you verified correct.\n' +
+    'Run ponytail:ponytail-review on the merge-base diff (inline ladder if the plugin is absent); Over-engineering never blocks merge alone.\n' +
+    'Truth-check (run.md → Reviewer step 6): the wave already ran it with independent agents; the result is below. NEVER run it yourself or inline.\n' +
+    'Reclass any Over-engineering Blocker in it to Should fix; it never decides merge or bounce.\n' +
+    'Merge only via super-board-merge-gate.sh. Exit 7 = merge_policy says a human merges (money/auth/schema/size): Blocked with the 🙋 template quoting its human-gate lines; To unblock = merge it yourself, or comment done to approve.\n' +
+    'Exit 8 = 🙋 needs you (migration for a DB the robot may not touch, failed migrate, declared human step): Blocked with the 🙋 template, exact commands from its needs-you lines, label needs-you.\n' +
+    'Truth-check result: SCORED 90/100 (minimum of Code-grounder 90/100 · Historian 90/100) at head undefined.\n' +
+    'Compare it to truth_threshold in the config (run.md → Reviewer step 6). If the PR head is no longer undefined, the score is stale: Block 🛡 truth-check inconclusive.\n' +
+    'Findings: []\n' +
+    '\n' +
+    'Report your exit via structured output:\n' +
+    '- status=advanced  → card moved forward (Building→QA, QA→Review, Review→Done/merged)\n' +
+    '- status=bounced   → card moved backward (QA fail → Ready, Reviewer bounce → Ready/QA)\n' +
+    '- status=blocked or human-gate → you wrote the Block template and moved the card to Blocked\n' +
+    '- status=halted    → required service evidence is unavailable; leave card state unchanged and stop the run\n' +
+    '- status=failed    → you could not complete the lifecycle (say why in detail)\n' +
+    'column = the column the card is in when you exit. detail = one line. Include prUrl/branch when they exist.'
+  
+      at TestContext.<anonymous> (file://tests/wave-truth.test.mjs:121:9)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: `Read shapes (helper: .claude/bin/super-board-github-read.py --kind <kind> -- <gh args>):\n- issue title+body: --kind issue -- issue view <N> --json number,title,body\n- issue comments: --kind comments -- api repos/{owner}/{repo}/issues/<N>/comments --paginate --slurp (zero comments = [[]])\n- other JSON, incl. maybe-empty lists: --kind json -- <gh args> (no --jq that prints a plain string)\n- PR branch+head: --kind head -- pr view <N> --json headRefName,headRefOid --jq '"\\(.headRefName) \\(.headRefOid)"'\n- PR body+head: --kind body -- pr view <N> --json body,headRefOid\n- PR metadata: --kind metadata -- pr view <N> --json files,labels,body,additions,deletions,changedFiles\n- issue state: --kind state -- issue view <N> --json state --jq .state\nA read whose output misses its shape exits 64 for that call only and prints the valid form: fix the read, do not halt.\nRequired GitHub reads use .claude/bin/super-board-github-read.py: three total attempts, exit 79 means run halted. Check --check before any GitHub write, migration, or merge. On exit 79 preserve worktree/card/approval/claims, make no more GitHub calls, and report status=halted (preflight verdict=halted). Never retry a mutation. Config: .claude/super-board/configs/atlas-plugin.json.\nRun super-review on issue #7 ("t") for a super-board workflow wave.\nRead .claude/skills/super-board/references/run.md → "Reviewer" lifecycle and follow it EXACTLY:\ncreate your own worktree under .claude/worktrees/, work on the issue branch, post the required PR/issue comments,\nmove the project card yourself, clean up the worktree on exit. Config: .claude/super-board/configs/atlas-plugin.json.\nBoard moves and reads: .claude/bin/super-board-card.sh --config .claude/super-board/configs/atlas-plugin.json move <issue> <Status> (1 GraphQL point) · status <issue> · items. Comments, labels, PR reads: REST per .claude/skills/super-board/references/rate-limit-etiquette.md → "Price list". Read GitHub once per decision, never in a sleep loop.\nCommits, PR title, PR body blocks, comments: .claude/skills/super-board/references/writing-standard.md. Rewrite only your own PR body blocks, with .claude/bin/super-board-pr-body.sh.\nBefore reviewing, load prior_report: the newest PR comment containing "<!-- super-review:report -->" (run.md → Reviewer step 3b).\nNone → first review, behave as usual. Found → round 1 marks each prior finding fixed / not fixed / no longer applies;\nany not fixed → bounce again listing them. Edit that report comment in place (keep R-ids), never post a second one. Report the counts as priorFindings.\nRead the issue ACs and the diff before the builder's PR summary; form your own hypotheses, then check their claims.\nClass every finding Gap / Bug / Verification miss / Scope drift / Over-engineering, and list what you verified correct.\nRun ponytail:ponytail-review on the merge-base diff (inline ladder if the plugin is absent); Over-engineering never blocks merge alone.\nTruth-check (run.md → Reviewer step 6): the wave already ran it with independent agents; the result is below. NEVER run it yourself or inline.\nReclass any Over-engineering Blocker in it to Should fix; it never decides merge or bounce.\nMerge only via super-board-merge-gate.sh. Exit 7 = merge_policy says a human merges (money/auth/schema/size): Blocked with the 🙋 template quoting its human-gate lines; To unblock = merge it yourself, or comment done to approve.\nExit 8 = 🙋 needs you (migration for a DB the robot may not touch, failed migrate, declared human step): Blocked with the 🙋 template, exact commands from its needs-you lines, label needs-you.\nTruth-check result: SCORED 90/100 (minimum of Code-grounder 90/100 · Historian 90/100) at head undefined.\nCompare it to truth_threshold in the config (run.md → Reviewer step 6). If the PR head is no longer undefined, the score is stale: Block 🛡 truth-check inconclusive.\nFindings: []\n\nReport your exit via structured output:\n- status=advanced  → card moved forward (Building→QA, QA→Review, Review→Done/merged)\n- status=bounced   → card moved backward (QA fail → Ready, Reviewer bounce → Ready/QA)\n- status=blocked or human-gate → you wrote the Block template and moved the card to Blocked\n- status=halted    → required service evidence is unavailable; leave card state unchanged and stop the run\n- status=failed    → you could not complete the lifecycle (say why in detail)\ncolumn = the column the card is in when you exit. detail = one line. Include prUrl/branch when they exist.`,
+    expected: /at head undefined/,
+    operator: 'doesNotMatch',
+    diff: 'simple'
+  }

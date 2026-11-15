@@ -63,3 +63,9 @@ Prepara el plugin una vez:
 - [ ] Con un capítulo abierto, **Índice de entidades (escanear manuscrito)** abre el panel a la derecha con Personajes, Lugares y Objetos del proyecto.
 - [ ] Bajo cada ficha salen las escenas que la nombran por `nombre` o por un `alias`; clic en una escena la abre.
 - [ ] Borrar la mención de un capítulo y ejecutar el comando otra vez la quita del panel, sin repetir fichas ni escenas.
+
+## #14 linter
+
+- [ ] En un capítulo con `- Hola.` y `Pienso de que sí.`, **Revisar estilo de la nota** lista `raya-dialogo` y `dequeismo` con su línea. Al pulsar uno, el cursor va a esa línea.
+- [ ] Una skill global con `verificacion: patron` y `patron: '\bya\b'` sale en la lista con su nombre y su severidad.
+- [ ] **Ignorar aquí** añade `%% atlas-ignorar: … %%` a la línea y el hallazgo desaparece de la lista. Las otras notas no cambian.
