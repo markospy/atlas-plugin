@@ -267,9 +267,20 @@ def validate(text, kind, meta=None):
     return value
 
 
+def slurp_with_filter(args):
+    """gh refuses --slurp next to --jq/--template; that is the caller's mistake, not an outage."""
+    if '--slurp' not in args:
+        return False
+    return any(a in ('-q', '--jq', '-t', '--template') or a.startswith(('--jq=', '--template='))
+               for a in args)
+
+
 def read(args, kind='json', meta=None, recovering=False):
     if not read_only(args):
         raise ValueError('retry helper accepts read-only GitHub commands only')
+    if slurp_with_filter(args):
+        raise ValueError('gh rejects --slurp together with --jq or --template; this call failed, the run '
+                         f'continues. Valid form: --kind comments -- {FORMS["comments"]} (no --jq, no --template)')
     if not recovering:
         check_halt()
     operation = {'args': args, 'kind': kind, 'meta': meta}
