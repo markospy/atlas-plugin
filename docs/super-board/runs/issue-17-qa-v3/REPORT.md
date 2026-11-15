@@ -2,12 +2,12 @@
 
 | AC | Resultado | Prueba |
 |---|---|---|
-| AC1 lista de hallazgos con tipo y ancla | ✅ | `tests/review.test.mjs:45`, `tests/review-readonly.test.mjs:28`, CRLF nuevo en `tests/review-readonly.test.mjs:44` |
+| AC1 lista de hallazgos con tipo y ancla | ✅ | `tests/review.test.mjs:45`, `tests/review-readonly.test.mjs:29`, CRLF nuevo en `tests/review-readonly.test.mjs:44` |
 | AC2 no modifica el manuscrito | ✅ | `tests/review-readonly.test.mjs:18` (sin APIs de escritura en `reviewWithAi` ni `ReviewModal`), `tests/review.test.mjs:83` |
 | AC3 sin proveedor, mensaje claro | ✅ | `tests/review.test.mjs:93`, `tests/review.test.mjs:105` |
 | AC4 test con proveedor mock | ✅ | `tests/review.test.mjs:45` (mock `send`) |
 | R7 respuesta cortada con `[[enlaces]]` | ✅ | `tests/review.test.mjs:150`; sonda: 200 KB en 25 ms |
-| R8 `projectOf` único | ✅ | `tests/sheets.test.mjs:82`, `tests/review-readonly.test.mjs:37` |
+| R8 `projectOf` único | ✅ | `tests/sheets.test.mjs:82`, `tests/review-readonly.test.mjs:38` |
 
 - `npm test`: 215/215 (`npm-test.log`)
 - `tsc -noEmit -skipLibCheck`: limpio (`tsc.log`)
