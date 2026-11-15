@@ -86,3 +86,36 @@ test("objeto con peso narrativo que no reaparece genera aviso", () => {
 		{ nombre: "Revólver", path: "Novela/Objetos/Revólver.md", escenas: ["Novela/Manuscrito/Cap 03.md"] },
 	]);
 });
+
+test("qa: pista sin estado o con estado entre comillas; proyecto raíz", () => {
+	const notes = [
+		{ path: "Novela/Trama/Sin estado.md", text: '---\ntipo: pista\nnombre: "Sin estado"\n---\n' },
+		{ path: "Novela/Trama/Cerrada.md", text: '---\ntipo: pista\nnombre: "Cerrada"\nestado: "resuelto"\n---\n' },
+		{ path: "Novela/Manuscrito/Trama/Falsa.md", text: clue("Falsa", "sembrado").text },
+		{ path: "Trama/Raíz.md", text: clue("Raíz", "sembrado").text },
+	];
+	assert.deepEqual(
+		openClues("Novela", notes).map((item) => [item.nombre, item.estado]),
+		[["Sin estado", ""]],
+	);
+	assert.deepEqual(
+		openClues("", notes).map((item) => item.path),
+		["Trama/Raíz.md"],
+	);
+	assert.deepEqual(openClues("Novela", []), []);
+});
+
+test("qa: aviso de objeto con cero escenas, alias cuenta, otro proyecto no", () => {
+	const object = (path, extra) => ({ path, text: `---\ntipo: objeto\nfuncion: "Chéjov"\n${extra}---\n` });
+	const notes = [
+		object("Novela/Objetos/Daga.md", ""),
+		object("Novela/Objetos/Medallón.md", "alias: [colgante]\n"),
+		object("Otra/Objetos/Daga.md", ""),
+		{ path: "Novela/Manuscrito/Cap 01.md", text: "Lleva el medallón." },
+		{ path: "Novela/Manuscrito/Cap 02.md", text: "El colgante pesa." },
+		{ path: "Otra/Manuscrito/Cap 01.md", text: "La daga. Otra vez la daga." },
+	];
+	assert.deepEqual(forgottenObjects("Novela", notes), [
+		{ nombre: "Daga", path: "Novela/Objetos/Daga.md", escenas: [] },
+	]);
+});
