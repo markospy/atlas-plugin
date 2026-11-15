@@ -3,6 +3,8 @@ import { type Editor, Notice, Plugin, TFile, type Vault } from "obsidian";
 import { characterFolder, characterNote, parseCharacter, relationErrors } from "./characters";
 import { GRAPH_VIEW, GraphView } from "./graph-view";
 import { ENTITY_VIEW, EntityView } from "./entity-view";
+import { clueFolder, clueNote, nextState } from "./foreshadow";
+import { FORESHADOW_VIEW, ForeshadowView } from "./foreshadow-view";
 import { objectFolder, objectNote } from "./objects";
 import { placeFolder, placeNote } from "./places";
 import {
@@ -56,6 +58,7 @@ export default class AtlasPlugin extends Plugin {
 		this.registerView(MARKER_VIEW, (leaf) => new MarkerView(leaf));
 		this.registerView(GRAPH_VIEW, (leaf) => new GraphView(leaf));
 		this.registerView(ENTITY_VIEW, (leaf) => new EntityView(leaf));
+		this.registerView(FORESHADOW_VIEW, (leaf) => new ForeshadowView(leaf));
 		this.addCommand({
 			id: "insert-tk",
 			name: "Insertar [TK]",
@@ -134,6 +137,27 @@ export default class AtlasPlugin extends Plugin {
 			name: "Nuevo objeto",
 			editorCallback: (editor) => {
 				void this.newObject(editor.getSelection().trim());
+			},
+		});
+		this.addCommand({
+			id: "new-clue",
+			name: "Nueva pista (foreshadowing)",
+			editorCallback: (editor) => {
+				void this.newClue(editor.getSelection().trim());
+			},
+		});
+		this.addCommand({
+			id: "advance-clue",
+			name: "Avanzar pista (sembrado → reforzado → resuelto)",
+			callback: () => {
+				void this.advanceClue();
+			},
+		});
+		this.addCommand({
+			id: "show-foreshadow",
+			name: "Tablero de foreshadowing",
+			callback: () => {
+				void this.openForeshadow();
 			},
 		});
 		this.addCommand({
@@ -296,6 +320,50 @@ export default class AtlasPlugin extends Plugin {
 		new Notice("Objeto creado.");
 	}
 
+	private async newClue(name: string): Promise<void> {
+		if (name.length === 0) {
+			new Notice("Selecciona el nombre de la pista.");
+			return;
+		}
+		if (name.includes("/") || name.includes("\\")) {
+			new Notice("El nombre no puede incluir carpetas.");
+			return;
+		}
+		const folder = clueFolder(this.app.workspace.getActiveFile()?.path ?? "");
+		const path = `${folder}/${name}.md`;
+		if (await this.app.vault.adapter.exists(path)) {
+			new Notice("Esa pista ya existe.");
+			return;
+		}
+		if (!(await this.app.vault.adapter.exists(folder))) {
+			await this.app.vault.createFolder(folder);
+		}
+		await this.app.vault.create(path, clueNote(name));
+		new Notice("Pista sembrada.");
+	}
+
+	private async advanceClue(): Promise<void> {
+		const file = this.app.workspace.getActiveFile();
+		if (!file || file.extension !== "md") {
+			new Notice("Abre una pista (tipo: pista).");
+			return;
+		}
+		let next = "";
+		try {
+			await this.app.fileManager.processFrontMatter(file, (frontmatter: Record<string, unknown>) => {
+				if (frontmatter.tipo !== "pista") {
+					return;
+				}
+				next = nextState(String(frontmatter.estado ?? ""));
+				frontmatter.estado = next;
+			});
+		} catch {
+			new Notice("El frontmatter de la pista no es YAML válido.");
+			return;
+		}
+		new Notice(next.length > 0 ? `Pista: ${next}.` : "Abre una pista (tipo: pista).");
+	}
+
 	private async newSkill(name: string): Promise<void> {
 		if (name.length === 0) {
 			new Notice("Selecciona el nombre de la skill.");
@@ -390,6 +458,21 @@ export default class AtlasPlugin extends Plugin {
 		}
 		await this.app.workspace.revealLeaf(leaf);
 		if (leaf.view instanceof MarkerView) {
+			await leaf.view.refresh();
+		}
+	}
+
+	private async openForeshadow(): Promise<void> {
+		const existing = this.app.workspace.getLeavesOfType(FORESHADOW_VIEW);
+		const leaf = existing[0] ?? this.app.workspace.getRightLeaf(false);
+		if (!leaf) {
+			return;
+		}
+		if (existing.length === 0) {
+			await leaf.setViewState({ type: FORESHADOW_VIEW, active: false });
+		}
+		await this.app.workspace.revealLeaf(leaf);
+		if (leaf.view instanceof ForeshadowView) {
 			await leaf.view.refresh();
 		}
 	}

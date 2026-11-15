@@ -49,7 +49,7 @@ export function buildEntityIndex(project: string, notes: VaultNote[]): EntityEnt
 	return index;
 }
 
-const PROJECT_FOLDERS = ["Manuscrito", "Personajes", "Lugares", "Objetos"];
+const PROJECT_FOLDERS = ["Manuscrito", "Personajes", "Lugares", "Objetos", "Trama"];
 
 /** Project folder of the active note: the parent of its Manuscrito/ or sheet folder, else its own folder. */
 export function projectOf(activePath: string): string {

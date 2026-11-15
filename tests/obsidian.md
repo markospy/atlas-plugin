@@ -82,3 +82,9 @@ Prepara el plugin una vez:
 - [ ] Con `Manuscrito/Cap 03.md` abierto, **Nueva memoria del capítulo** crea `_Memoria/Cap 03.md` del proyecto con `hechos` y `conocimiento`. Ejecutarlo otra vez avisa "Esa memoria ya existe." y no pisa la nota.
 - [ ] Con un hecho `padre` que `[[Elena]]` sabe y el `lector` sospecha, seleccionar `Elena` en el capítulo y ejecutar **Qué sabe en este capítulo** muestra `sabe: …`.
 - [ ] Sin selección, el mismo comando muestra `lector en cap. 3` con `sospecha: …`. Un `estado: intuye` sale como aviso y no se cuenta.
+
+## #11 foreshadowing
+
+- [ ] Con el nombre seleccionado en un capítulo, **Nueva pista (foreshadowing)** crea `Trama/<nombre>.md` del proyecto con `tipo: pista` y `estado: sembrado`. Otra vez con el mismo nombre avisa "Esa pista ya existe.".
+- [ ] Con la pista abierta, **Avanzar pista** pasa `estado` a `reforzado` y luego a `resuelto`; una vez resuelta no cambia.
+- [ ] **Tablero de foreshadowing** lista las pistas sembradas y reforzadas, no las resueltas. Un objeto con `funcion` nombrado en un solo capítulo sale en **Objetos que no vuelven**; al nombrarlo en un segundo capítulo y ejecutar el comando otra vez, desaparece.
