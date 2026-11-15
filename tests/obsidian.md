@@ -37,6 +37,11 @@ Prepara el plugin una vez:
 - [ ] Con el nombre seleccionado, **Nuevo lugar** crea la nota en `Lugares/` con las secciones sensoriales y no sustituye una ficha ya existente.
 - [ ] Un lugar con `padre: "[[Casa]]"` y un estado en el capítulo 12 se lee al reabrir la nota.
 
+## #6 trama
+
+- [ ] Con el nombre seleccionado, **Nueva trama (Save the Cat)** crea la nota en `Trama/` con premisa, tema, conflicto central, arcos, subtramas y los 15 beats, y no sustituye una trama ya existente.
+- [ ] **Añadir campos de escena** en una escena con `pov: "[[Elena]]"` agrega los otros cuatro campos vacíos y deja `pov` y el texto como estaban.
+
 ## #26 marcadores
 
 - [ ] En una nota del manuscrito, **Insertar [TK]** y **Insertar [INVESTIGAR]** dejan el texto en el cursor. El atajo se asigna en **Settings → Hotkeys**.
