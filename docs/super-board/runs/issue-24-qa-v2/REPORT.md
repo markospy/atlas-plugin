@@ -21,6 +21,6 @@ Head probado: `63ce892` (rebuild R1 R2 R4) más el commit de tests de QA v2. Sin
 - No escritos (Low): R3 sigue abierto, el estado del lugar muestra el enlace crudo `(desde [[Cap 12]])` (`src/peek.ts:60`); cosmético.
 
 ## Comandos
-- `npm test`: 251/251 pass (`npm-test.log`)
-- `npm run build`: tsc + esbuild limpio (`build.log`)
+- `npm test`: 251/251 pass
+- `npm run build`: tsc + esbuild limpio
 - Merge con `origin/staging` (`4d31d31`): sin conflictos (`git merge-tree`)

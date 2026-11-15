@@ -193,3 +193,21 @@ test("peekAt: ficha con nombre distinto del archivo casa con enlaces al archivo"
 	const { entities, sheets } = projectSheets("Novela", notes);
 	assert.deepEqual(peekAt("Ana García", 0, entities, sheets, 2).estado, ["Relación: Luis → hermano", "Posee: Llave"]);
 });
+
+test("peekAt: enlaces con encabezado o al alias también casan con la entidad", () => {
+	const notes = [
+		{ path: "Novela/Personajes/Ana.md", text: '---\ntipo: personaje\nnombre: "Ana García"\nalias: ["la hermana"]\n---\n' },
+		{
+			path: "Novela/Personajes/Luis.md",
+			text: '---\ntipo: personaje\nnombre: "Luis"\nrelaciones:\n  - con: "[[Ana#Infancia]]"\n    tipo: "hermano"\n---\n',
+		},
+		{
+			path: "Novela/Objetos/Llave.md",
+			text: '---\ntipo: objeto\nposesiones:\n  - poseedor: "[[la hermana]]"\n    capitulo: "[[Cap 01]]"\n---\n',
+		},
+	];
+	const { entities, sheets } = projectSheets("Novela", notes);
+	const line = "Luego la hermana cerró.";
+	assert.deepEqual(peekAt(line, line.indexOf("hermana"), entities, sheets, 2).estado, ["Relación: Luis → hermano", "Posee: Llave"]);
+	assert.deepEqual(peekAt("Luis", 0, entities, sheets, 2).estado, ["Relación: hermano de Ana"]);
+});
