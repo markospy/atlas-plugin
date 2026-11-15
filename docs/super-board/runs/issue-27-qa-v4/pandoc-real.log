@@ -1,0 +1,32 @@
+(node:3908846) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///home/marcos/OtherProjects/atlas-plugin/.claude/worktrees/issue-27-qa/src/export.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /home/marcos/OtherProjects/atlas-plugin/.claude/worktrees/issue-27-qa/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+pandoc 3.1.3
+epub: Exportado: Exportar/Mi Novela.epub
+Archive:  /tmp/atlas-probe-wddRrW/Exportar/Mi Novela.epub
+  Length      Date    Time    Name
+---------  ---------- -----   ----
+       20  2026-11-15 17:22   mimetype
+      252  2026-11-15 17:22   META-INF/container.xml
+      161  2026-11-15 17:22   META-INF/com.apple.ibooks.display-options.xml
+     1444  2026-11-15 17:22   EPUB/content.opf
+      898  2026-11-15 17:22   EPUB/toc.ncx
+      805  2026-11-15 17:22   EPUB/nav.xhtml
+      518  2026-11-15 17:22   EPUB/text/title_page.xhtml
+     4102  2026-11-15 17:22   EPUB/styles/stylesheet1.css
+      511  2026-11-15 17:22   EPUB/text/ch001.xhtml
+      506  2026-11-15 17:22   EPUB/text/ch002.xhtml
+---------                     -------
+     9217                     10 files
+
+pdf: pandoc falló: pdflatex not found. Please select a different --pdf-engine or install pdflatex -- see also /usr/share/doc/pandoc/README.Debian
+docx->md:
+**Cap 02**
+
+Primero va esta.
+
+**Cap 01**
+
+Luego esta.
+

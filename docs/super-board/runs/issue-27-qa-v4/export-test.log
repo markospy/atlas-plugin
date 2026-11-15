@@ -1,0 +1,22 @@
+(node:3908090) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///home/marcos/OtherProjects/atlas-plugin/.claude/worktrees/issue-27-qa/src/export.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /home/marcos/OtherProjects/atlas-plugin/.claude/worktrees/issue-27-qa/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ el orden de escenas sale del índice Longform, anidadas aplanadas (4.745165ms)
+✔ ensambla el manuscrito en el orden del índice sin pandoc (2.679816ms)
+✔ el DOCX es un zip válido que Word abre, con el texto en orden (44.107623ms)
+✔ sin pandoc solo se ofrece DOCX y EPUB/PDF avisan claro (2.663144ms)
+✔ con pandoc, EPUB y PDF pasan el manuscrito por stdin (0.688583ms)
+✔ sceneFolder `/`, vacío o ausente es la carpeta del índice; sin barras sobrantes (0.808315ms)
+✔ caracteres de control no rompen el XML del DOCX (57.82932ms)
+✔ sin escenas no exporta, y el aviso conserva las saltadas (1.22715ms)
+✔ con pandoc real, EPUB sale con los capítulos en el orden del índice (134.927034ms)
+✔ con pandoc real, PDF se genera o avisa claro qué motor falta (113.402407ms)
+ℹ tests 10
+ℹ suites 0
+ℹ pass 10
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 726.244279
