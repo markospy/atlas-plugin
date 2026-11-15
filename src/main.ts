@@ -7,6 +7,7 @@ import { characterFolder, characterNote, parseCharacter, relationErrors } from "
 import { frontmatterBody, scalar } from "./frontmatter";
 import { GRAPH_VIEW, GraphView } from "./graph-view";
 import { checkContinuity, usageErrors } from "./continuity";
+import { buildFactGraph, dependents, graphDump } from "./dependencies";
 import { ENTITY_VIEW, EntityView } from "./entity-view";
 import { clueFolder, clueNote, nextState } from "./foreshadow";
 import { FORESHADOW_VIEW, ForeshadowView } from "./foreshadow-view";
@@ -208,6 +209,20 @@ export default class AtlasPlugin extends Plugin {
 			name: "Revisar continuidad",
 			callback: () => {
 				void this.checkContinuityHere();
+			},
+		});
+		this.addCommand({
+			id: "fact-dependents",
+			name: "Quién depende de este hecho",
+			editorCallback: (editor) => {
+				void this.factDependentsHere(editor.getSelection().trim());
+			},
+		});
+		this.addCommand({
+			id: "dump-fact-graph",
+			name: "Copiar grafo de dependencias (JSON)",
+			callback: () => {
+				void this.dumpFactGraph();
 			},
 		});
 		this.addCommand({
@@ -485,6 +500,33 @@ export default class AtlasPlugin extends Plugin {
 		const lines = [...errors, ...checkContinuity(found.memories, found.chapter).map((alert) => alert.mensaje)];
 		const summary = lines.length > 0 ? lines.join("\n") : "Sin alertas.";
 		new Notice(`Continuidad cap. ${found.chapter}\n${summary}`);
+	}
+
+	private async factDependentsHere(fact: string): Promise<void> {
+		if (fact.length === 0) {
+			new Notice("Selecciona el id de un hecho.");
+			return;
+		}
+		const found = await this.chapterMemories();
+		if (!found) {
+			return;
+		}
+		const graph = buildFactGraph(found.memories);
+		const chapters = dependents(graph, fact);
+		const summary = chapters.length > 0 ? chapters.map((chapter) => `Cap. ${chapter}`).join(", ") : "Ningún capítulo lo usa.";
+		const warnings = graph.avisos.length > 0 ? `\nGrafo incompleto:\n${graph.avisos.join("\n")}` : "";
+		new Notice(`Dependen de «${fact}»: ${summary}${warnings}`);
+	}
+
+	private async dumpFactGraph(): Promise<void> {
+		const found = await this.chapterMemories();
+		if (!found) {
+			return;
+		}
+		const graph = buildFactGraph(found.memories);
+		await navigator.clipboard.writeText(graphDump(graph));
+		const warnings = graph.avisos.length > 0 ? ` · ${graph.avisos.length} avisos de grafo incompleto` : "";
+		new Notice(`Grafo copiado: ${graph.edges.length} aristas${warnings}.`);
 	}
 
 	private async whatKnowsHere(who: string): Promise<void> {
