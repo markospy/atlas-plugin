@@ -1,0 +1,24 @@
+✔ PR contra staging con Closes #N cuenta el issue como vinculado (98.98637ms)
+✔ PR contra staging que no nombra el issue no lo vincula (138.391332ms)
+✔ repo ajeno en la palabra clave se ignora (154.470653ms)
+✔ contra la rama por defecto solo cuenta el enlace de GitHub (136.377528ms)
+✔ head nuevo tras un done verificado: answered sin aprobar el head nuevo (111.417936ms)
+✔ head nuevo sin ningún done: answered sigue en false (110.437965ms)
+✔ --deps: done sobre el head viejo y head nuevo marca needsYouAnswered sin needsYouDone (105.184451ms)
+✔ --deps: head nuevo sin done deja needsYouAnswered en false (99.994183ms)
+✔ --deps: un 🙋 nuevo sin done anula el done del 🙋 viejo (203.469024ms)
+✔ --deps: un done anterior al 🙋 no cuenta (139.907044ms)
+✔ una tarjeta con 🙋 + done verificado que rebota a Ready entra en cards (351.354791ms)
+✔ una tarjeta con 🙋 sin done sigue con humanGated y fuera de cards (398.495777ms)
+✔ en Blocked, el done verificado va por resume y nunca por sweep (211.263546ms)
+✔ un 🙋 aprobado no libera una tarjeta con un bloqueante abierto (326.47605ms)
+✔ una tarjeta aprobada, reconstruida y rebotada otra vez a Ready entra en cards (208.082003ms)
+✔ head cambiado sin ningún done (solo approvalRefresh) sigue fuera de cards (248.104997ms)
+ℹ tests 16
+ℹ suites 0
+ℹ pass 16
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1910.227811

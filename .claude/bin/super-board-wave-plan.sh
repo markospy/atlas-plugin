@@ -144,6 +144,16 @@ echo "$ITEMS" | jq --argjson cols "$COLUMNS" --argjson cap "$MAX_WORKERS" --argj
     else "build" end;
   # Unknown to the graph (closed, or beyond the fetch limit) is not "free".
   def free($n): (dep($n) | if . == null then false else .runnable end);
+  # A Ready card whose only gate is an old 🙋 a trusted human already answered
+  # `done` (verified by super-board-approval.py), even if the head moved since:
+  # the merge gate asks again for the new head. A Reviewer bounce to Ready
+  # writes no new `blocked-by:`, so the old `-` would hold it forever. Ready only:
+  # in Blocked the resume path moves it, never the sweep. approvalRefresh alone
+  # (head moved, no `done`) never frees a card.
+  def approved($n): (dep($n) | if . == null then false
+                     else (.parseable and .humanGated
+                           and ((.needsYouDone // false) or (.needsYouAnswered // false))
+                           and ((.openBlockers // []) | length == 0)) end);
 
   [ .items[]
     | select(.content.type == "Issue")
@@ -158,7 +168,7 @@ echo "$ITEMS" | jq --argjson cols "$COLUMNS" --argjson cap "$MAX_WORKERS" --argj
   | [ $cols[] as $c | $all[] | select(.status == $c and $c != "Ready") ] as $flight
 
   # Ready: only the ones the graph says are actually free.
-  | [ $all[] | select(.status == "Ready") | select(free(.number)) ] as $ready
+  | [ $all[] | select(.status == "Ready") | select(free(.number) or approved(.number)) ] as $ready
 
   # Downstream-first, so work already begun finishes before new work starts.
   | ($flight + $ready) as $picked
