@@ -1,5 +1,5 @@
 import { frontmatterBody, scalar } from "./frontmatter.ts";
-import { sheetFolder } from "./places.ts";
+import { sheetFolder } from "./sheets.ts";
 
 export const PLOT_STRUCTURES = {
 	"tres-actos": {

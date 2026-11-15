@@ -59,6 +59,38 @@ export function list(frontmatter: string, key: string): string[] {
 	return items;
 }
 
+/**
+ * Items of a top-level list of maps: `key:` then `- field: value` lines with any indent
+ * (zero-indent included), each item's other fields indented deeper than its dash.
+ */
+export function mapList(frontmatter: string, key: string): Record<string, string>[] {
+	const lines = frontmatter.split("\n");
+	const start = lines.findIndex((line) => line.trimEnd() === `${key}:`);
+	if (start === -1) {
+		return [];
+	}
+	const items: Record<string, string>[] = [];
+	let current: Record<string, string> | null = null;
+	let itemIndent = -1;
+	for (const line of lines.slice(start + 1)) {
+		if (line.length > 0 && !/^[\s-]/.test(line)) {
+			break;
+		}
+		const item = /^(\s*)- (\w+):\s*(.*)$/.exec(line);
+		if (item) {
+			itemIndent = (item[1] ?? "").length;
+			current = { [item[2] ?? ""]: unquote(item[3] ?? "") };
+			items.push(current);
+			continue;
+		}
+		const field = /^(\s*)(\w+):\s*(.*)$/.exec(line);
+		if (field && current && (field[1] ?? "").length > itemIndent) {
+			current[field[2] ?? ""] = unquote(field[3] ?? "");
+		}
+	}
+	return items;
+}
+
 function splitOutsideQuotes(inner: string): string[] {
 	const parts: string[] = [];
 	let current = "";

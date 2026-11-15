@@ -1,4 +1,6 @@
+import { frontmatterBody, mapList, scalar } from "./frontmatter.ts";
 import { chapterNumber } from "./graph.ts";
+import { sheetFolder } from "./sheets.ts";
 
 export interface ObjectPossession {
 	poseedor: string;
@@ -15,20 +17,7 @@ export interface ObjectSheet {
 }
 
 export function objectFolder(activePath: string): string {
-	const marker = "/Objetos/";
-	const at = activePath.indexOf(marker);
-	if (at !== -1) {
-		return activePath.slice(0, at + "/Objetos".length);
-	}
-	if (activePath === "Objetos" || activePath.startsWith("Objetos/")) {
-		return "Objetos";
-	}
-	const parent = parentOf(activePath);
-	if (parent === "Manuscrito" || parent.endsWith("/Manuscrito")) {
-		const project = parentOf(parent);
-		return project.length > 0 ? `${project}/Objetos` : "Objetos";
-	}
-	return parent.length > 0 ? `${parent}/Objetos` : "Objetos";
+	return sheetFolder(activePath, "Objetos");
 }
 
 export function objectNote(name: string): string {
@@ -84,73 +73,9 @@ export function holderAt(sheet: ObjectSheet, chapter: number): string {
 	return holder;
 }
 
-function parentOf(path: string): string {
-	const slash = path.lastIndexOf("/");
-	return slash === -1 ? "" : path.slice(0, slash);
-}
-
-function frontmatterBody(note: string): string {
-	if (!note.startsWith("---\n")) {
-		return "";
-	}
-	const end = note.indexOf("\n---", 3);
-	return end === -1 ? "" : note.slice(4, end);
-}
-
-function scalar(frontmatter: string, key: string): string {
-	const match = new RegExp(`^${key}:\\s*(.*)$`, "m").exec(frontmatter);
-	if (!match) {
-		return "";
-	}
-	return unquote(match[1] ?? "");
-}
-
-function unquote(value: string): string {
-	const trimmed = value.trim();
-	if (trimmed.startsWith('"') && trimmed.endsWith('"')) {
-		try {
-			return JSON.parse(trimmed) as string;
-		} catch {
-			return trimmed.slice(1, -1);
-		}
-	}
-	return trimmed;
-}
-
 function parsePossessions(frontmatter: string): ObjectPossession[] {
-	const lines = frontmatter.split("\n");
-	const start = lines.findIndex((line) => line === "posesiones:");
-	if (start === -1) {
-		return [];
-	}
-	const possessions: ObjectPossession[] = [];
-	let current: ObjectPossession | null = null;
-	for (const line of lines.slice(start + 1)) {
-		if (line.length > 0 && !line.startsWith(" ") && !line.startsWith("-")) {
-			break;
-		}
-		const item = /^ {2}- (\w+):\s*(.*)$/.exec(line);
-		if (item) {
-			if (current) {
-				possessions.push(current);
-			}
-			current = { poseedor: "", capitulo: "" };
-			assignPossession(current, item[1] ?? "", unquote(item[2] ?? ""));
-			continue;
-		}
-		const field = /^ {4}(\w+):\s*(.*)$/.exec(line);
-		if (field && current) {
-			assignPossession(current, field[1] ?? "", unquote(field[2] ?? ""));
-		}
-	}
-	if (current) {
-		possessions.push(current);
-	}
-	return possessions;
-}
-
-function assignPossession(possession: ObjectPossession, key: string, value: string): void {
-	if (key === "poseedor" || key === "capitulo") {
-		possession[key] = value;
-	}
+	return mapList(frontmatter, "posesiones").map((item) => ({
+		poseedor: item.poseedor ?? "",
+		capitulo: item.capitulo ?? "",
+	}));
 }

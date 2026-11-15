@@ -1,0 +1,6 @@
+src/frontmatter.ts:2:export function frontmatterBody(note: string): string {
+src/frontmatter.ts:26:export function scalar(frontmatter: string, key: string): string {
+src/frontmatter.ts:115:export function unquote(value: string): string {
+src/style.ts:86:function frontmatterBody(note: string): string {
+src/style.ts:94:function scalar(frontmatter: string, key: string): string {
+src/style.ts:102:function unquote(value: string): string {
