@@ -29,6 +29,7 @@ import { DEFAULT_PROVIDER_SETTINGS, type ProviderSettings } from "./providers";
 import { reviewScene } from "./review";
 import { ReviewModal } from "./review-modal";
 import { AtlasSettingTab } from "./settings";
+import { inProject, projectRoot } from "./sheets";
 import { parseSkill, skillFolder, skillNote, skillsFor } from "./style";
 import { createAtlasProject, type AtlasFiles } from "./vault";
 
@@ -498,10 +499,10 @@ export default class AtlasPlugin extends Plugin {
 			new Notice("Abre una escena de un capítulo (Cap NN).");
 			return;
 		}
-		// Read-only: every note is read, none is written.
-		const notes = await Promise.all(
-			this.app.vault.getMarkdownFiles().map(async (file) => this.app.vault.cachedRead(file)),
-		);
+		// Read-only: the project's notes are read, none is written.
+		const root = projectRoot(path);
+		const files = this.app.vault.getMarkdownFiles().filter((file) => inProject(root, file.path));
+		const notes = await Promise.all(files.map(async (file) => this.app.vault.cachedRead(file)));
 		const byType = (tipo: string) => notes.filter((note) => scalar(frontmatterBody(note), "tipo") === tipo);
 		new Notice("Revisando la escena con IA…");
 		const result = await reviewScene(

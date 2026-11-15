@@ -34,3 +34,9 @@ test("ancla citas en una escena sin frontmatter", () => {
 	assert.deepEqual(parsed.hallazgos.map((h) => [h.linea, h.columna]), [[2, 11]]);
 	assert.equal(parsed.descartados, 0);
 });
+
+test("Revisar escena con IA solo lee notas del proyecto de la escena", () => {
+	const main = readFileSync(new URL("../src/main.ts", import.meta.url), "utf8");
+	const command = method(main, "reviewWithAi");
+	assert.match(command, /inProject\(/);
+});
