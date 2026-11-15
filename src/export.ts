@@ -98,11 +98,12 @@ export async function manuscriptScenes(
 	return { escenas, faltan };
 }
 
-/** `[[nota|alias]]` and `[[nota]]` read as plain text; `![[...]]` embeds are dropped. */
+/** `[[nota|alias]]` and `[[nota#ancla]]` read as plain text; `![[...]]` embeds are dropped. */
 function plainLinks(text: string): string {
 	return text
 		.replace(/!\[\[[^\]]*\]\]/g, "")
 		.replace(/\[\[([^\]|]+)\|([^\]]+)\]\]/g, "$2")
+		.replace(/\[\[([^\]#]*)#\^?([^\]]*)\]\]/g, (_, nota: string, ancla: string) => nota || ancla)
 		.replace(/\[\[([^\]]+)\]\]/g, "$1");
 }
 
@@ -111,8 +112,22 @@ export function assembleMarkdown(escenas: ExportScene[]): string {
 	return escenas.map((scene) => `# ${scene.titulo}\n\n${plainLinks(scene.texto)}\n`).join("\n");
 }
 
+/** Where pandoc lives when the app's PATH misses it: Homebrew on Apple silicon, then Intel and the official .pkg. */
+const PANDOC_PATHS = ["pandoc", "/opt/homebrew/bin/pandoc", "/usr/local/bin/pandoc"];
+
+/** First pandoc binary that `works`, or null. A macOS app opened from the Dock does not see the shell PATH. */
+export async function pandocBinary(works: (bin: string) => Promise<boolean>): Promise<string | null> {
+	for (const bin of PANDOC_PATHS) {
+		if (await works(bin)) {
+			return bin;
+		}
+	}
+	return null;
+}
+
+/** `-raw_html`: a literal `<raro>` in a scene stays text instead of vanishing as unknown HTML. */
 export function pandocArgs(titulo: string, output: string): string[] {
-	return ["--from", "markdown", "--metadata", `title=${titulo}`, "--output", output];
+	return ["--from", "markdown-raw_html", "--metadata", `title=${titulo}`, "--output", output];
 }
 
 export interface ExportIO {

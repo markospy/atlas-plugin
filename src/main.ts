@@ -10,7 +10,7 @@ import { GRAPH_VIEW, GraphView } from "./graph-view";
 import { checkContinuity, usageErrors } from "./continuity";
 import { buildFactGraph, dependents, graphDump } from "./dependencies";
 import { ENTITY_VIEW, EntityView } from "./entity-view";
-import { type ExportIO, exportManuscript, exportMessage, manuscriptScenes, sceneOrder } from "./export";
+import { type ExportIO, exportManuscript, exportMessage, manuscriptScenes, pandocBinary, sceneOrder } from "./export";
 import { ExportModal } from "./export-modal";
 import { clueFolder, clueNote, nextState } from "./foreshadow";
 import { FORESHADOW_VIEW, ForeshadowView } from "./foreshadow-view";
@@ -72,9 +72,9 @@ async function findPandoc(adapter: DataAdapter): Promise<ExportIO["pandoc"]> {
 	}
 	// Loaded here, not at the top: mobile has no child_process.
 	const { execFile } = require("child_process") as typeof import("child_process");
-	const run = (args: string[], input = "") =>
+	const runWith = (bin: string, args: string[], input = "") =>
 		new Promise<void>((resolve, reject) => {
-			const child = execFile("pandoc", args, { cwd: adapter.getBasePath() }, (error, _stdout, stderr) => {
+			const child = execFile(bin, args, { cwd: adapter.getBasePath() }, (error, _stdout, stderr) => {
 				if (error) {
 					reject(new Error(String(stderr).trim() || error.message));
 					return;
@@ -83,12 +83,11 @@ async function findPandoc(adapter: DataAdapter): Promise<ExportIO["pandoc"]> {
 			});
 			child.stdin?.end(input);
 		});
-	try {
-		await run(["--version"]);
-	} catch {
+	const bin = await pandocBinary((candidate) => runWith(candidate, ["--version"]).then(() => true, () => false));
+	if (bin === null) {
 		return null;
 	}
-	return run;
+	return (args, input) => runWith(bin, args, input);
 }
 
 function backupsFromVault(vault: Vault): BackupFiles {

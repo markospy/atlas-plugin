@@ -13,6 +13,7 @@ import {
 	exportMessage,
 	manuscriptScenes,
 	pandocArgs,
+	pandocBinary,
 	sceneOrder,
 } from "../src/export.ts";
 
@@ -92,6 +93,27 @@ test("las incrustaciones ![[...]] no salen como texto (R7)", () => {
 	assert.doesNotMatch(xml, /mapa\.jpg/);
 });
 
+test("los enlaces con ancla salen como el nombre de la nota (R13)", () => {
+	const markdown = assembleMarkdown([
+		{ titulo: "Cap 01", texto: "Ver [[nota#seccion]], [[nota#^bloque]], [[nota#seccion|aquí]] y [[#Final]]." },
+	]);
+	assert.match(markdown, /Ver nota, nota, aquí y Final\./);
+});
+
+test("busca pandoc en el PATH y luego en las rutas de Homebrew de macOS (R10)", async () => {
+	const tried = [];
+	const only = (ok) => async (bin) => {
+		tried.push(bin);
+		return bin === ok;
+	};
+	assert.equal(await pandocBinary(only("pandoc")), "pandoc");
+	assert.deepEqual(tried, ["pandoc"]);
+	tried.length = 0;
+	assert.equal(await pandocBinary(only("/opt/homebrew/bin/pandoc")), "/opt/homebrew/bin/pandoc");
+	assert.equal(await pandocBinary(only("/usr/local/bin/pandoc")), "/usr/local/bin/pandoc");
+	assert.equal(await pandocBinary(only("nada")), null);
+});
+
 test("el encabezado de escena del DOCX tiene nivel de esquema para el panel de navegación (R8)", () => {
 	const xml = new TextDecoder().decode(docxFile([{ titulo: "Cap 01", texto: "Hola." }]));
 	assert.match(xml, /<w:p><w:pPr><w:outlineLvl w:val="0"\/><\/w:pPr><w:r><w:rPr><w:b\/><w:sz w:val="32"\/><\/w:rPr><w:t xml:space="preserve">Cap 01</);
@@ -165,7 +187,7 @@ test("con pandoc, EPUB y PDF pasan el manuscrito por stdin", async () => {
 
 	assert.deepEqual(pandocArgs("Mi Novela", "out.pdf"), [
 		"--from",
-		"markdown",
+		"markdown-raw_html",
 		"--metadata",
 		"title=Mi Novela",
 		"--output",
@@ -256,6 +278,15 @@ test("con pandoc real, EPUB sale con los capítulos en el orden del índice", { 
 	assert.match(text, /<dc:title[^>]*>Mi Novela<\/dc:title>/);
 	assert.ok(text.indexOf("Cap 02") < text.indexOf("Cap 01"), "Cap 02 antes que Cap 01");
 	assert.match(text, /Primero va esta &amp; ella\./);
+});
+
+test("con pandoc real, un <raro> literal no se pierde en EPUB (R12)", { skip: !HAS_PANDOC && "sin pandoc" }, async () => {
+	const vault = mkdtempSync(join(tmpdir(), "atlas-raw-"));
+	const io = { writeBinary: async () => assert.fail("no escribe binario"), pandoc: realPandoc(vault) };
+	const result = await exportManuscript("epub", "Mi Novela", [{ titulo: "Cap 01", texto: "Ella dijo <raro> y siguió." }], "", io);
+	assert.equal(result.ok, true, result.mensaje);
+	const text = spawnSync("unzip", ["-p", join(vault, result.ruta), "EPUB/text/*.xhtml"], { encoding: "utf8" }).stdout;
+	assert.match(text, /Ella dijo &lt;raro&gt; y siguió\./);
 });
 
 test("con pandoc real, PDF se genera o avisa claro qué motor falta", { skip: !HAS_PANDOC && "sin pandoc" }, async () => {
