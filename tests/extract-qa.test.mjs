@@ -185,3 +185,18 @@ test("aceptar en una memoria con hechos: en flujo de varias líneas no antepone 
 	assert.equal(parseMemory(escrita).capitulo, 3);
 	assert.deepEqual(parseMemory(escrita).hechos.map((h) => h.id), ["anillo", "carta"]);
 });
+
+// #70 v2: lector y escritor leen el frontmatter con la librería `yaml`, sin parseo a mano.
+test("el lector ve los hechos de una lista en flujo de varias líneas y con comentario al final", () => {
+	const varias = ["---", "capitulo: 3", "hechos: [", "  {id: anillo, texto: El anillo},", "  {id: llave, texto: \"Una llave, rota\", verdad: true}", "]", "---", ""].join("\n");
+	assert.deepEqual(parseMemory(varias).hechos.map((h) => h.id), ["anillo", "llave"]);
+	const comentario = ["---", "capitulo: 3", "hechos: [{id: anillo, texto: El anillo}] # a mano", "---", ""].join("\n");
+	assert.deepEqual(parseMemory(comentario).hechos.map((h) => h.id), ["anillo"]);
+});
+
+test("aceptar en una memoria cuyo frontmatter no es YAML válido falla sin tocar la nota", async () => {
+	const nota = ["---", "tipo: memoria", "hechos:", "  - id: anillo", "    texto: El anillo: dorado", "---", "Cuerpo", ""].join("\n");
+	const files = mockFiles({ [MEMORIA]: nota });
+	await assert.rejects(writeApproved(files, destino, parseProposal(RESPUESTA), new Set(["h1"])), /YAML/);
+	assert.equal(files.store.get(MEMORIA), nota);
+});

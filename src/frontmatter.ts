@@ -1,3 +1,5 @@
+import { isMap, parseDocument, type Document } from "yaml";
+
 /** YAML frontmatter between the opening `---` and its closing `---` line, with CRLF read as LF. */
 export function frontmatterBody(note: string): string {
 	const lines = note.replace(/\r\n/g, "\n").split("\n");
@@ -30,16 +32,27 @@ export function noteBody(note: string): string {
 /**
  * Index of the line that closes a note's frontmatter, or -1 when there is none. `lines` is the
  * note split on LF. A `---` scene break also opens notes, so the block counts as frontmatter only
- * when every line in it reads as YAML: blank, `# comment`, `key:` (spaces in the key allowed, as
- * Obsidian Properties writes them) or an indented / `- ` continuation.
+ * when it parses as a YAML map (or is empty).
  */
 export function frontmatterEnd(lines: readonly string[]): number {
+	return frontmatterYaml(lines).end;
+}
+
+/**
+ * Closing line and parsed YAML of a note's frontmatter (`lines` split on LF). `end` is -1 when
+ * there is none: no closing line, or a block that is not a YAML map (a `---` scene break).
+ * `invalid` marks a block that is not valid YAML at all, so a writer can refuse instead of guessing.
+ */
+export function frontmatterYaml(lines: readonly string[]): { end: number; doc: Document.Parsed | null; invalid: boolean } {
 	const end = closingLine(lines);
 	if (end === -1) {
-		return -1;
+		return { end: -1, doc: null, invalid: false };
 	}
-	const yaml = lines.slice(1, end).every((line) => /^(\s*$|\s*#|[\s-]|[^\s:#][^:]*:(\s|$))/u.test(line));
-	return yaml ? end : -1;
+	const doc = parseDocument(lines.slice(1, end).join("\n"));
+	if (doc.errors.length > 0) {
+		return { end: -1, doc: null, invalid: true };
+	}
+	return doc.contents === null || isMap(doc.contents) ? { end, doc, invalid: false } : { end: -1, doc: null, invalid: false };
 }
 
 /** Value of a top-level `key: value` line, unquoted; "" when missing. */
@@ -80,17 +93,17 @@ export function list(frontmatter: string, key: string): string[] {
 }
 
 /**
- * Items of a top-level list of maps: `key:` then `- field: value` lines with any indent
- * (zero-indent included), each item's other fields indented deeper than its dash; or a one-line
- * flow list `key: [{field: value, …}, …]`.
+ * Items of a top-level list of maps, read as YAML (block or flow, one line or several), values
+ * as strings. Frontmatter that is not valid YAML falls back to `key:` then `- field: value` lines
+ * with any indent, each item's other fields indented deeper than its dash.
  */
 export function mapList(frontmatter: string, key: string): Record<string, string>[] {
-	const lines = frontmatter.split("\n");
-	const inline = lines.find((line) => line.startsWith(`${key}: `) && line.slice(key.length + 1).trim().startsWith("["));
-	if (inline !== undefined) {
-		const maps = flowMaps(inline.slice(key.length + 1)) ?? [];
-		return maps.map((pairs) => Object.fromEntries(pairs.map(([field, value]) => [field, unquote(value)])));
+	const doc = parseDocument(frontmatter);
+	if (doc.errors.length === 0) {
+		const value: unknown = isMap(doc.contents) ? doc.toJS()[key] : undefined;
+		return Array.isArray(value) ? value.filter(isRecord).map((item) => Object.fromEntries(Object.entries(item).map(([field, v]) => [field, text(v)]))) : [];
 	}
+	const lines = frontmatter.split("\n");
 	const start = lines.findIndex((line) => line.trimEnd() === `${key}:`);
 	if (start === -1) {
 		return [];
@@ -117,56 +130,32 @@ export function mapList(frontmatter: string, key: string): Record<string, string
 	return items;
 }
 
-/**
- * Raw `field`, `value` pairs of each map in a one-line flow list `[{a: 1, b: "x, y"}, …]`, values
- * as written; `[]` for an empty list; null when `value` is anything else.
- */
-export function flowMaps(value: string): [string, string][][] | null {
-	const trimmed = value.trim();
-	if (!trimmed.startsWith("[") || !trimmed.endsWith("]")) {
-		return null;
-	}
-	const maps: [string, string][][] = [];
-	for (const part of splitOutsideQuotes(trimmed.slice(1, -1))) {
-		const item = part.trim();
-		if (item.length === 0) {
-			continue;
-		}
-		if (!item.startsWith("{") || !item.endsWith("}")) {
-			return null;
-		}
-		const pairs: [string, string][] = [];
-		for (const entry of splitOutsideQuotes(item.slice(1, -1))) {
-			if (entry.trim().length === 0) {
-				continue;
-			}
-			const pair = /^\s*([\p{L}\w-]+)\s*:(?:\s+(.*))?$/su.exec(entry);
-			if (!pair) {
-				return null;
-			}
-			pairs.push([pair[1] ?? "", (pair[2] ?? "").trim()]);
-		}
-		maps.push(pairs);
-	}
-	return maps;
+function isRecord(value: unknown): value is Record<string, unknown> {
+	return !!value && typeof value === "object" && !Array.isArray(value);
 }
 
-/** Splits on commas that sit outside quotes and outside nested `{}` / `[]`. */
+function text(value: unknown): string {
+	if (value === null || value === undefined) {
+		return "";
+	}
+	// An unquoted `[[Link]]` reads as YAML as a list in a list; keep it a link, as written.
+	if (Array.isArray(value) && value.length === 1 && Array.isArray(value[0]) && value[0].length === 1) {
+		return `[[${String(value[0][0])}]]`;
+	}
+	return typeof value === "object" ? JSON.stringify(value) : String(value);
+}
+
+/** Splits on commas that sit outside quotes. */
 export function splitOutsideQuotes(inner: string): string[] {
 	const parts: string[] = [];
 	let current = "";
 	let quote = "";
-	let depth = 0;
 	for (const char of inner) {
 		if (quote.length > 0) {
 			quote = char === quote ? "" : quote;
 		} else if (char === '"' || char === "'") {
 			quote = char;
-		} else if (char === "{" || char === "[") {
-			depth++;
-		} else if (char === "}" || char === "]") {
-			depth = Math.max(0, depth - 1);
-		} else if (char === "," && depth === 0) {
+		} else if (char === ",") {
 			parts.push(current);
 			current = "";
 			continue;
