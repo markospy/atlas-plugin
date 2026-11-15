@@ -171,3 +171,10 @@ Antes de aplicar un cambio de IA, Atlas copia la nota tal como estaba en `.atlas
 - **Restaurar respaldo de la nota**, con la nota abierta, lista sus versiones de la más nueva a la más vieja. Al elegir una, la nota vuelve a ese texto. El texto que tenía antes también se respalda, así que restaurar se puede deshacer.
 - Retención, por nota y cada vez que se crea un respaldo: se quedan las 10 versiones más nuevas y se borran las de más de 7 días. La más nueva no se borra nunca.
 - Atlas solo borra en esa carpeta archivos con nombre de respaldo (`2026-11-15T10-30-00.000Z.md`); los demás no se tocan.
+
+## Exportar manuscrito
+
+Abre la nota índice del proyecto (la que tiene `longform`) y ejecuta **Exportar manuscrito**. Elige el formato y la carpeta de la bóveda (por defecto `Exportar/` junto al índice; se crea si no existe). Las escenas salen en el orden de `longform.scenes`, las anidadas aplanadas, cada una con su título como encabezado y sin frontmatter. Los `[[wikilinks]]` quedan como texto. Una escena del índice sin nota se salta y el aviso la nombra.
+
+- **DOCX** no necesita nada instalado: un encabezado por escena, un párrafo por bloque y salto de página entre escenas.
+- **EPUB** y **PDF** usan [pandoc](https://pandoc.org) y solo aparecen si `pandoc --version` funciona (solo escritorio). PDF necesita además un motor PDF de pandoc (p. ej. LaTeX); si falta, el aviso muestra el error de pandoc. Sin pandoc, el diálogo lo dice y DOCX sigue disponible.

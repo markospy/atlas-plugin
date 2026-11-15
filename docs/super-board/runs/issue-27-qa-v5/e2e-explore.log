@@ -1,0 +1,70 @@
+order {"titulo":"Mi Novela","carpeta":"","escenas":["Cap 02","Hija","Cap 01"]}
+faltan []
+# Cap 02
+
+Primero con la heroína y  fin.
+
+Segundo párrafo & <raro>  ok.
+
+# Hija
+
+---
+
+Texto sin YAML tras una pausa.
+
+---
+
+Sigue.
+
+# Cap 01
+
+Sin frontmatter.  Lugar.
+
+epub {"ok":true,"ruta":"./Mi Novela.epub"}
+pdf {"ok":false,"mensaje":"pandoc falló: Command failed: pandoc --from markdown --metadata title=Mi Novela --output ./Mi Novela.pdf\npdflatex not found. Please select a different --pdf-engine or install pdflatex -- see also /usr/share/doc/pandoc/README.Debian\n"}
+--- unzip -t
+Archive:  out.docx
+    testing: [Content_Types].xml      OK
+    testing: _rels/.rels              OK
+    testing: word/document.xml        OK
+No errors detected in compressed data of out.docx.
+--- pandoc out.docx -t plain
+Cap 02
+
+Primero con la heroína y fin.
+
+Segundo párrafo & <raro> ok.
+
+Hija
+
+---
+
+Texto sin YAML tras una pausa.
+
+---
+
+Sigue.
+
+Cap 01
+
+Sin frontmatter. Lugar.
+--- pandoc 'Mi Novela.epub' -t plain
+Cap 02
+
+Primero con la heroína y fin.
+
+Segundo párrafo &  ok.
+
+Hija
+
+------------------------------------------------------------------------
+
+Texto sin YAML tras una pausa.
+
+------------------------------------------------------------------------
+
+Sigue.
+
+Cap 01
+
+Sin frontmatter. Lugar.

@@ -1,4 +1,4 @@
-import { type Editor, Notice, Plugin, requestUrl, type TAbstractFile, TFile, type Vault } from "obsidian";
+import { type DataAdapter, type Editor, FileSystemAdapter, Notice, Platform, Plugin, requestUrl, type TAbstractFile, TFile, type Vault } from "obsidian";
 
 import { backup, type BackupFiles, listBackups, restore } from "./backup";
 import { chronologyNotice, impossibleTravels, readChronology } from "./chronology";
@@ -12,6 +12,8 @@ import { addDecision, type Decision, markAligned, parseDecisions, pendingChapter
 import { DecisionsModal, type DecisionRow } from "./decisions-modal";
 import { buildFactGraph, dependents, graphDump } from "./dependencies";
 import { ENTITY_VIEW, EntityView } from "./entity-view";
+import { type ExportIO, exportManuscript, exportMessage, manuscriptScenes, pandocBinary, sceneOrder } from "./export";
+import { ExportModal } from "./export-modal";
 import { clueFolder, clueNote, nextState } from "./foreshadow";
 import { FORESHADOW_VIEW, ForeshadowView } from "./foreshadow-view";
 import { objectFolder, objectNote, parseObject } from "./objects";
@@ -45,7 +47,7 @@ import { projectOf } from "./entities";
 import { inProject } from "./sheets";
 import { dayKey, inManuscript, manuscriptFolder, manuscriptWords, progress, progressNotice, recordTotal, type WritingLog } from "./stats";
 import { parseSkill, skillFolder, skillNote, skillsFor } from "./style";
-import { createAtlasProject, type AtlasFiles } from "./vault";
+import { childPath, createAtlasProject, parentPath, type AtlasFiles } from "./vault";
 
 function filesFromVault(vault: Vault): AtlasFiles {
 	return {
@@ -63,6 +65,31 @@ function filesFromVault(vault: Vault): AtlasFiles {
 			await vault.create(path, data);
 		},
 	};
+}
+
+/** pandoc run from the vault root, or null on mobile or when `pandoc --version` fails. */
+async function findPandoc(adapter: DataAdapter): Promise<ExportIO["pandoc"]> {
+	if (!Platform.isDesktopApp || !(adapter instanceof FileSystemAdapter)) {
+		return null;
+	}
+	// Loaded here, not at the top: mobile has no child_process.
+	const { execFile } = require("child_process") as typeof import("child_process");
+	const runWith = (bin: string, args: string[], input = "") =>
+		new Promise<void>((resolve, reject) => {
+			const child = execFile(bin, args, { cwd: adapter.getBasePath() }, (error, _stdout, stderr) => {
+				if (error) {
+					reject(new Error(String(stderr).trim() || error.message));
+					return;
+				}
+				resolve();
+			});
+			child.stdin?.end(input);
+		});
+	const bin = await pandocBinary((candidate) => runWith(candidate, ["--version"]).then(() => true, () => false));
+	if (bin === null) {
+		return null;
+	}
+	return (args, input) => runWith(bin, args, input);
 }
 
 function backupsFromVault(vault: Vault): BackupFiles {
@@ -342,6 +369,13 @@ export default class AtlasPlugin extends Plugin {
 			},
 		});
 		this.addCommand({
+			id: "export-manuscript",
+			name: "Exportar manuscrito",
+			callback: () => {
+				void this.exportFromIndex();
+			},
+		});
+		this.addCommand({
 			id: "writing-progress",
 			name: "Progreso de escritura",
 			callback: () => {
@@ -365,6 +399,40 @@ export default class AtlasPlugin extends Plugin {
 		}
 		await createAtlasProject(filesFromVault(this.app.vault), file.path);
 		new Notice("Proyecto Atlas listo.");
+	}
+
+	private async exportFromIndex(): Promise<void> {
+		const file = this.app.workspace.getActiveFile();
+		const order = file ? sceneOrder(await this.app.vault.read(file)) : null;
+		if (!file || !order) {
+			new Notice("Abre la nota índice del proyecto (frontmatter longform).");
+			return;
+		}
+		if (order.escenas.length === 0) {
+			new Notice("El índice no tiene escenas en longform.scenes.");
+			return;
+		}
+		const { adapter } = this.app.vault;
+		const pandoc = await findPandoc(adapter);
+		const start = childPath(parentPath(file.path), "Exportar");
+		new ExportModal(this.app, pandoc !== null, start, (format, folder) => {
+			void (async () => {
+				try {
+					const { escenas, faltan } = await manuscriptScenes(file.path, order, (path) => adapter.read(path));
+					if (escenas.length > 0 && folder.length > 0 && !(await adapter.exists(folder))) {
+						await this.app.vault.createFolder(folder);
+					}
+					const io: ExportIO = {
+						writeBinary: (path, data) => adapter.writeBinary(path, data.slice().buffer),
+						pandoc,
+					};
+					const result = await exportManuscript(format, order.titulo || file.basename, escenas, folder, io);
+					new Notice(exportMessage(result, faltan), 0);
+				} catch (error) {
+					new Notice(`No se pudo exportar: ${error instanceof Error ? error.message : String(error)}`, 0);
+				}
+			})();
+		}).open();
 	}
 
 	private async newCharacter(name: string): Promise<void> {

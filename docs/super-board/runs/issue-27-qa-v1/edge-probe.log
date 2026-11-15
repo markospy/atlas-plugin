@@ -1,0 +1,19 @@
+{"titulo":"Novela","carpeta":"/","escenas":["A","B","C","D"]}
+[ 'Libro///A.md', 'Libro///B.md', 'Libro///C.md', 'Libro///D.md' ]
+[
+  'Libro/Escenas/A.md',
+  'Libro/Escenas/B.md',
+  'Libro/Escenas/C.md',
+  'Libro/Escenas/D.md'
+]
+[
+  'Libro//Escenas/A.md',
+  'Libro//Escenas/B.md',
+  'Libro//Escenas/C.md',
+  'Libro//Escenas/D.md'
+]
+crlf {"titulo":"Novela","carpeta":"/","escenas":["A","B","C","D"]}
+zip testzip: None
+xml ok [Content_Types].xml
+xml ok _rels/.rels
+xml BAD word/document.xml not well-formed (invalid token): line 2, column 342
