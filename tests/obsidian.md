@@ -102,3 +102,9 @@ Prepara el plugin una vez:
 - [ ] **Aprobar** escribe la propuesta en la nota y conserva el frontmatter; **Continuación** añade al final sin tocar lo anterior.
 - [ ] Editar la nota mientras se espera la propuesta y pulsar **Aprobar** avisa "La nota cambió desde la propuesta." y no escribe.
 - [ ] Con **Modelo** vacío, el comando avisa "Configura endpoint y modelo…" y no abre el diff.
+
+## #25 metas y estadísticas
+
+- [ ] Con una escena de `Manuscrito/` abierta, **Progreso de escritura** avisa con las palabras totales del manuscrito, "Hoy: 0 / 500 (0 %)" y "Racha: 0 días" la primera vez.
+- [ ] Escribir unas palabras, esperar 5 s y repetir el comando: "Hoy" sube en esas palabras y la racha pasa a 1 día.
+- [ ] Poner **Meta diaria** a 0 en **Settings → Atlas**: el aviso dice "sin meta diaria". Tras reiniciar Obsidian, la meta y el registro siguen en `data.json`.
