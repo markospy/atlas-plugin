@@ -27,6 +27,7 @@ import { PLOT_STRUCTURES, plotFolder, plotNote, SCENE_FIELDS, type PlotStructure
 import { BASE_RULES, patternRules } from "./linter";
 import { LintModal } from "./lint-modal";
 import { MARKER_VIEW, MarkerView } from "./marker-view";
+import { chapterOf } from "./peek";
 import { PEEK_VIEW, PeekView } from "./peek-view";
 import { DEFAULT_PROVIDER_SETTINGS, ollamaProvider, type ProviderSettings } from "./providers";
 import { NO_PROVIDER, providerReady, reviewScene } from "./review";
@@ -519,8 +520,7 @@ export default class AtlasPlugin extends Plugin {
 	private async reviewWithAi(editor: Editor): Promise<void> {
 		const active = this.app.workspace.getActiveFile();
 		const path = active?.path ?? "";
-		const parent = path.slice(0, Math.max(0, path.lastIndexOf("/")));
-		const chapter = chapterNumber(path) ?? chapterNumber(parent);
+		const chapter = chapterOf(path);
 		if (!active || chapter === null) {
 			new Notice("Abre una escena de un capítulo (Cap NN).");
 			return;

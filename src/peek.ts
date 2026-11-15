@@ -5,6 +5,7 @@ import { chapterNumber } from "./memory.ts";
 import { parseObject } from "./objects.ts";
 import { parsePlace } from "./places.ts";
 import { inProject } from "./sheets.ts";
+import { noteTitle } from "./vault.ts";
 import { worldAt, type WorldSheets } from "./world.ts";
 
 export type Peek = { ok: true; entidad: EntityEntry; estado: string[] } | { ok: false };
@@ -51,13 +52,15 @@ export function peekAt(
 
 function stateOf(entity: EntityEntry, sheets: WorldSheets, chapter: number): string[] {
 	const world = worldAt(sheets, chapter);
-	const name = entity.nombre.toLowerCase();
-	const is = (value: string) => linkTarget(value).toLowerCase() === name;
+	// Links point at the file name, the text may use `nombre` or an alias: any of them is this entity.
+	const names = new Set([entity.nombre, noteTitle(entity.path), ...entity.alias].map((term) => term.trim().toLowerCase()));
+	names.delete("");
+	const is = (value: string) => names.has(linkTarget(value).toLowerCase());
 	if (entity.tipo === "objeto") {
 		return world.posesiones.filter((item) => is(item.objeto)).map((item) => `Poseedor: ${linkTarget(item.poseedor)}`);
 	}
 	if (entity.tipo === "lugar") {
-		return world.lugares.filter((item) => is(item.lugar)).map((item) => `Estado: ${item.estado} (desde ${item.desde})`);
+		return world.lugares.filter((item) => is(item.lugar)).map((item) => `Estado: ${item.estado} (desde ${linkTarget(item.desde)})`);
 	}
 	return [
 		...world.relaciones.filter((item) => is(item.personaje)).map((item) => `Relación: ${item.tipo} de ${linkTarget(item.con)}`),

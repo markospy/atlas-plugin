@@ -86,7 +86,7 @@ test("peekAt da el estado del personaje en el capítulo de la nota", () => {
 test("peekAt da poseedor del objeto y estado del lugar en ese capítulo", () => {
 	assert.deepEqual(peekAt("el Revólver", 4, ENTITIES, SHEETS, 2).estado, ["Poseedor: Abuelo"]);
 	assert.deepEqual(peekAt("el Revólver", 4, ENTITIES, SHEETS, 4).estado, ["Poseedor: Elena"]);
-	assert.deepEqual(peekAt("Casa del abuelo", 0, ENTITIES, SHEETS, 12).estado, ["Estado: Quemada (desde [[Cap 12]])"]);
+	assert.deepEqual(peekAt("Casa del abuelo", 0, ENTITIES, SHEETS, 12).estado, ["Estado: Quemada (desde Cap 12)"]);
 	assert.deepEqual(peekAt("Casa del abuelo", 0, ENTITIES, SHEETS, 1).estado, []);
 });
 
@@ -132,7 +132,7 @@ test("projectSheets: ficha sin nombre usa el título de la nota y muestra su est
 	assert.deepEqual(entities.map((entity) => entity.nombre), ["Elena", "Faro", "Revólver"]);
 	assert.deepEqual(peekAt("el Revólver", 4, entities, sheets, 5).estado, ["Poseedor: Elena"]);
 	assert.deepEqual(peekAt("Elena", 0, entities, sheets, 5).estado, ["Posee: Revólver"]);
-	assert.deepEqual(peekAt("el Faro", 4, entities, sheets, 3).estado, ["Estado: Apagado (desde [[Cap 02]])"]);
+	assert.deepEqual(peekAt("el Faro", 4, entities, sheets, 3).estado, ["Estado: Apagado (desde Cap 02)"]);
 });
 
 test("chapterOf: capítulo de la nota por su nombre o su carpeta", () => {
@@ -176,4 +176,20 @@ test("projectSheets: ignora escenas del manuscrito aunque tengan tipo de ficha",
 	const { entities, sheets } = projectSheets("Novela", notes);
 	assert.deepEqual(entities.map((entity) => entity.path), ["Novela/Personajes/Elena.md"]);
 	assert.equal(sheets.personajes.length, 1);
+});
+
+test("peekAt: ficha con nombre distinto del archivo casa con enlaces al archivo", () => {
+	const notes = [
+		{ path: "Novela/Personajes/Ana.md", text: '---\ntipo: personaje\nnombre: "Ana García"\n---\n' },
+		{
+			path: "Novela/Personajes/Luis.md",
+			text: '---\ntipo: personaje\nnombre: "Luis"\nrelaciones:\n  - con: "[[Ana]]"\n    tipo: "hermano"\n---\n',
+		},
+		{
+			path: "Novela/Objetos/Llave.md",
+			text: '---\ntipo: objeto\nposesiones:\n  - poseedor: "[[Personajes/Ana|la hermana]]"\n    capitulo: "[[Cap 01]]"\n---\n',
+		},
+	];
+	const { entities, sheets } = projectSheets("Novela", notes);
+	assert.deepEqual(peekAt("Ana García", 0, entities, sheets, 2).estado, ["Relación: Luis → hermano", "Posee: Llave"]);
 });
