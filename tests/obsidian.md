@@ -116,3 +116,10 @@ Prepara el plugin una vez:
 - [ ] Quitar `carta` de los `hechos` de `Cap 03`, guardar y ejecutar **Propagar cambios** avisa "1 eliminados · 2 capítulos desactualizados" y abre la lista con cap. 9 y cap. 14 y el motivo "ya no se introduce en el cap. 3".
 - [ ] Solo el cap. 9 tiene **Confirmar: ya está reanalizado**; pulsarlo lo quita y el cap. 14 pasa a tenerlo. **Abrir para corregir** abre el capítulo de `Manuscrito/`.
 - [ ] Cerrar y reabrir Obsidian: **Capítulos desactualizados** sigue mostrando lo que no se confirmó.
+
+## #22 registro de decisiones
+
+- [ ] En un proyecto con `Manuscrito/Cap 02.md` y `Cap 04.md` que nombran «posada del Ciervo», ejecutar **Registro de decisiones** y registrar «posada del Ciervo» → «El Reyezuelo» desde el cap. 7 lista cap. 2 y cap. 4.
+- [ ] **Marcar alineado** en el cap. 2 lo quita; el cap. 4 sigue. **Abrir** abre su escena.
+- [ ] Dejar el valor antiguo o el nuevo vacío, o el corte en 0, avisa sin guardar nada.
+- [ ] Cerrar y reabrir Obsidian: la decisión y el cap. 2 alineado siguen ahí.
