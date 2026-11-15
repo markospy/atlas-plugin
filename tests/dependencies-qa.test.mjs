@@ -40,3 +40,16 @@ test("el hecho reintroducido después de un uso sigue avisando del uso adelantad
 	assert.equal(graph.avisos.length, 1);
 	assert.match(graph.avisos[0], /cap\. 2/);
 });
+
+test("v2: conocimiento antes de que se introduzca el hecho avisa y cuenta en el volcado", () => {
+	const graph = buildFactGraph([
+		note(["capitulo: 2", "hechos: []", "conocimiento:", "  - hecho: carta", '    quien: "[[Elena]]"', "    estado: sospecha", "usos: []"]),
+		note(["capitulo: 3", "hechos:", "  - id: carta", '    texto: "x"', "usos: []"]),
+		note(["capitulo: 9", "hechos: []", "conocimiento:", "  - hecho: carta", "    quien: lector", "    estado: sabe", "usos:", "  - hecho: carta", '    quien: "[[Elena]]"', "    modo: menciona"]),
+	]);
+	assert.deepEqual(dependents(graph, "carta"), [2, 9]);
+	assert.deepEqual(graph.avisos, ["El cap. 2 usa «carta», que no se introduce en ese capítulo ni en uno anterior."]);
+	const dump = JSON.parse(graphDump(graph));
+	assert.deepEqual(dump.hechos.carta, { introduce: [3], usa: [2, 9] });
+	assert.equal(dump.aristas.filter((edge) => edge.capitulo === 9).length, 1, "usos + conocimiento del mismo hecho: una sola arista");
+});
