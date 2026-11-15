@@ -1,0 +1,6 @@
+zip testzip: None | entradas: ['[Content_Types].xml', '_rels/.rels', 'word/document.xml']
+xml ok [Content_Types].xml
+xml ok _rels/.rels
+xml ok word/document.xml
+encabezados en orden: ['Cap 02', 'Escena hija', 'Cap 01']
+saltos de página: 2
