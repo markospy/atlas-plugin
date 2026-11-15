@@ -1,6 +1,6 @@
 import { ItemView, MarkdownView, TFile, type WorkspaceLeaf } from "obsidian";
 
-import { collectMarkers } from "./markers";
+import { collectMarkers, isManuscript } from "./markers";
 
 export const MARKER_VIEW = "atlas-markers";
 
@@ -66,8 +66,4 @@ export class MarkerView extends ItemView {
 		const view = this.app.workspace.getActiveViewOfType(MarkdownView);
 		view?.editor.setCursor({ line: line - 1, ch: 0 });
 	}
-}
-
-function isManuscript(path: string): boolean {
-	return path.startsWith("Manuscrito/") || path.includes("/Manuscrito/");
 }

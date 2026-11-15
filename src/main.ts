@@ -1,6 +1,6 @@
 import { type Editor, Notice, Plugin, TFile, type Vault } from "obsidian";
 
-import { impossibleTravels, readChronology } from "./chronology";
+import { chronologyNotice, impossibleTravels, readChronology } from "./chronology";
 import { characterFolder, characterNote, parseCharacter, relationErrors } from "./characters";
 import { GRAPH_VIEW, GraphView } from "./graph-view";
 import { ENTITY_VIEW, EntityView } from "./entity-view";
@@ -313,17 +313,7 @@ export default class AtlasPlugin extends Plugin {
 		);
 		const { scenes, travels } = readChronology(notes);
 		const found = impossibleTravels(scenes, travels);
-		new Notice(
-			found.length === 0
-				? "Cronología sin viajes imposibles."
-				: found
-						.map(
-							(item) =>
-								`${item.personaje}: ${item.desde} → ${item.hasta} (${item.origen} → ${item.destino}) en ${item.dias} días; mínimo ${item.minimo}.`,
-						)
-						.join("\n"),
-			found.length === 0 ? undefined : 0,
-		);
+		new Notice(chronologyNotice(found), found.length === 0 ? undefined : 0);
 	}
 
 	private async newObject(name: string): Promise<void> {

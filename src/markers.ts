@@ -43,3 +43,8 @@ export function collectMarkers(notes: { path: string; text: string }[]): { path:
 	}
 	return listed;
 }
+
+/** Manuscript notes live under a `Manuscrito/` folder, at the vault root or inside a project. */
+export function isManuscript(path: string): boolean {
+	return path.startsWith("Manuscrito/") || path.includes("/Manuscrito/");
+}

@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { impossibleTravels, parseSceneTime, parseTravels, readChronology } from "../src/chronology.ts";
+import { chronologyNotice, impossibleTravels, parseSceneTime, parseTravels, readChronology } from "../src/chronology.ts";
+import { isManuscript } from "../src/markers.ts";
 import { placeNote } from "../src/places.ts";
 
 const CASA = `---
@@ -146,4 +147,44 @@ test("la bóveda aporta escenas solo de Manuscrito/ y rutas solo de fichas tipo:
 		impossibleTravels(scenes, travels).map(({ desde, hasta }) => [desde, hasta]),
 		[["Cap 01", "Cap 02"]],
 	);
+});
+
+test("los enlaces casan sin distinguir mayúsculas y el aviso muestra el nombre como se escribió", () => {
+	const { scenes, travels } = readChronology([
+		{ path: "Lugares/Faro.md", nombre: "Faro", note: '---\ntipo: lugar\nviajes:\n  - a: "[[Puerto]]"\n    dias: 7\n---\n' },
+		{ path: "Manuscrito/Cap 01.md", nombre: "Cap 01", note: '---\ndia: 1\nlugar: "[[faro]]"\npov: "[[Elena]]"\n---\n' },
+		{ path: "Manuscrito/Cap 02.md", nombre: "Cap 02", note: '---\ndia: 2\nlugar: "[[PUERTO]]"\npov: "[[elena]]"\n---\n' },
+	]);
+	assert.deepEqual(impossibleTravels(scenes, travels), [
+		{ personaje: "Elena", desde: "Cap 01", hasta: "Cap 02", origen: "faro", destino: "PUERTO", dias: 1, minimo: 7 },
+	]);
+	assert.deepEqual(parseSceneTime("Cap 03", '---\ndia: 1\nlugar: Faro\npov: "[[Elena]]"\npersonajes: ["[[elena]]", "[[Marcos]]"]\n---\n').personajes, [
+		"Elena",
+		"Marcos",
+	]);
+	assert.deepEqual(impossibleTravels([scene("A", 1, "Faro", ["Elena"]), scene("B", 2, "faro", ["Elena"])], travels), []);
+});
+
+test("los comentarios YAML dentro de viajes no pierden rutas", () => {
+	const note = '---\ntipo: lugar\nviajes:\n  # rutas por mar\n  - a: "[[Isla#Muelle]]" # en barco\n    dias: 7 # una semana\n\n  - a: Faro\n    dias: 2\nestados: []\n---\n';
+	assert.deepEqual(parseTravels("Puerto", note), [
+		{ desde: "Puerto", a: "Isla", dias: 7 },
+		{ desde: "Puerto", a: "Faro", dias: 2 },
+	]);
+});
+
+test("el aviso del comando: sin hallazgos, uno y dos", () => {
+	assert.equal(chronologyNotice([]), "Cronología sin viajes imposibles.");
+	const one = { personaje: "Elena", desde: "Cap 01", hasta: "Cap 02", origen: "Faro", destino: "Puerto", dias: 1, minimo: 7 };
+	assert.equal(chronologyNotice([one]), "Elena: Cap 01 → Cap 02 (Faro → Puerto) en 1 días; mínimo 7.");
+	assert.equal(
+		chronologyNotice([one, { ...one, personaje: "Marcos", dias: 0.5, minimo: 2 }]),
+		"Elena: Cap 01 → Cap 02 (Faro → Puerto) en 1 días; mínimo 7.\nMarcos: Cap 01 → Cap 02 (Faro → Puerto) en 0.5 días; mínimo 2.",
+	);
+});
+
+test("isManuscript reconoce Manuscrito/ en la raíz o dentro de un proyecto", () => {
+	assert.equal(isManuscript("Manuscrito/Cap 01.md"), true);
+	assert.equal(isManuscript("Novela/Manuscrito/Cap 01.md"), true);
+	assert.equal(isManuscript("Notas/Manuscritos.md"), false);
 });
