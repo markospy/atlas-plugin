@@ -95,7 +95,7 @@ async function startPlugin(stored, active = 0) {
 	};
 	const plugin = new module.exports.default(app, {});
 	await plugin.onload();
-	return { state, files };
+	return { state, files, plugin };
 }
 
 const settle = () => new Promise((resolve) => setTimeout(resolve, 0));
@@ -162,4 +162,14 @@ test("runtime: Progreso de escritura fuera de un proyecto no guarda un registro 
 	await settle();
 	assert.deepEqual(state.notices, ["Abre una nota del proyecto."]);
 	assert.deepEqual(state.saved, []);
+});
+
+test("runtime: descargar el plugin cancela los recuentos pendientes de todos los proyectos", async () => {
+	const { state, files, plugin } = await startPlugin(null);
+	state.onModify(files[1]);
+	state.onModify(files[3]);
+	plugin.onunload();
+	assert.deepEqual(state.timers.map((timer) => timer.cleared), [true, true]);
+	state.onModify(files[1]);
+	assert.deepEqual(state.timers.map((timer) => timer.cleared), [true, true, false], "tras onunload el Map queda vacío");
 });
