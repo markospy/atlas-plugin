@@ -1,15 +1,18 @@
 import { type Editor, Notice, Plugin, requestUrl, TFile, type Vault } from "obsidian";
 
+import { chronologyNotice, impossibleTravels, readChronology } from "./chronology";
 import { CoWriteSession, coWriteContext, propose, type CoWriteMode } from "./cowrite";
 import { CoWriteModal } from "./cowrite-modal";
 import { characterFolder, characterNote, parseCharacter, relationErrors } from "./characters";
 import { GRAPH_VIEW, GraphView } from "./graph-view";
+import { checkContinuity, usageErrors } from "./continuity";
 import { ENTITY_VIEW, EntityView } from "./entity-view";
 import { clueFolder, clueNote, nextState } from "./foreshadow";
 import { FORESHADOW_VIEW, ForeshadowView } from "./foreshadow-view";
 import { objectFolder, objectNote, parseObject } from "./objects";
 import { parsePlace, placeFolder, placeNote } from "./places";
 import {
+	type ChapterMemory,
 	chapterNumber,
 	knowledgeErrors,
 	memoryFolder,
@@ -140,6 +143,13 @@ export default class AtlasPlugin extends Plugin {
 			},
 		});
 		this.addCommand({
+			id: "check-chronology",
+			name: "Revisar cronología",
+			callback: () => {
+				void this.checkChronology();
+			},
+		});
+		this.addCommand({
 			id: "new-object",
 			name: "Nuevo objeto",
 			editorCallback: (editor) => {
@@ -186,6 +196,13 @@ export default class AtlasPlugin extends Plugin {
 			name: "Qué sabe en este capítulo",
 			editorCallback: (editor) => {
 				void this.whatKnowsHere(editor.getSelection().trim() || READER);
+			},
+		});
+		this.addCommand({
+			id: "check-continuity",
+			name: "Revisar continuidad",
+			callback: () => {
+				void this.checkContinuityHere();
 			},
 		});
 		this.addCommand({
@@ -311,6 +328,17 @@ export default class AtlasPlugin extends Plugin {
 		new Notice("Campos de escena listos.");
 	}
 
+	private async checkChronology(): Promise<void> {
+		const notes = await Promise.all(
+			this.app.vault
+				.getMarkdownFiles()
+				.map(async (file) => ({ path: file.path, nombre: file.basename, note: await this.app.vault.read(file) })),
+		);
+		const { scenes, travels } = readChronology(notes);
+		const found = impossibleTravels(scenes, travels);
+		new Notice(chronologyNotice(found), found.length === 0 ? undefined : 0);
+	}
+
 	private async newObject(name: string): Promise<void> {
 		if (name.length === 0) {
 			new Notice("Selecciona el nombre del objeto.");
@@ -421,16 +449,36 @@ export default class AtlasPlugin extends Plugin {
 		new Notice("Memoria creada.");
 	}
 
-	private async whatKnowsHere(who: string): Promise<void> {
+	private async chapterMemories(): Promise<{ chapter: number; memories: ChapterMemory[] } | null> {
 		const active = this.app.workspace.getActiveFile();
 		const chapter = chapterNumber(active?.path ?? "");
 		if (!active || chapter === null) {
 			new Notice("Abre un capítulo (Cap NN).");
-			return;
+			return null;
 		}
 		const folder = `${memoryFolder(active.path)}/`;
 		const notes = this.app.vault.getMarkdownFiles().filter((file) => file.path.startsWith(folder));
 		const memories = await Promise.all(notes.map(async (file) => parseMemory(await this.app.vault.cachedRead(file))));
+		return { chapter, memories };
+	}
+
+	private async checkContinuityHere(): Promise<void> {
+		const found = await this.chapterMemories();
+		if (!found) {
+			return;
+		}
+		const errors = usageErrors(found.memories, found.chapter);
+		const lines = [...errors, ...checkContinuity(found.memories, found.chapter).map((alert) => alert.mensaje)];
+		const summary = lines.length > 0 ? lines.join("\n") : "Sin alertas.";
+		new Notice(`Continuidad cap. ${found.chapter}\n${summary}`);
+	}
+
+	private async whatKnowsHere(who: string): Promise<void> {
+		const found = await this.chapterMemories();
+		if (!found) {
+			return;
+		}
+		const { chapter, memories } = found;
 		const errors = memories.flatMap(knowledgeErrors);
 		const known = whatKnows(memories, who, chapter);
 		const lines = known.map((fact) => `${fact.estado}: ${fact.texto}`);
