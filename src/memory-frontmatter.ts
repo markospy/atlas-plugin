@@ -3,8 +3,8 @@ import { isMap, parseDocument, type Document } from "yaml";
 import { mapList } from "./frontmatter.ts";
 
 /**
- * YAML reader for the `_Memoria/` notes that approval writes to. Place sheets keep the line
- * reader of `places.ts`, so approval writes them the way `parsePlace` reads them.
+ * YAML reader for the `_Memoria/` notes that approval writes to. Place sheets are read and
+ * written entry by entry in `places.ts`, with the same failsafe schema.
  * The common reader in `frontmatter.ts`, which export and the other notes use, stays as it is.
  */
 
@@ -58,7 +58,8 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 	return !!value && typeof value === "object" && !Array.isArray(value);
 }
 
-function text(value: unknown): string {
+/** A failsafe YAML value as the author wrote it: "" when empty, `[[Link]]` kept a link. */
+export function text(value: unknown): string {
 	if (value === null || value === undefined) {
 		return "";
 	}
