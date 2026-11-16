@@ -1,0 +1,26 @@
+# npm test @ a57c69f + tests QA v3
+✔ quita el frontmatter con claves de Properties con espacios (R6) (3.473738ms)
+✔ las incrustaciones ![[...]] no salen como texto (R7) (13.441442ms)
+✔ el encabezado de escena del DOCX tiene nivel de esquema para el panel de navegación (R8) (5.792244ms)
+✔ R6: aprobar dos veces un estado sobre `estados: [{...}]` en flujo deja un solo estado (22.150575ms)
+✔ R6: un estado que ya está en la lista en flujo no se duplica (2.011641ms)
+✔ R7: una ficha con `nombre: Torre: alta` acepta el estado (2.355745ms)
+✔ R8: si la ficha de lugar no se puede escribir, _Memoria/ queda sin cambios y el error sale (37.484737ms)
+✔ R8: si la ficha de lugar no admite el estado, no se escribe nada (12.408497ms)
+✔ R6: una lista en flujo de varias líneas con `]` en la columna 0 pasa a bloque sin crear otro frontmatter (17.381619ms)
+✔ R6: flujo de varias líneas con CRLF pasa a bloque, conserva CRLF y no duplica al aprobar dos veces (6.911017ms)
+✔ R6: lista en bloque sin sangría recibe el estado a su sangría, antes de la clave siguiente (5.489225ms)
+✔ R6: aprobar dos veces una descripción de varias líneas deja un solo estado y se lee igual (3.41618ms)
+✔ R6: una lista en flujo con elementos que no son mapas no se reescribe y el error sale (6.258794ms)
+✔ R6: `estados: # comentario` con lista en bloque recibe el estado (3.458259ms)
+✔ QA v3: una descripción con comillas, barra invertida, `#` y `:` no se duplica al aprobar dos veces (1.698241ms)
+✔ QA v3: flujo con `]` dentro de un valor entre comillas y comentario final conserva el estado previo (2.829809ms)
+✔ bordes: empate en el mismo capítulo, orden libre, capítulo ilegible y poseedor vacío (0.84072ms)
+ℹ tests 396
+ℹ suites 0
+ℹ pass 396
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 10022.755162

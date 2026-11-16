@@ -1,0 +1,29 @@
+(node:3882991) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file://./src/dependencies.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to ./package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ cambiar solo la verdad de un hecho cuenta como cambiado y marca a quien lo usa (4.113537ms)
+✔ quitar un hecho que ya introducía un capítulo anterior no marca nada (0.444683ms)
+✔ un hecho cambiado y vuelto a introducir entre medias solo marca los usos previos a la reintroducción (0.444672ms)
+✔ un capítulo con dos hechos rotos lleva un motivo por hecho (13.152724ms)
+✔ renombrar el id de un hecho es eliminado + añadido y marca a sus usuarios (0.685057ms)
+✔ el propio capítulo editado nunca se marca desactualizado (0.390873ms)
+✔ volver a propagar sin capítulos nuevos no limpia la lista: solo confirmar la limpia (0.591213ms)
+(node:3882992) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file://./src/dependencies.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to ./package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ carta eliminada del cap. 3 → caps 9 y 14 desactualizados, el 10 no (20.843418ms)
+✔ un hecho cambiado marca a quien lo usa después, no a capítulos anteriores (18.889705ms)
+✔ un hecho añadido no marca nada; sin cambios no hay lista (1.232359ms)
+✔ si otro capítulo vuelve a introducir el hecho antes del uso, ese uso no queda desactualizado (1.323177ms)
+✔ reanalizar en orden: solo el capítulo más antiguo se limpia, y solo al confirmarlo (1.069117ms)
+✔ el almacén vacío o ausente arranca sin base ni lista (0.392606ms)
+ℹ tests 13
+ℹ suites 0
+ℹ pass 13
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 367.969326

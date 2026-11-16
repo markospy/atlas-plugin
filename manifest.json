@@ -1,0 +1,9 @@
+{
+	"id": "atlas",
+	"name": "Atlas",
+	"version": "0.1.0",
+	"minAppVersion": "1.0.0",
+	"description": "Esqueleto para fichas, continuidad y escritura de una novela en la bóveda.",
+	"author": "markospy",
+	"isDesktopOnly": false
+}

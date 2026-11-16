@@ -1,0 +1,9 @@
+# npm test en 082c0f0 (resumen). Las 2 fallas son de tests/extract-qa.test.mjs y también fallan en origin/staging 92b00bc (318 tests, 2 fail).
+✖ aceptar en una memoria cuyo cierre --- lleva espacios al final no antepone otro frontmatter (11.227044ms)
+✖ aceptar un hecho no borra una lista hechos: en línea escrita a mano (0.566437ms)
+ℹ tests 328
+ℹ pass 326
+ℹ fail 2
+✖ failing tests:
+✖ aceptar en una memoria cuyo cierre --- lleva espacios al final no antepone otro frontmatter (11.227044ms)
+✖ aceptar un hecho no borra una lista hechos: en línea escrita a mano (0.566437ms)

@@ -1,0 +1,64 @@
+(node:3482854) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file://src/extract.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ aceptar en una memoria sin frontmatter deja frontmatter válido y conserva la nota (3.986204ms)
+✔ aceptar en una memoria con frontmatter vacío deja frontmatter válido y conserva la nota (0.348358ms)
+✖ aceptar un hecho conserva campos y comentarios escritos a mano en _Memoria/ (1.409647ms)
+✖ aceptar un estado conserva campos escritos a mano en la ficha del lugar (1.228875ms)
+✖ aceptar en una memoria que abre con un --- de escena no mete el cuerpo en el frontmatter (0.671964ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 2
+ℹ fail 3
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 259.040497
+
+✖ failing tests:
+
+test at tests/extract-qa.test.mjs:41:1
+✖ aceptar un hecho conserva campos y comentarios escritos a mano en _Memoria/ (1.409647ms)
+  AssertionError [ERR_ASSERTION]: el comentario a mano sigue
+      at TestContext.<anonymous> (file://tests/extract-qa.test.mjs:60:9)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: '---\ntipo: memoria\ncapitulo: 3\nhechos:\n  - id: anillo\n    texto: "El anillo"\n    verdad: true\n  - id: carta\n    texto: "La carta es falsa"\n    verdad: false\nconocimiento: []\n---\nCuerpo\n',
+    expected: /# corregido a mano/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at tests/extract-qa.test.mjs:65:1
+✖ aceptar un estado conserva campos escritos a mano en la ficha del lugar (1.228875ms)
+  AssertionError [ERR_ASSERTION]: el campo a mano sigue
+      at TestContext.<anonymous> (file://tests/extract-qa.test.mjs:72:9)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: '---\nnombre: Torre\nestados:\n  - capitulo: "[[Cap 01]]"\n    descripcion: "intacta"\n  - capitulo: "[[Cap 03]]"\n    descripcion: "en ruinas"\n---\n',
+    expected: /nota: x/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at tests/extract-qa.test.mjs:76:1
+✖ aceptar en una memoria que abre con un --- de escena no mete el cuerpo en el frontmatter (0.671964ms)
+  AssertionError [ERR_ASSERTION]: el cuerpo original queda intacto tras el frontmatter
+      at TestContext.<anonymous> (file://tests/extract-qa.test.mjs:81:9)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }

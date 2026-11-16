@@ -1,0 +1,17 @@
+node_modules/
+main.js
+
+# super-board (local)
+.claude/super-board/active
+.claude/super-board/onboard-answers.json
+.claude/super-board/onboard-staged/
+.claude/super-board/backup/
+.claude/super-board/inflight/
+.claude/super-board/migrations/
+.claude/super-board/upgrade.json
+.claude/worktrees/
+.claude/super-board/cache/
+.claude/super-board/github-halt*.json
+.claude/settings.json.bak-*
+.claude/settings.local.json
+__pycache__/

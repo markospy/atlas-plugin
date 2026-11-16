@@ -1,0 +1,40 @@
+✔ una tarjeta con 🙋 + done verificado que rebota a Ready entra en cards (586.718061ms)
+✔ una tarjeta con 🙋 sin done sigue con humanGated y fuera de cards (428.626698ms)
+✔ en Blocked, el done verificado va por resume y nunca por sweep (258.322268ms)
+✔ un 🙋 aprobado no libera una tarjeta con un bloqueante abierto (627.098057ms)
+✖ una tarjeta aprobada, reconstruida y rebotada otra vez a Ready entra en cards (294.799044ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 4
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2584.204758
+
+✖ failing tests:
+
+test at tests/wave-plan.test.mjs:75:1
+✖ una tarjeta aprobada, reconstruida y rebotada otra vez a Ready entra en cards (294.799044ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+  + []
+  - [
+  -   6
+  - ]
+  
+      at TestContext.<anonymous> (file:///home/marcos/OtherProjects/atlas-plugin/.claude/worktrees/issue-55-qa/tests/wave-plan.test.mjs:77:9)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [],
+    expected: [ 6 ],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
