@@ -3,12 +3,13 @@ import { isMap, parseDocument, type Document } from "yaml";
 import { mapList } from "./frontmatter.ts";
 
 /**
- * YAML reader for the notes that approval writes to (`_Memoria/` and the `estados` of a place).
+ * YAML reader for the `_Memoria/` notes that approval writes to. Place sheets are read and
+ * written entry by entry in `places.ts`, with the same failsafe schema.
  * The common reader in `frontmatter.ts`, which export and the other notes use, stays as it is.
  */
 
 /** Every scalar reads as the text the author wrote: no numbers, booleans or dates. */
-const FAILSAFE = { schema: "failsafe" } as const;
+export const FAILSAFE = { schema: "failsafe" } as const;
 
 /**
  * Closing line and parsed YAML of a note's frontmatter (`lines` split on LF). The block opens with
@@ -45,7 +46,11 @@ export function memoryMapList(frontmatter: string, key: string): Record<string, 
 	if (doc.errors.length > 0) {
 		return mapList(frontmatter, key);
 	}
-	const value: unknown = isMap(doc.contents) ? doc.toJS()[key] : undefined;
+	return yamlMaps(isMap(doc.contents) ? doc.toJS()[key] : undefined);
+}
+
+/** Maps of a YAML list read with the failsafe schema, each value as written; [] when not a list. */
+export function yamlMaps(value: unknown): Record<string, string>[] {
 	return Array.isArray(value) ? value.filter(isRecord).map((item) => Object.fromEntries(Object.entries(item).map(([field, v]) => [field, text(v)]))) : [];
 }
 
@@ -53,7 +58,8 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 	return !!value && typeof value === "object" && !Array.isArray(value);
 }
 
-function text(value: unknown): string {
+/** A failsafe YAML value as the author wrote it: "" when empty, `[[Link]]` kept a link. */
+export function text(value: unknown): string {
 	if (value === null || value === undefined) {
 		return "";
 	}

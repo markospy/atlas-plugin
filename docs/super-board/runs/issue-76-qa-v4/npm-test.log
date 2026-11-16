@@ -1,0 +1,29 @@
+✔ quita el frontmatter con claves de Properties con espacios (R6) (0.487142ms)
+✔ las incrustaciones ![[...]] no salen como texto (R7) (6.218719ms)
+✔ el encabezado de escena del DOCX tiene nivel de esquema para el panel de navegación (R8) (6.025953ms)
+✔ R5: un separador `---` en la línea 1 no es frontmatter y la primera escena se revisa (0.325352ms)
+✔ R6: aprobar dos veces un estado sobre `estados: [{...}]` en flujo deja un solo estado (86.118393ms)
+✔ R6: un estado que ya está en la lista en flujo no se duplica (2.307862ms)
+✔ R7: una ficha con `nombre: Torre: alta` acepta el estado (8.189066ms)
+✔ R8: si la ficha de lugar no se puede escribir, _Memoria/ queda sin cambios y el error sale (11.676349ms)
+✔ R8: si la ficha de lugar no admite el estado, no se escribe nada (4.806757ms)
+✔ R6: una lista en flujo de varias líneas con `]` en la columna 0 pasa a bloque sin crear otro frontmatter (7.979467ms)
+✔ R6: flujo de varias líneas con CRLF pasa a bloque, conserva CRLF y no duplica al aprobar dos veces (7.854988ms)
+✔ R6: lista en bloque sin sangría recibe el estado a su sangría, antes de la clave siguiente (8.035452ms)
+✔ R6: aprobar dos veces una descripción de varias líneas deja un solo estado y se lee igual (10.378819ms)
+✔ R6: una lista en flujo con elementos que no son mapas no se reescribe y el error sale (3.059762ms)
+✔ R6: `estados: # comentario` con lista en bloque recibe el estado (3.22603ms)
+✔ R4: `estados: # comentario` se lee con sus estados y aprobar dos veces no duplica (3.952635ms)
+✔ R5: `descripcion: |-` se lee como texto y aprobar el mismo estado no lo duplica (1.705156ms)
+✔ R7: `nombre: Torre: alta` sigue leyéndose como está escrito y su línea no cambia al aprobar (5.103646ms)
+✔ R6 nit: un valor anidado de la lista en flujo sigue anidado al pasarla a bloque (6.19204ms)
+✔ QA v4: un estado escrito a mano sin comillas (`null`, `0x1F`, `1e3`, `.inf`) se lee como está y no se duplica (13.595481ms)
+✔ bordes: empate en el mismo capítulo, orden libre, capítulo ilegible y poseedor vacío (0.786757ms)
+ℹ tests 401
+ℹ suites 0
+ℹ pass 401
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 9094.134875

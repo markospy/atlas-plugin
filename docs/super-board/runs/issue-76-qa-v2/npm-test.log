@@ -1,0 +1,17 @@
+# npm test (extracto: tests de #76 y resumen; suite completa 391/391)
+✔ R6: aprobar dos veces un estado sobre `estados: [{...}]` en flujo deja un solo estado (36.727988ms)
+✔ R6: un estado que ya está en la lista en flujo no se duplica (4.29938ms)
+✔ R7: una ficha con `nombre: Torre: alta` acepta el estado (5.180072ms)
+✔ R8: si la ficha de lugar no se puede escribir, _Memoria/ queda sin cambios y el error sale (19.215122ms)
+✔ R8: si la ficha de lugar no admite el estado, no se escribe nada (3.757939ms)
+✔ R6: una lista en flujo de varias líneas con `]` en la columna 0 pasa a bloque sin crear otro frontmatter (8.936358ms)
+✔ R6: flujo de varias líneas con CRLF pasa a bloque, conserva CRLF y no duplica al aprobar dos veces (4.124679ms)
+✔ R6: lista en bloque sin sangría recibe el estado a su sangría, antes de la clave siguiente (1.621167ms)
+ℹ tests 391
+ℹ suites 0
+ℹ pass 391
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 9044.225414

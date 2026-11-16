@@ -2,7 +2,7 @@ import { KNOWLEDGE_STATES, memoryNote, memoryNoteName, parseMemory, type Chapter
 import { Document, isMap, isScalar, isSeq } from "yaml";
 
 import { memoryFrontmatter } from "./memory-frontmatter.ts";
-import { parsePlace } from "./places.ts";
+import { addPlaceStates, parsePlace } from "./places.ts";
 
 /** One AI-proposed memory update. Nothing is written until the writer approves its `id`. */
 export type Candidate =
@@ -111,7 +111,9 @@ export function candidateLabel(candidate: Candidate): string {
 /**
  * Writes only the approved candidates and returns the paths written. Nothing approved → no
  * read-modify-write, no folder, no file. Facts whose id is already in the note stay as written by
- * hand; states for a place with no sheet are skipped (sheets are never created here).
+ * hand; states for a place with no sheet are skipped (sheets are never created here). Every note is
+ * prepared before any is written, and place sheets are written before `_Memoria/`: a sheet that
+ * cannot take its state throws and leaves the memory note as it was.
  */
 export async function writeApproved(
 	files: ExtractFiles,
@@ -120,7 +122,6 @@ export async function writeApproved(
 	approved: ReadonlySet<string>,
 ): Promise<string[]> {
 	const chosen = candidates.filter((candidate) => approved.has(candidate.id));
-	const written: string[] = [];
 
 	const memoryNow = (await files.exists(target.memoria)) ? await files.read(target.memoria) : null;
 	const memory = parseMemory(memoryNow ?? "");
@@ -140,42 +141,44 @@ export async function writeApproved(
 		known.add(knowledgeKey(c.conocimiento));
 		return [c.conocimiento];
 	});
+	let memoryNext: string | null = null;
 	if (hechos.length > 0 || conocimiento.length > 0) {
 		const note = memoryNow ?? memoryNote(target.capitulo);
-		let updated = appendToList(note, "hechos", hechos.map(factEntry));
-		updated = appendToList(updated, "conocimiento", conocimiento.map(knowledgeEntry));
+		memoryNext = appendToList(appendToList(note, "hechos", hechos.map(factEntry)), "conocimiento", conocimiento.map(knowledgeEntry));
+	}
+
+	const chapter = `[[${memoryNoteName(target.capitulo)}]]`;
+	const places = new Map<string, string>();
+	for (const candidate of chosen) {
+		if (candidate.tipo !== "estado") {
+			continue;
+		}
+		const path = target.lugar(candidate.lugar);
+		const note = places.get(path) ?? ((await files.exists(path)) ? await files.read(path) : null);
+		if (note === null) {
+			continue;
+		}
+		const recorded = parsePlace(note).estados.some(
+			(state) => state.capitulo === chapter && state.descripcion === candidate.descripcion,
+		);
+		if (!recorded) {
+			places.set(path, addPlaceStates(note, [{ capitulo: chapter, descripcion: candidate.descripcion }]));
+		}
+	}
+
+	for (const [path, note] of places) {
+		await files.write(path, note);
+	}
+	if (memoryNext !== null) {
 		if (memoryNow === null) {
 			const folder = target.memoria.slice(0, Math.max(0, target.memoria.lastIndexOf("/")));
 			if (folder.length > 0 && !(await files.exists(folder))) {
 				await files.createFolder(folder);
 			}
 		}
-		await files.write(target.memoria, updated);
-		written.push(target.memoria);
+		await files.write(target.memoria, memoryNext);
 	}
-
-	const chapter = `[[${memoryNoteName(target.capitulo)}]]`;
-	for (const candidate of chosen) {
-		if (candidate.tipo !== "estado") {
-			continue;
-		}
-		const path = target.lugar(candidate.lugar);
-		if (!(await files.exists(path))) {
-			continue;
-		}
-		const note = await files.read(path);
-		const recorded = parsePlace(note).estados.some(
-			(state) => state.capitulo === chapter && state.descripcion === candidate.descripcion,
-		);
-		if (recorded) {
-			continue;
-		}
-		await files.write(path, appendToList(note, "estados", [{ capitulo: chapter, descripcion: candidate.descripcion }]));
-		if (!written.includes(path)) {
-			written.push(path);
-		}
-	}
-	return written;
+	return [...(memoryNext === null ? [] : [target.memoria]), ...places.keys()];
 }
 
 function factEntry(fact: Fact): Record<string, unknown> {
