@@ -219,3 +219,15 @@ test("R6 nit: un valor anidado de la lista en flujo sigue anidado al pasarla a b
 		{ capitulo: "[[Cap 03]]", descripcion: "en ruinas" },
 	]);
 });
+
+// QA v4: valores sin comillas que el esquema core de YAML leería como otro tipo.
+test("QA v4: un estado escrito a mano sin comillas (`null`, `0x1F`, `1e3`, `.inf`) se lee como está y no se duplica", async () => {
+	for (const descripcion of ["null", "0x1F", "1e3", ".inf", "0o17", "+12"]) {
+		const ficha = `---\nnombre: Torre\nestados:\n  - capitulo: "[[Cap 03]]"\n    descripcion: ${descripcion}\n---\n`;
+		assert.deepEqual(parsePlace(ficha).estados, [{ capitulo: "[[Cap 03]]", descripcion }]);
+		const files = mockFiles({ [LUGAR]: ficha });
+		const respuesta = JSON.stringify({ hechos: [], estados: [{ lugar: "Torre", descripcion }] });
+		assert.deepEqual(await writeApproved(files, destino, parseProposal(respuesta), new Set(["e1"])), [], descripcion);
+		assert.equal(files.store.get(LUGAR), ficha);
+	}
+});
