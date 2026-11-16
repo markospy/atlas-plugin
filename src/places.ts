@@ -1,7 +1,7 @@
 import { Document, isMap, isNode, isScalar, isSeq, parseDocument } from "yaml";
 
 import { frontmatterBody, scalar } from "./frontmatter.ts";
-import { FAILSAFE, text, yamlMaps } from "./memory-frontmatter.ts";
+import { FAILSAFE, insertFlowItems, text, yamlMaps } from "./memory-frontmatter.ts";
 import { sheetFolder } from "./sheets.ts";
 
 export interface PlaceState {
@@ -81,7 +81,7 @@ function states(entry: PlaceEntry | undefined): unknown {
 /**
  * Adds `states` to the `estados` list of a place sheet. The list is read with the `yaml` library,
  * as `parsePlace` reads it: block or flow, comments, `|-` and quotes included. The new items go
- * after the last line of a block list, at its indent, or before the closing `]` of a flow list; an
+ * after the last line of a block list, at its indent, or right after the last item of a flow list; an
  * empty list becomes a block list. Every other character stays as written, so comments and an
  * entry that is not strict YAML (`nombre: Torre: alta`) are kept. New values are quoted when the
  * YAML core schema would read them as another type (`null`, `123`).
@@ -119,19 +119,11 @@ export function addPlaceStates(note: string, states: PlaceState[]): string {
 	let written: string[];
 	if (entry && isSeq(list) && list.flow && list.items.length > 0 && list.range) {
 		// Flow list: the new items go in flow form right after its last item, before any comment.
-		const last = list.items.at(-1);
-		if (!isNode(last) || !last.range) {
+		const updated = insertFlowItems(source, list, added);
+		if (updated === null) {
 			throw new Error("«estados» de la ficha no se puede leer: corrígelo a mano antes de aprobar.");
 		}
-		const at = last.range[1];
-		const flow = added.map((state) => {
-			const item = new Document(state);
-			if (isMap(item.contents)) {
-				item.contents.flow = true;
-			}
-			return item.toString({ lineWidth: 0 }).trim();
-		});
-		written = `${source.slice(0, at)}, ${flow.join(", ")}${source.slice(at)}`.split("\n");
+		written = updated.split("\n");
 	} else if (entry && isSeq(list) && list.items.length > 0 && list.range) {
 		// Block list: only the new items' lines are added after its last line, at the indent of its first `- `.
 		const indent = " ".repeat(list.range[0] - (source.lastIndexOf("\n", list.range[0] - 1) + 1));

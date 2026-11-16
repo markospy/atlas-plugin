@@ -1,7 +1,7 @@
 import { KNOWLEDGE_STATES, memoryNote, memoryNoteName, parseMemory, type ChapterMemory, type Fact, type Knowledge } from "./memory.ts";
 import { Document, isMap, isScalar, isSeq } from "yaml";
 
-import { memoryFrontmatter } from "./memory-frontmatter.ts";
+import { insertFlowItems, memoryFrontmatter } from "./memory-frontmatter.ts";
 import { addPlaceStates, parsePlace } from "./places.ts";
 
 /** One AI-proposed memory update. Nothing is written until the writer approves its `id`. */
@@ -210,7 +210,8 @@ function knowledgeKey(entry: Knowledge): string {
 /**
  * Appends `entries` to the frontmatter list `key`. The frontmatter is read with the `yaml`
  * library, but only that list changes: a block list gets the new items after its last line, at
- * its own indent; a flow list (one line or several) gets them before its closing `]`; an empty
+ * its own indent; a flow list (one line or several) gets them right after its last item, so a
+ * comment after that item is kept; an empty
  * value or a missing key becomes a block list. Every other line, and the body after the closing
  * `---`, stays byte for byte. A value that is not a list, or frontmatter that is not valid YAML,
  * throws rather than lose what the author wrote. A note without frontmatter (a `---` scene break
@@ -242,20 +243,11 @@ function appendToList(note: string, key: string, entries: Record<string, unknown
 	}
 	const frontmatter = source.length === 0 ? [] : source.split("\n");
 	if (isSeq(value) && value.flow && value.range && value.items.length > 0) {
-		// Flow list: the new items go in flow form before its closing `]`.
-		let at = value.range[1] - 1;
-		while (at > 0 && /\s/.test(source[at - 1] ?? "")) {
-			at--;
+		// Flow list: the new items go in flow form right after its last item, before any comment.
+		const updated = insertFlowItems(source, value, entries);
+		if (updated === null) {
+			throw new Error(`«${key}» de la nota no se puede leer: corrígelo a mano antes de aprobar.`);
 		}
-		const lead = source[at - 1] === "," ? " " : ", ";
-		const flow = entries.map((entry) => {
-			const item = new Document(entry);
-			if (isMap(item.contents)) {
-				item.contents.flow = true;
-			}
-			return item.toString({ lineWidth: 0 }).trim();
-		});
-		const updated = `${source.slice(0, at)}${lead}${flow.join(", ")}${source.slice(at)}`;
 		return ["---", ...updated.split("\n"), ...lines.slice(end)].join(eol);
 	}
 	const added = blockLines(new Document(entries).toString({ lineWidth: 0 }));
