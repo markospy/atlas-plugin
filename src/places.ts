@@ -1,4 +1,4 @@
-import { Document, isMap, isScalar, isSeq, parseDocument } from "yaml";
+import { Document, isMap, isNode, isScalar, isSeq, parseDocument } from "yaml";
 
 import { frontmatterBody, scalar } from "./frontmatter.ts";
 import { FAILSAFE, text, yamlMaps } from "./memory-frontmatter.ts";
@@ -59,15 +59,32 @@ export function parsePlace(note: string): PlaceSheet {
 	return {
 		nombre: field("nombre"),
 		padre: field("padre"),
-		estados: yamlMaps(value("estados")).map((item) => ({ capitulo: item.capitulo ?? "", descripcion: item.descripcion ?? "" })),
+		estados: yamlMaps(states(found.find((item) => item.key === "estados"))).map((item) => ({ capitulo: item.capitulo ?? "", descripcion: item.descripcion ?? "" })),
 	};
 }
 
 /**
- * Adds `states` to the `estados` list of a place sheet. The list is read and written with the
- * `yaml` library, as `parsePlace` reads it: block or flow, comments, `|-` and quotes included. The
- * new items go after the last line of a block list, at its indent; a flow or empty list is
- * rewritten as a block list with its items first. Every other line stays byte for byte, so an entry that is not strict YAML (`nombre: Torre: alta`) is kept as written.
+ * The `estados` list as YAML reads it. When one of its items is not strict YAML
+ * (`descripcion: a: b`), the other items are still read and a warning says how many were left out.
+ */
+function states(entry: PlaceEntry | undefined): unknown {
+	if (!entry || entry.doc.errors.length === 0) {
+		return entry?.doc.toJS()?.estados;
+	}
+	const list = entry.doc.get("estados", true);
+	const items = isSeq(list) ? list.items.filter(isNode) : [];
+	const valid = items.filter((item) => !entry.doc.errors.some((error) => !!item.range && error.pos[0] < item.range[2] && error.pos[1] > item.range[0]));
+	console.warn(`Atlas: ${Math.max(items.length - valid.length, 1)} entrada(s) de «estados» no son YAML válido y no se leen: corrígelas a mano.`);
+	return valid.map((item) => item.toJS(entry.doc));
+}
+
+/**
+ * Adds `states` to the `estados` list of a place sheet. The list is read with the `yaml` library,
+ * as `parsePlace` reads it: block or flow, comments, `|-` and quotes included. The new items go
+ * after the last line of a block list, at its indent, or before the closing `]` of a flow list; an
+ * empty list becomes a block list. Every other character stays as written, so comments and an
+ * entry that is not strict YAML (`nombre: Torre: alta`) are kept. New values are quoted when the
+ * YAML core schema would read them as another type (`null`, `123`).
  * A missing or empty `estados` becomes a list. A value that is not a list of maps throws.
  */
 export function addPlaceStates(note: string, states: PlaceState[]): string {
@@ -96,29 +113,38 @@ export function addPlaceStates(note: string, states: PlaceState[]): string {
 	if (!current.every((item) => !!item && typeof item === "object" && !Array.isArray(item))) {
 		throw new Error("«estados» de la ficha no se puede leer: corrígelo a mano antes de aprobar.");
 	}
-	// Kept items keep nested values as they are; only an unquoted `[[Link]]` becomes its text.
-	const kept = (current as Record<string, unknown>[]).map((item) =>
-		Object.fromEntries(Object.entries(item).map(([field, value]) => [field, value !== null && typeof value === "object" && !isLink(value) ? value : text(value)])),
-	);
 	const added = states.map((state) => ({ capitulo: state.capitulo, descripcion: state.descripcion }));
 	const list = doc.get("estados", true);
-	if (entry && isSeq(list) && !list.flow && list.items.length > 0 && list.range) {
+	const source = entry ? frontmatter.slice(entry.from, entry.to).join("\n") : "";
+	let written: string[];
+	if (entry && isSeq(list) && list.flow && list.items.length > 0 && list.range) {
+		// Flow list: the new items go in flow form right after its last item, before any comment.
+		const last = list.items.at(-1);
+		if (!isNode(last) || !last.range) {
+			throw new Error("«estados» de la ficha no se puede leer: corrígelo a mano antes de aprobar.");
+		}
+		const at = last.range[1];
+		const flow = added.map((state) => {
+			const item = new Document(state);
+			if (isMap(item.contents)) {
+				item.contents.flow = true;
+			}
+			return item.toString({ lineWidth: 0 }).trim();
+		});
+		written = `${source.slice(0, at)}, ${flow.join(", ")}${source.slice(at)}`.split("\n");
+	} else if (entry && isSeq(list) && list.items.length > 0 && list.range) {
 		// Block list: only the new items' lines are added after its last line, at the indent of its first `- `.
-		const source = frontmatter.slice(entry.from, entry.to).join("\n");
 		const indent = " ".repeat(list.range[0] - (source.lastIndexOf("\n", list.range[0] - 1) + 1));
 		const items = new Document(added).toString({ lineWidth: 0 }).replace(/\n$/, "").split("\n");
-		frontmatter.splice(entry.to, 0, ...items.map((line) => indent + line));
-		return [lines[0], ...frontmatter, ...lines.slice(close)].join(eol);
+		written = [...source.split("\n"), ...items.map((line) => indent + line)];
+	} else {
+		// Empty or missing list, written with the core schema so its values read back as text.
+		const empty = entry ? parseDocument(source) : new Document({});
+		empty.set("estados", empty.createNode(added));
+		written = empty.toString({ lineWidth: 0 }).replace(/\n$/, "").split("\n");
 	}
-	doc.set("estados", doc.createNode([...kept, ...added]));
-	const written = doc.toString({ lineWidth: 0 }).replace(/\n$/, "").split("\n");
 	frontmatter.splice(entry?.from ?? frontmatter.length, entry ? entry.to - entry.from : 0, ...written);
 	return [lines[0], ...frontmatter, ...lines.slice(close)].join(eol);
-}
-
-/** An unquoted `[[Link]]`, which YAML reads as a list in a list. */
-function isLink(value: unknown): boolean {
-	return Array.isArray(value) && value.length === 1 && Array.isArray(value[0]) && value[0].length === 1;
 }
 
 /**

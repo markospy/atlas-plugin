@@ -149,12 +149,16 @@ export async function writeApproved(
 
 	const chapter = `[[${memoryNoteName(target.capitulo)}]]`;
 	const places = new Map<string, string>();
+	const originals = new Map<string, string>();
 	for (const candidate of chosen) {
 		if (candidate.tipo !== "estado") {
 			continue;
 		}
 		const path = target.lugar(candidate.lugar);
-		const note = places.get(path) ?? ((await files.exists(path)) ? await files.read(path) : null);
+		if (!originals.has(path) && (await files.exists(path))) {
+			originals.set(path, await files.read(path));
+		}
+		const note = places.get(path) ?? originals.get(path) ?? null;
 		if (note === null) {
 			continue;
 		}
@@ -166,8 +170,18 @@ export async function writeApproved(
 		}
 	}
 
-	for (const [path, note] of places) {
-		await files.write(path, note);
+	// All or nothing: if one place sheet cannot be written, the ones already written get their text back.
+	const written: string[] = [];
+	try {
+		for (const [path, note] of places) {
+			await files.write(path, note);
+			written.push(path);
+		}
+	} catch (error) {
+		for (const path of written) {
+			await files.write(path, originals.get(path) ?? "").catch(() => {});
+		}
+		throw error;
 	}
 	if (memoryNext !== null) {
 		if (memoryNow === null) {

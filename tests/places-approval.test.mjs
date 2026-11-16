@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import { parseDocument } from "yaml";
+
 import { parseProposal, writeApproved } from "../src/extract.ts";
 import { parsePlace } from "../src/places.ts";
 
@@ -81,7 +83,7 @@ test("R8: si la ficha de lugar no admite el estado, no se escribe nada", async (
 	assert.equal(files.store.get(LUGAR), ficha);
 });
 
-test("R6: una lista en flujo de varias líneas con `]` en la columna 0 pasa a bloque sin crear otro frontmatter", async () => {
+test("R6: una lista en flujo de varias líneas con `]` en la columna 0 sigue en flujo sin crear otro frontmatter", async () => {
 	const ficha = ["---", "nombre: Torre", "estados: [", '  {capitulo: "[[Cap 01]]", descripcion: intacta}', "]", "viajes: []", "---", "Cuerpo", ""].join("\n");
 	assert.equal(parsePlace(ficha).estados.length, 1, "parsePlace lee el flujo de varias líneas");
 	const files = mockFiles({ [LUGAR]: ficha });
@@ -95,7 +97,7 @@ test("R6: una lista en flujo de varias líneas con `]` en la columna 0 pasa a bl
 	]);
 });
 
-test("R6: flujo de varias líneas con CRLF pasa a bloque, conserva CRLF y no duplica al aprobar dos veces", async () => {
+test("R6: flujo de varias líneas con CRLF sigue en flujo, conserva CRLF y no duplica al aprobar dos veces", async () => {
 	const ficha = ["---", "nombre: Torre", "estados: [", '  {capitulo: "[[Cap 01]]", descripcion: intacta}', "]", "---", "Cuerpo"].join("\r\n");
 	const files = mockFiles({ [LUGAR]: ficha });
 	const candidatos = parseProposal(RESPUESTA);
@@ -208,12 +210,12 @@ test("R7: `nombre: Torre: alta` sigue leyéndose como está escrito y su línea 
 	});
 });
 
-test("R6 nit: un valor anidado de la lista en flujo sigue anidado al pasarla a bloque", async () => {
+test("R6 nit: un valor anidado de la lista en flujo sigue como está escrito al añadir un estado", async () => {
 	const ficha = "---\nnombre: Torre\nestados: [{capitulo: [[Cap 01]], descripcion: intacta, extra: {a: 1}}]\n---\n";
 	const files = mockFiles({ [LUGAR]: ficha });
 	await writeApproved(files, destino, parseProposal(RESPUESTA), new Set(["e1"]));
 	const escrita = files.store.get(LUGAR);
-	assert.match(escrita, /\n {4}extra:\n {6}a: 1\n/, escrita);
+	assert.ok(escrita.includes("estados: [{capitulo: [[Cap 01]], descripcion: intacta, extra: {a: 1}}, {"), escrita);
 	assert.deepEqual(parsePlace(escrita).estados, [
 		{ capitulo: "[[Cap 01]]", descripcion: "intacta" },
 		{ capitulo: "[[Cap 03]]", descripcion: "en ruinas" },
@@ -229,5 +231,92 @@ test("QA v4: un estado escrito a mano sin comillas (`null`, `0x1F`, `1e3`, `.inf
 		const respuesta = JSON.stringify({ hechos: [], estados: [{ lugar: "Torre", descripcion }] });
 		assert.deepEqual(await writeApproved(files, destino, parseProposal(respuesta), new Set(["e1"])), [], descripcion);
 		assert.equal(files.store.get(LUGAR), ficha);
+	}
+});
+
+// #77 seguimiento (R7, R9, R10, R11).
+test("R7 seguimiento: si falla la segunda ficha de lugar, la primera vuelve a su contenido y _Memoria/ no cambia", async () => {
+	const memoria = "---\ntipo: memoria\ncapitulo: 3\nhechos: []\n---\n";
+	const torre = "---\nnombre: Torre\nestados: []\n---\n";
+	const casa = "---\nnombre: Casa\nestados: []\n---\n";
+	const CASA = "Proyecto/Lugares/Casa.md";
+	const respuesta = JSON.stringify({
+		hechos: [{ id: "carta", texto: "La carta es falsa", verdad: false }],
+		estados: [
+			{ lugar: "Torre", descripcion: "en ruinas" },
+			{ lugar: "Casa", descripcion: "vacía" },
+		],
+	});
+	const files = mockFiles({ [MEMORIA]: memoria, [LUGAR]: torre, [CASA]: casa }, CASA);
+	await assert.rejects(writeApproved(files, destino, parseProposal(respuesta), new Set(["h1", "e1", "e2"])), /no se pudo escribir/);
+	assert.equal(files.store.get(LUGAR), torre);
+	assert.equal(files.store.get(CASA), casa);
+	assert.equal(files.store.get(MEMORIA), memoria);
+});
+
+test("R9: una lista en flujo con comentario sigue en flujo y conserva el comentario al añadir un estado", async () => {
+	const ficha = ["---", "nombre: Torre", 'estados: [{capitulo: "[[Cap 01]]", descripcion: intacta}] # orden de capítulos', "viajes: []", "---", ""].join("\n");
+	const files = mockFiles({ [LUGAR]: ficha });
+	await writeApproved(files, destino, parseProposal(RESPUESTA), new Set(["e1"]));
+	const escrita = files.store.get(LUGAR);
+	assert.ok(escrita.includes('estados: [{capitulo: "[[Cap 01]]", descripcion: intacta}, {'), escrita);
+	assert.ok(escrita.includes("}] # orden de capítulos\nviajes: []\n"), escrita);
+	assert.deepEqual(parsePlace(escrita).estados, [
+		{ capitulo: "[[Cap 01]]", descripcion: "intacta" },
+		{ capitulo: "[[Cap 03]]", descripcion: "en ruinas" },
+	]);
+});
+
+test("R9: en un flujo de varias líneas, el estado nuevo no cae dentro del comentario tras el último elemento", async () => {
+	const ficha = ["---", "nombre: Torre", "estados: [ # cambios", '  {capitulo: "[[Cap 01]]", descripcion: intacta}, # primero', "]", "---", ""].join("\n");
+	const files = mockFiles({ [LUGAR]: ficha });
+	await writeApproved(files, destino, parseProposal(RESPUESTA), new Set(["e1"]));
+	const escrita = files.store.get(LUGAR);
+	assert.ok(escrita.includes("estados: [ # cambios\n") && escrita.includes(" # primero\n]\n"), escrita);
+	assert.deepEqual(parsePlace(escrita).estados, [
+		{ capitulo: "[[Cap 01]]", descripcion: "intacta" },
+		{ capitulo: "[[Cap 03]]", descripcion: "en ruinas" },
+	]);
+});
+
+test("R10: una entrada de `estados` que no es YAML estricto no borra las demás y se avisa", () => {
+	const ficha = ["---", "nombre: Torre", "estados:", '  - capitulo: "[[Cap 01]]"', "    descripcion: a: b", '  - capitulo: "[[Cap 02]]"', "    descripcion: intacta", "---", ""].join("\n");
+	const avisos = [];
+	const warn = console.warn;
+	console.warn = (...args) => avisos.push(args.join(" "));
+	try {
+		assert.deepEqual(parsePlace(ficha).estados, [{ capitulo: "[[Cap 02]]", descripcion: "intacta" }]);
+	} finally {
+		console.warn = warn;
+	}
+	assert.equal(avisos.length, 1);
+	assert.match(avisos[0], /estados/);
+});
+
+test("R10: con una entrada rota, aprobar un estado nuevo no escribe y uno ya presente no se duplica", async () => {
+	const ficha = ["---", "nombre: Torre", "estados:", "  - capitulo: x", "    descripcion: a: b", '  - capitulo: "[[Cap 03]]"', "    descripcion: en ruinas", "---", ""].join("\n");
+	const warn = console.warn;
+	console.warn = () => {};
+	try {
+		const files = mockFiles({ [LUGAR]: ficha });
+		assert.deepEqual(await writeApproved(files, destino, parseProposal(RESPUESTA), new Set(["e1"])), []);
+		const nuevo = JSON.stringify({ hechos: [], estados: [{ lugar: "Torre", descripcion: "otra" }] });
+		await assert.rejects(writeApproved(files, destino, parseProposal(nuevo), new Set(["e1"])), /no se puede leer/);
+		assert.equal(files.store.get(LUGAR), ficha);
+	} finally {
+		console.warn = warn;
+	}
+});
+
+test("R11: `null` y `123` añadidos a una lista vacía o en flujo se leen como texto con el esquema core", async () => {
+	for (const ficha of ["---\nnombre: Torre\nestados: []\n---\n", "---\nnombre: Torre\nestados: [{capitulo: a, descripcion: b}]\n---\n"]) {
+		for (const descripcion of ["null", "123"]) {
+			const files = mockFiles({ [LUGAR]: ficha });
+			const respuesta = JSON.stringify({ hechos: [], estados: [{ lugar: "Torre", descripcion }] });
+			await writeApproved(files, destino, parseProposal(respuesta), new Set(["e1"]));
+			const escrita = files.store.get(LUGAR);
+			const core = parseDocument(escrita.split("---\n")[1]).toJS();
+			assert.equal(core.estados.at(-1).descripcion, descripcion, escrita);
+		}
 	}
 });
