@@ -244,3 +244,38 @@ test("aceptar un hecho y su conocimiento en una memoria CRLF cuyo cierre --- lle
 	assert.deepEqual(memoria.conocimiento, [{ hecho: "007", quien: "[[Ana]]", estado: "sabe" }]);
 	assert.equal(memoria.capitulo, 3);
 });
+
+// Un comentario tras el último elemento de una lista en flujo no debe tragarse lo aprobado.
+test("aceptar en hechos: en flujo de varias líneas con comentario tras el último elemento no pierde el hecho", async () => {
+	const nota = ["---", "capitulo: 3", "hechos: [", "  {id: anillo, texto: El anillo}, # a mano", "]", "---", "Cuerpo", ""].join("\n");
+	const files = mockFiles({ [MEMORIA]: nota });
+	await writeApproved(files, destino, parseProposal(RESPUESTA), new Set(["h1"]));
+	const escrita = files.store.get(MEMORIA);
+	assert.deepEqual(parseMemory(escrita).hechos.map((h) => h.id), ["anillo", "carta"]);
+	assert.match(escrita, /^ {2}\{id: anillo, texto: El anillo\}, \{.*carta.*\}, # a mano$/m, "el comentario y el estilo en flujo siguen");
+});
+
+test("aceptar en hechos: en flujo de varias líneas con comentario y sin coma final no pierde el hecho", async () => {
+	const nota = ["---", "capitulo: 3", "hechos: [", "  {id: anillo, texto: El anillo} # a mano", "]", "---", "Cuerpo", ""].join("\n");
+	const files = mockFiles({ [MEMORIA]: nota });
+	await writeApproved(files, destino, parseProposal(RESPUESTA), new Set(["h1"]));
+	const escrita = files.store.get(MEMORIA);
+	assert.deepEqual(parseMemory(escrita).hechos.map((h) => h.id), ["anillo", "carta"]);
+	assert.match(escrita, /^ {2}\{id: anillo, texto: El anillo\}, \{.*carta.*\} # a mano$/m);
+});
+
+test("aceptar en hechos: en flujo de una línea con comentario al final conserva el comentario", async () => {
+	const nota = ["---", "capitulo: 3", "hechos: [{id: anillo, texto: El anillo}] # a mano", "---", ""].join("\n");
+	const files = mockFiles({ [MEMORIA]: nota });
+	await writeApproved(files, destino, parseProposal(RESPUESTA), new Set(["h1"]));
+	const escrita = files.store.get(MEMORIA);
+	assert.deepEqual(parseMemory(escrita).hechos.map((h) => h.id), ["anillo", "carta"]);
+	assert.match(escrita, /^hechos: \[\{id: anillo, texto: El anillo\}, \{.*carta.*\}\] # a mano$/m);
+});
+
+test("aceptar en hechos: [] vacío sigue escribiendo el hecho", async () => {
+	const nota = ["---", "capitulo: 3", "hechos: []", "---", ""].join("\n");
+	const files = mockFiles({ [MEMORIA]: nota });
+	await writeApproved(files, destino, parseProposal(RESPUESTA), new Set(["h1"]));
+	assert.deepEqual(parseMemory(files.store.get(MEMORIA)).hechos, [{ id: "carta", texto: "La carta es falsa", verdad: false }]);
+});

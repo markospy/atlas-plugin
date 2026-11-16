@@ -1,4 +1,4 @@
-import { isMap, parseDocument, type Document } from "yaml";
+import { Document, isMap, isNode, parseDocument, type YAMLSeq } from "yaml";
 
 import { mapList } from "./frontmatter.ts";
 
@@ -68,4 +68,25 @@ export function text(value: unknown): string {
 		return `[[${String(value[0][0])}]]`;
 	}
 	return typeof value === "object" ? JSON.stringify(value) : String(value);
+}
+
+/**
+ * Inserts `entries`, in flow form, into the flow list `list` read from `source`: right after the
+ * end of its last item as `yaml` reports it, so a comment after that item, a trailing comma and
+ * the closing `]` stay where they were. Null when the last item has no range.
+ */
+export function insertFlowItems(source: string, list: YAMLSeq, entries: readonly object[]): string | null {
+	const last = list.items.at(-1);
+	if (!isNode(last) || !last.range) {
+		return null;
+	}
+	const flow = entries.map((entry) => {
+		const item = new Document(entry);
+		if (isMap(item.contents)) {
+			item.contents.flow = true;
+		}
+		return item.toString({ lineWidth: 0 }).trim();
+	});
+	const at = last.range[1];
+	return `${source.slice(0, at)}, ${flow.join(", ")}${source.slice(at)}`;
 }
